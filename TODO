@@ -1,0 +1,2 @@
+- correct quaternion getting and setting from a SO2 state
+- joint only robots may want to have a goal in workspace pose of the tip, not in the joint space
