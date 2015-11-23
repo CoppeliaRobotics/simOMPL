@@ -479,6 +479,28 @@ protected:
     TaskDef *task;
 };
 
+class Goal : public ob::Goal
+{
+public:
+    Goal(const SpaceInformationPtr &si, Task *task)
+        : ob::Goal(si), task(task)
+    {
+    }
+
+    virtual bool isSatisfied(const State *st) const
+    {
+        double distance = 0.0;
+        return isSatisfied(st, &distance);
+    }
+
+    virtual bool isSatisfied(const State *st, double *distance) const
+    {
+    }
+
+protected:
+    Task *task;
+};
+
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
 #define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection)"
 const int inArgs_CREATE_STATE_SPACE[]={6, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0};
