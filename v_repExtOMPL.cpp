@@ -135,6 +135,12 @@ struct TaskDef
     std::vector<simFloat> startState;
     // goal state:
     std::vector<simFloat> goalState;
+    // goal dummy pair:
+    struct
+    {
+        simInt goalDummy;
+        simInt robotDummy;
+    } goalDummyPair;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -482,23 +488,46 @@ protected:
 class Goal : public ob::Goal
 {
 public:
-    Goal(const SpaceInformationPtr &si, Task *task)
-        : ob::Goal(si), task(task)
+    Goal(const ob::SpaceInformationPtr &si, TaskDef *task, double tolerance = 1e-3)
+        : ob::Goal(si), task(task), tolerance(tolerance)
     {
     }
 
-    virtual bool isSatisfied(const State *st) const
+    virtual bool isSatisfied(const ob::State *state) const
     {
         double distance = 0.0;
-        return isSatisfied(st, &distance);
+        return isSatisfied(state, &distance);
     }
 
-    virtual bool isSatisfied(const State *st, double *distance) const
+    virtual bool isSatisfied(const ob::State *state, double *distance) const
     {
+        ob::StateSpacePtr statespace = getSpaceInformation()->getStateSpace();
+
+        ob::ScopedState<ob::CompoundStateSpace> s(statespace);
+        s = state;
+
+        // save old state:
+        ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
+        statespace->as<StateSpace>()->readState(s_old);
+
+        // write query state:
+        statespace->as<StateSpace>()->writeState(s);
+
+        simFloat goalPos[3], robotPos[3];
+        simGetObjectPosition(task->goalDummyPair.goalDummy, -1, &goalPos[0]);
+        simGetObjectPosition(task->goalDummyPair.robotDummy, -1, &robotPos[0]);
+        *distance = sqrt(pow(goalPos[0] - robotPos[0], 2) + pow(goalPos[1] - robotPos[1], 2) + pow(goalPos[2] - robotPos[2], 2));
+        bool satisfied = *distance <= tolerance;
+
+        // restore original state:
+        statespace->as<StateSpace>()->writeState(s_old);
+
+        return satisfied;
     }
 
 protected:
-    Task *task;
+    TaskDef *task;
+    double tolerance;
 };
 
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
@@ -1072,9 +1101,47 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
+        task->goalDummyPair.goalDummy = 0;
+        task->goalDummyPair.robotDummy = 0;
         task->goalState.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->goalState.push_back(inData->at(1).floatData[i]);
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
+#define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
+#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy)"
+const int inArgs_SET_GOAL[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+
+void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_GOAL, inArgs_SET_GOAL[0], LUA_SET_GOAL_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_SET_GOAL_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+        task->goalState.clear();
+        task->goalDummyPair.goalDummy = inData->at(1).intData[0];
+        task->goalDummyPair.robotDummy = inData->at(2).intData[0];
         returnResult = 1;
 	}
     while(0);
@@ -1132,7 +1199,18 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         // TODO: check if task->goalState is set/valid
         for(int i = 0; i < task->goalState.size(); i++)
             goal[i] = task->goalState[i];
-        setup.setStartAndGoalStates(start, goal);
+        setup.setStartState(start);
+        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
+        {
+            // goal is specified by a dummy pair -> create goal class
+            ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
+            setup.setGoal(goal);
+        }
+        else
+        {
+            // goal is specified with a state
+            setup.setGoalState(goal);
+        }
         ob::SpaceInformationPtr si = setup.getSpaceInformation();
         //ob::PlannerPtr planner(new og::BiTRRT(si));
         //ob::PlannerPtr planner(new og::BITstar(si));
@@ -1287,6 +1365,9 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 
 	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_GOAL_STATE, inArgs);
 	simRegisterCustomLuaFunction(LUA_SET_GOAL_STATE_COMMAND, LUA_SET_GOAL_STATE_APIHELP, &inArgs[0], LUA_SET_GOAL_STATE_CALLBACK);
+
+	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_GOAL, inArgs);
+	simRegisterCustomLuaFunction(LUA_SET_GOAL_COMMAND, LUA_SET_GOAL_APIHELP, &inArgs[0], LUA_SET_GOAL_CALLBACK);
 
 	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_COMPUTE, inArgs);
 	simRegisterCustomLuaFunction(LUA_COMPUTE_COMMAND, LUA_COMPUTE_APIHELP, &inArgs[0], LUA_COMPUTE_CALLBACK);
