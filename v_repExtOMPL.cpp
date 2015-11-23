@@ -45,11 +45,13 @@
 
 LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
+#include <ompl/base/Goal.h>
+#include <ompl/base/ProjectionEvaluator.h>
 #include <ompl/base/StateSpace.h>
+
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
-#include <ompl/base/ProjectionEvaluator.h>
 
 #include <ompl/geometric/SimpleSetup.h>
 
@@ -89,7 +91,7 @@ enum StateSpaceType
     simx_ompl_statespacetype_joint_position
 };
 
-struct StateSpace
+struct StateSpaceDef
 {
     // internal handle of this state space object (used by the plugin):
     simInt handle;
@@ -107,7 +109,7 @@ struct StateSpace
     bool defaultProjection;
 };
 
-struct Robot
+struct RobotDef
 {
     // internal handle of this robot object (used by the plugin):
     simInt handle;
@@ -115,11 +117,11 @@ struct Robot
     std::string name;
     // handles of object that will be checked for collision:
     std::vector<simInt> collisionHandles;
-    // state space is a composition of elementary state spaces (internal handles to StateSpace objects):
+    // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
 };
 
-struct Task
+struct TaskDef
 {
     // internal handle of this task object (used by the plugin):
     simInt handle;
@@ -135,9 +137,9 @@ struct Task
     std::vector<simFloat> goalState;
 };
 
-std::map<simInt, Task *> tasks;
-std::map<simInt, Robot *> robots;
-std::map<simInt, StateSpace *> statespaces;
+std::map<simInt, TaskDef *> tasks;
+std::map<simInt, RobotDef *> robots;
+std::map<simInt, StateSpaceDef *> statespaces;
 simInt nextTaskHandle = 1000;
 simInt nextRobotHandle = 4000;
 simInt nextStateSpaceHandle = 9000;
@@ -145,119 +147,20 @@ simInt nextStateSpaceHandle = 9000;
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-// writes state s to V-REP:
-void writeState(Robot *robot, const ob::ScopedState<ob::CompoundStateSpace>& s)
-{
-    int j = 0;
-    simFloat pos[3], orient[4], value;
-
-    for(int i = 0; i < robot->stateSpaces.size(); i++)
-    {
-        StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
-
-        switch(stateSpace->type)
-        {
-            case simx_ompl_statespacetype_pose2d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                orient[0] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                // FIXME: make correct quaternion for 2d orientation!
-                simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                break;
-            case simx_ompl_statespacetype_pose3d:
-                pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                orient[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
-                orient[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
-                orient[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
-                orient[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
-                simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                break;
-            case simx_ompl_statespacetype_position2d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                break;
-            case simx_ompl_statespacetype_position3d:
-                pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                break;
-            case simx_ompl_statespacetype_joint_position:
-                value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                simSetJointPosition(stateSpace->objectHandle, value);
-                break;
-        }
-    }
-}
-
-// reads state s from V-REP:
-void readState(Robot *robot, ob::ScopedState<ob::CompoundStateSpace>& s)
-{
-    simFloat pos[3], orient[4], value;
-
-    for(int i = 0; i < robot->stateSpaces.size(); i++)
-    {
-        StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
-
-        switch(stateSpace->type)
-        {
-            case simx_ompl_statespacetype_pose2d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
-                s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[0]);
-                // FIXME: make correct quaternion for 2d orientation!
-                break;
-            case simx_ompl_statespacetype_pose3d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
-                break;
-            case simx_ompl_statespacetype_position2d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
-                break;
-            case simx_ompl_statespacetype_position3d:
-                simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
-                break;
-            case simx_ompl_statespacetype_joint_position:
-                simGetJointPosition(stateSpace->objectHandle, &value);
-                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
-                break;
-        }
-    }
-}
-
 class ProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
-    ProjectionEvaluator(const ob::StateSpacePtr& space, Task *task)
+    ProjectionEvaluator(const ob::StateSpacePtr& space, TaskDef *task)
         : ob::ProjectionEvaluator(space)
     {
         this->task = task;
         dim = 0;
 
-        Robot *robot = robots[task->robotHandle];
+        RobotDef *robot = robots[task->robotHandle];
 
         for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
-            StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -294,18 +197,16 @@ public:
 
     virtual void project(const ob::State *state, ob::EuclideanProjection& projection) const
     {
-        std::cout << "projection of " << state;
-
         for(int i = 0; i < dim; i++)
             projection(i) = 0.0;
 
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-        Robot *robot = robots[task->robotHandle];
+        RobotDef *robot = robots[task->robotHandle];
 
         for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
-            StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -334,69 +235,198 @@ public:
                     break;
             }
 
-            if(dim > 0) std::cout << " " << projection(0);
-            if(dim > 1) std::cout << " " << projection(0);
-            if(dim > 2) std::cout << " " << projection(0);
-            std::cout << std::endl;
-
             break;
         }
     }
 
 protected:
-    Task *task;
+    TaskDef *task;
     int dim;
 };
 
-ob::StateSpacePtr makeOMPLStateSpace(Task *task)
+class StateSpace : public ob::CompoundStateSpace
 {
-    ob::StateSpacePtr compoundSpace(new ob::CompoundStateSpace());
-
-    Robot *robot = robots[task->robotHandle];
-
-    for(int i = 0; i < robot->stateSpaces.size(); i++)
+public:
+    StateSpace(TaskDef *task)
+        : ob::CompoundStateSpace(), task(task)
     {
-        StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
+        setName("VREPCompoundStateSpace");
+        type_ = ompl::base::STATE_SPACE_TYPE_COUNT + 1;
 
-        ob::StateSpace *ss;
+        RobotDef *robot = robots[task->robotHandle];
 
-        switch(stateSpace->type)
+        for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
-            case simx_ompl_statespacetype_pose2d:
-                ss = new ob::SE2StateSpace();
-                ss->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
-                ss->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
-                break;
-            case simx_ompl_statespacetype_pose3d:
-                ss = new ob::SE3StateSpace();
-                ss->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
-                ss->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
-                break;
-            case simx_ompl_statespacetype_position2d:
-                ss = new ob::RealVectorStateSpace(2);
-                break;
-            case simx_ompl_statespacetype_position3d:
-                ss = new ob::RealVectorStateSpace(3);
-                break;
-            case simx_ompl_statespacetype_joint_position:
-                ss = new ob::RealVectorStateSpace(1);
-                break;
-        }
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
-        ob::StateSpacePtr subSpace(ss);
-        subSpace->setName(stateSpace->name);
-        compoundSpace->as<ob::CompoundStateSpace>()->addSubspace(subSpace, 1.0);
+            ob::StateSpacePtr subSpace;
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                    subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
+                    break;
+                case simx_ompl_statespacetype_pose3d:
+                    subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
+                    break;
+                case simx_ompl_statespacetype_position2d:
+                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
+                    break;
+                case simx_ompl_statespacetype_position3d:
+                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(3));
+                    break;
+                case simx_ompl_statespacetype_joint_position:
+                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
+                    break;
+            }
+
+            subSpace->setName(stateSpace->name);
+            addSubspace(subSpace, 1.0);
+
+            // set bounds:
+
+            ob::RealVectorBounds bounds(stateSpace->boundsLow.size());;
+            for(int j = 0; j < stateSpace->boundsLow.size(); j++)
+                bounds.setLow(j, stateSpace->boundsLow[j]);
+            for(int j = 0; j < stateSpace->boundsHigh.size(); j++)
+                bounds.setHigh(j, stateSpace->boundsHigh[j]);
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                    as<ob::SE2StateSpace>(i)->setBounds(bounds);
+                    break;
+                case simx_ompl_statespacetype_pose3d:
+                    as<ob::SE3StateSpace>(i)->setBounds(bounds);
+                    break;
+                case simx_ompl_statespacetype_position2d:
+                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                    break;
+                case simx_ompl_statespacetype_position3d:
+                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                    break;
+                case simx_ompl_statespacetype_joint_position:
+                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                    break;
+            }
+        }
     }
 
-    compoundSpace->registerDefaultProjection(ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(compoundSpace, task)));
-    
-    return compoundSpace;
-}
+    // writes state s to V-REP:
+    void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
+    {
+        RobotDef *robot = robots[task->robotHandle];
+
+        int j = 0;
+        simFloat pos[3], orient[4], value;
+
+        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                    pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                    orient[0] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                    // FIXME: make correct quaternion for 2d orientation!
+                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    break;
+                case simx_ompl_statespacetype_pose3d:
+                    pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                    pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                    pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                    orient[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
+                    orient[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
+                    orient[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
+                    orient[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
+                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    break;
+                case simx_ompl_statespacetype_position2d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    break;
+                case simx_ompl_statespacetype_position3d:
+                    pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    break;
+                case simx_ompl_statespacetype_joint_position:
+                    value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    simSetJointPosition(stateSpace->objectHandle, value);
+                    break;
+            }
+        }
+    }
+
+    // reads state s from V-REP:
+    void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
+    {
+        RobotDef *robot = robots[task->robotHandle];
+
+        simFloat pos[3], orient[4], value;
+
+        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
+                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[0]);
+                    // FIXME: make correct quaternion for 2d orientation!
+                    break;
+                case simx_ompl_statespacetype_pose3d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
+                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
+                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
+                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
+                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
+                    break;
+                case simx_ompl_statespacetype_position2d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
+                    break;
+                case simx_ompl_statespacetype_position3d:
+                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
+                    break;
+                case simx_ompl_statespacetype_joint_position:
+                    simGetJointPosition(stateSpace->objectHandle, &value);
+                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
+                    break;
+            }
+        }
+    }
+
+protected:
+    TaskDef *task;
+};
 
 class StateValidityChecker : public ob::StateValidityChecker
 {
 public:
-    StateValidityChecker(const ob::SpaceInformationPtr &si, Task *task)
+    StateValidityChecker(const ob::SpaceInformationPtr &si, TaskDef *task)
         : ob::StateValidityChecker(si)
     {
         this->statespace = si->getStateSpace();
@@ -409,21 +439,18 @@ public:
 
     virtual bool isValid(const ob::State *state) const
     {
-        Robot *robot = robots[task->robotHandle];
+        RobotDef *robot = robots[task->robotHandle];
 
         //ob::CompoundStateSpace *ss = statespace->as<ob::CompoundStateSpace>();
         ob::ScopedState<ob::CompoundStateSpace> s(statespace);
         s = state;
 
-        std::cout << "StateValidityChecker::isValid: State: " << s << std::endl;
-        std::cout << "StateValidityChecker::isValid: save old state: " << s << std::endl;
-
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
-        readState(robot, s_old);
+        statespace->as<StateSpace>()->readState(s_old);
 
         // write query state:
-        writeState(robot, s);
+        statespace->as<StateSpace>()->writeState(s);
 
         // check collisions:
         bool inCollision = false;
@@ -442,14 +469,14 @@ public:
         }
 
         // restore original state:
-        writeState(robot, s_old);
+        statespace->as<StateSpace>()->writeState(s_old);
 
         return !inCollision;
     }
 
 protected:
     ob::StateSpacePtr statespace;
-    Task *task;
+    TaskDef *task;
 };
 
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
@@ -478,7 +505,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         std::string name = inData->at(0).stringData[0];
         simInt type = inData->at(1).intData[0];
         simInt objectHandle = inData->at(2).intData[0];
-        StateSpace *statespace = new StateSpace();
+        StateSpaceDef *statespace = new StateSpaceDef();
         statespace->handle = nextStateSpaceHandle++;
         statespace->name = name;
         statespace->type = static_cast<StateSpaceType>(type);
@@ -521,7 +548,7 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        StateSpace *statespace = statespaces[stateSpaceHandle];
+        StateSpaceDef *statespace = statespaces[stateSpaceHandle];
         statespaces.erase(stateSpaceHandle);
         delete statespace;
         returnResult = 1;
@@ -557,7 +584,7 @@ void LUA_SET_BOUNDS_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         task->boundsLow.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->boundsLow.push_back(inData->at(1).floatData[i]);
@@ -590,7 +617,7 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
-        Robot *robot = new Robot();
+        RobotDef *robot = new RobotDef();
         robot->handle = nextRobotHandle++;
         robot->name = name;
         robots[robot->handle] = robot;
@@ -626,7 +653,7 @@ void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Robot *robot = robots[robotHandle];
+        RobotDef *robot = robots[robotHandle];
         robots.erase(robotHandle);
         delete robot;
         returnResult = 1;
@@ -680,7 +707,7 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Robot *robot = robots[robotHandle];
+        RobotDef *robot = robots[robotHandle];
         robot->stateSpaces.clear();
         for(int i = 0; i < inData->at(1).intData.size(); i++)
             robot->stateSpaces.push_back(inData->at(1).intData[i]);
@@ -716,7 +743,7 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Robot *robot = robots[robotHandle];
+        RobotDef *robot = robots[robotHandle];
         robot->collisionHandles.clear();
         for(int i = 0; i < inData->at(1).intData.size(); i++)
             robot->collisionHandles.push_back(inData->at(1).intData[i]);
@@ -745,7 +772,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
-        Task *task = new Task();
+        TaskDef *task = new TaskDef();
         task->handle = nextTaskHandle++;
         task->name = name;
         tasks[task->handle] = task;
@@ -781,7 +808,7 @@ void LUA_DESTROY_TASK_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         tasks.erase(taskHandle);
         delete task;
         returnResult = 1;
@@ -829,8 +856,8 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
-        Robot *robot = robots[task->robotHandle];
+        TaskDef *task = tasks[taskHandle];
+        RobotDef *robot = robots[task->robotHandle];
 
         std::stringstream s;
         std::string prefix = "OMPL: ";
@@ -844,7 +871,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         s << prefix << "    state spaces:" << std::endl;
         for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
-            StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
             s << prefix << "        state space: " << stateSpace->handle << std::endl;
             s << prefix << "            name: " << stateSpace->name << std::endl;
             s << prefix << "            type: " << state_space_type_string(stateSpace->type) << std::endl;
@@ -914,7 +941,7 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         task->robotHandle = robotHandle;
         returnResult = 1;
 	}
@@ -950,7 +977,7 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         task->obstacleHandles.clear();
         for(int i = 0; i < numHandles; i++)
             task->obstacleHandles.push_back(obstacleHandles[i]);
@@ -986,7 +1013,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         task->startState.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->startState.push_back(inData->at(1).floatData[i]);
@@ -1022,7 +1049,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
         task->goalState.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->goalState.push_back(inData->at(1).floatData[i]);
@@ -1060,7 +1087,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Task *task = tasks[taskHandle];
+        TaskDef *task = tasks[taskHandle];
 
         if(robots.find(task->robotHandle) == robots.end())
         {
@@ -1068,51 +1095,11 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        Robot *robot = robots[task->robotHandle];
+        RobotDef *robot = robots[task->robotHandle];
 
-        ob::StateSpacePtr space = makeOMPLStateSpace(task);
-        ob::CompoundStateSpace *cspace = space->as<ob::CompoundStateSpace>();
-
-        std::cout << "State space: " << cspace->getName() << " (" << cspace->getDimension() << ")" << std::endl;
-        std::cout << "Subspaces: (" << cspace->getSubspaceCount() << ")" << std::endl;
-        for(int i = 0; i < cspace->getSubspaceCount(); i++)
-        {
-            std::cout << "Subspace " << i << ": " << cspace->getSubspace(i)->getName() << " (" << cspace->getSubspace(i)->getDimension() << ")" << std::endl;
-        }
-
-        std::cout << "Sanity checks..." << std::endl;
-        cspace->sanityChecks(0.0, 1e-9, ob::StateSpace::STATESPACE_DISTANCE_DIFFERENT_STATES | ob::StateSpace::STATESPACE_DISTANCE_SYMMETRIC | ob::StateSpace::STATESPACE_INTERPOLATION | ob::StateSpace::STATESPACE_TRIANGLE_INEQUALITY | ob::StateSpace::STATESPACE_DISTANCE_BOUND | ob::StateSpace::STATESPACE_RESPECT_BOUNDS | ob::StateSpace::STATESPACE_ENFORCE_BOUNDS_NO_OP | ob::StateSpace::STATESPACE_SERIALIZATION);
-
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
-        {
-            StateSpace *stateSpace = statespaces[robot->stateSpaces[i]];
-
-            ob::RealVectorBounds bounds(stateSpace->boundsLow.size());;
-            for(int j = 0; j < stateSpace->boundsLow.size(); j++)
-                bounds.setLow(j, stateSpace->boundsLow[j]);
-            for(int j = 0; j < stateSpace->boundsHigh.size(); j++)
-                bounds.setHigh(j, stateSpace->boundsHigh[j]);
-
-            switch(stateSpace->type)
-            {
-                case simx_ompl_statespacetype_pose2d:
-                    cspace->as<ob::SE2StateSpace>(i)->setBounds(bounds);
-                    break;
-                case simx_ompl_statespacetype_pose3d:
-                    cspace->as<ob::SE3StateSpace>(i)->setBounds(bounds);
-                    break;
-                case simx_ompl_statespacetype_position2d:
-                    cspace->as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
-                case simx_ompl_statespacetype_position3d:
-                    cspace->as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
-                case simx_ompl_statespacetype_joint_position:
-                    cspace->as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
-            }
-        }
-
+        ob::StateSpacePtr space(new StateSpace(task));
+        ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
+        space->registerDefaultProjection(projectionEval);
         og::SimpleSetup setup(space);
         setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
         ob::ScopedState<> start(space);
