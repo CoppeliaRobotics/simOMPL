@@ -1,0 +1,9 @@
+*.dylib
+*.so
+*.dll
+*~
+*.o
+.*.swp
+.DS_Store
+.AppleDouble
+.LSOverride
