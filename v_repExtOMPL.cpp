@@ -162,6 +162,13 @@ public:
         this->task = task;
         dim = 0;
 
+        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
+        {
+            // goal is specified by a dummy pair -> project robot pos
+            dim = 3;
+            return;
+        }
+
         RobotDef *robot = robots[task->robotHandle];
 
         for(int i = 0; i < robot->stateSpaces.size(); i++)
@@ -209,6 +216,17 @@ public:
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
         RobotDef *robot = robots[task->robotHandle];
+
+        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
+        {
+            // goal is specified by a dummy pair -> project robot pos
+            simFloat pos[3];
+            simGetObjectPosition(task->goalDummyPair.robotDummy, -1, &pos[0]);
+            projection(0) = pos[0];
+            projection(1) = pos[1];
+            projection(2) = pos[2];
+            return;
+        }
 
         for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
