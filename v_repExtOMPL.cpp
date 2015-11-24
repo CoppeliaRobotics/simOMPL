@@ -633,47 +633,6 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
-#if 0
-#define LUA_SET_BOUNDS_COMMAND "simExtOMPL_setBounds"
-#define LUA_SET_BOUNDS_APIHELP "number result=" LUA_SET_BOUNDS_COMMAND "(number taskHandle, table low, table high)"
-const int inArgs_SET_BOUNDS[]={3, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0};
-
-void LUA_SET_BOUNDS_CALLBACK(SLuaCallBack* p)
-{
-	p->outputArgCount = 0;
-    CLuaFunctionData D;
-	simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_SET_BOUNDS, inArgs_SET_BOUNDS[0], LUA_SET_BOUNDS_COMMAND))
-            break;
-
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-			simSetLastError(LUA_SET_BOUNDS_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
-        task->boundsLow.clear();
-        for(int i = 0; i < inData->at(1).floatData.size(); i++)
-            task->boundsLow.push_back(inData->at(1).floatData[i]);
-        task->boundsHigh.clear();
-        for(int i = 0; i < inData->at(2).floatData.size(); i++)
-            task->boundsHigh.push_back(inData->at(2).floatData[i]);
-        returnResult = 1;
-	}
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
-}
-#endif
-
 #define LUA_CREATE_ROBOT_COMMAND "simExtOMPL_createRobot"
 #define LUA_CREATE_ROBOT_APIHELP "number robotHandle=" LUA_CREATE_ROBOT_COMMAND "(string name)"
 const int inArgs_CREATE_ROBOT[]={1, sim_lua_arg_string, 0};
@@ -1362,11 +1321,6 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 
 	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_DESTROY_STATE_SPACE, inArgs);
 	simRegisterCustomLuaFunction(LUA_DESTROY_STATE_SPACE_COMMAND, LUA_DESTROY_STATE_SPACE_APIHELP, &inArgs[0], LUA_DESTROY_STATE_SPACE_CALLBACK);
-
-#if 0
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_BOUNDS, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_BOUNDS_COMMAND, LUA_SET_BOUNDS_APIHELP, &inArgs[0], LUA_SET_BOUNDS_CALLBACK);
-#endif
 
 	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_CREATE_ROBOT, inArgs);
 	simRegisterCustomLuaFunction(LUA_CREATE_ROBOT_COMMAND, LUA_CREATE_ROBOT_APIHELP, &inArgs[0], LUA_CREATE_ROBOT_CALLBACK);
