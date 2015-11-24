@@ -91,12 +91,19 @@ enum StateSpaceType
     simx_ompl_statespacetype_joint_position
 };
 
+struct ObjectDefHeader
+{
+    // internal handle of this object (used by the plugin):
+    simInt handle;
+    // name of this object:
+    std::string name;
+    // objects created during simulation will be destroyed when simulation terminates:
+    bool destroyAfterSimulationStop;
+};
+
 struct StateSpaceDef
 {
-    // internal handle of this state space object (used by the plugin):
-    simInt handle;
-    // name of this state space:
-    std::string name;
+    ObjectDefHeader header;
     // type of this state space:
     StateSpaceType type;
     // V-REP handle of the object (objects, or joint if type = joint_position):
@@ -107,30 +114,20 @@ struct StateSpaceDef
     std::vector<simFloat> boundsHigh;
     // use this state space as the default projection:
     bool defaultProjection;
-    // objects created during simulation will be destroyed when simulation terminates:
-    bool destroyAfterSimulationStop;
 };
 
 struct RobotDef
 {
-    // internal handle of this robot object (used by the plugin):
-    simInt handle;
-    // name of this robot object:
-    std::string name;
+    ObjectDefHeader header;
     // handles of object that will be checked for collision:
     std::vector<simInt> collisionHandles;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
-    // objects created during simulation will be destroyed when simulation terminates:
-    bool destroyAfterSimulationStop;
 };
 
 struct TaskDef
 {
-    // internal handle of this task object (used by the plugin):
-    simInt handle;
-    // name of this task:
-    std::string name;
+    ObjectDefHeader header;
     // internal handle of the robot object associated with the task:
     simInt robotHandle;
     // handle of the obstacles that will be checked for collision:
@@ -146,8 +143,6 @@ struct TaskDef
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
     } goal;
-    // objects created during simulation will be destroyed when simulation terminates:
-    bool destroyAfterSimulationStop;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -157,6 +152,8 @@ simInt nextTaskHandle = 1000;
 simInt nextRobotHandle = 4000;
 simInt nextStateSpaceHandle = 9000;
 
+// this function will be called at simulation end to destroy objects that
+// were created during simulation, which otherwise would leak indefinitely:
 template<typename T>
 void destroyTransientObjects(std::map<simInt, T *>& c)
 {
@@ -164,7 +161,7 @@ void destroyTransientObjects(std::map<simInt, T *>& c)
 
     for(typename std::map<simInt, T *>::const_iterator it = c.begin(); it != c.end(); ++it)
     {
-        if(it->second->destroyAfterSimulationStop)
+        if(it->second->header.destroyAfterSimulationStop)
             transientObjects.push_back(it->first);
     }
 
@@ -327,13 +324,13 @@ public:
             {
                 case simx_ompl_statespacetype_pose2d:
                     subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
                     break;
                 case simx_ompl_statespacetype_pose3d:
                     subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
+                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
                     break;
                 case simx_ompl_statespacetype_position2d:
                     subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
@@ -346,7 +343,7 @@ public:
                     break;
             }
 
-            subSpace->setName(stateSpace->name);
+            subSpace->setName(stateSpace->header.name);
             addSubspace(subSpace, 1.0);
 
             // set bounds:
@@ -613,9 +610,9 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         simInt type = inData->at(1).intData[0];
         simInt objectHandle = inData->at(2).intData[0];
         StateSpaceDef *statespace = new StateSpaceDef();
-        statespace->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        statespace->handle = nextStateSpaceHandle++;
-        statespace->name = name;
+        statespace->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
+        statespace->header.handle = nextStateSpaceHandle++;
+        statespace->header.name = name;
         statespace->type = static_cast<StateSpaceType>(type);
         statespace->objectHandle = objectHandle;
         for(int i = 0; i < inData->at(3).floatData.size(); i++)
@@ -623,8 +620,8 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < inData->at(4).floatData.size(); i++)
             statespace->boundsHigh.push_back(inData->at(4).floatData[i]);
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
-        statespaces[statespace->handle] = statespace;
-        returnResult = statespace->handle;
+        statespaces[statespace->header.handle] = statespace;
+        returnResult = statespace->header.handle;
 	}
     while(0);
 
@@ -685,11 +682,11 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         RobotDef *robot = new RobotDef();
-        robot->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        robot->handle = nextRobotHandle++;
-        robot->name = name;
-        robots[robot->handle] = robot;
-        returnResult = robot->handle;
+        robot->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
+        robot->header.handle = nextRobotHandle++;
+        robot->header.name = name;
+        robots[robot->header.handle] = robot;
+        returnResult = robot->header.handle;
 	}
     while(0);
 
@@ -841,11 +838,11 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         TaskDef *task = new TaskDef();
-        task->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        task->handle = nextTaskHandle++;
-        task->name = name;
-        tasks[task->handle] = task;
-        returnResult = task->handle;
+        task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
+        task->header.handle = nextTaskHandle++;
+        task->header.name = name;
+        tasks[task->header.handle] = task;
+        returnResult = task->header.handle;
 	}
     while(0);
 
@@ -930,9 +927,9 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
 
         std::stringstream s;
         std::string prefix = "OMPL: ";
-        s << prefix << "task name: " << task->name << std::endl;
+        s << prefix << "task name: " << task->header.name << std::endl;
         s << prefix << "robot: " << task->robotHandle << std::endl;
-        s << prefix << "    name: " << robot->name << std::endl;
+        s << prefix << "    name: " << robot->header.name << std::endl;
         s << prefix << "    collidables: {";
         for(int i = 0; i < robot->collisionHandles.size(); i++)
             s << (i ? ", " : "") << robot->collisionHandles[i];
@@ -941,8 +938,8 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
-            s << prefix << "        state space: " << stateSpace->handle << std::endl;
-            s << prefix << "            name: " << stateSpace->name << std::endl;
+            s << prefix << "        state space: " << stateSpace->header.handle << std::endl;
+            s << prefix << "            name: " << stateSpace->header.name << std::endl;
             s << prefix << "            type: " << state_space_type_string(stateSpace->type) << std::endl;
             s << prefix << "            object handle: " << stateSpace->objectHandle << std::endl;
             s << prefix << "            bounds low: {";
