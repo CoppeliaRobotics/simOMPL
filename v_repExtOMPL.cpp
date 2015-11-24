@@ -107,6 +107,8 @@ struct StateSpaceDef
     std::vector<simFloat> boundsHigh;
     // use this state space as the default projection:
     bool defaultProjection;
+    // objects created during simulation will be destroyed when simulation terminates:
+    bool destroyAfterSimulationStop;
 };
 
 struct RobotDef
@@ -119,6 +121,8 @@ struct RobotDef
     std::vector<simInt> collisionHandles;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
+    // objects created during simulation will be destroyed when simulation terminates:
+    bool destroyAfterSimulationStop;
 };
 
 struct TaskDef
@@ -142,6 +146,8 @@ struct TaskDef
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
     } goal;
+    // objects created during simulation will be destroyed when simulation terminates:
+    bool destroyAfterSimulationStop;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -150,6 +156,33 @@ std::map<simInt, StateSpaceDef *> statespaces;
 simInt nextTaskHandle = 1000;
 simInt nextRobotHandle = 4000;
 simInt nextStateSpaceHandle = 9000;
+
+template<typename T>
+void destroyTransientObjects(std::map<simInt, T *>& c)
+{
+    std::vector<simInt> transientObjects;
+
+    for(typename std::map<simInt, T *>::const_iterator it = c.begin(); it != c.end(); ++it)
+    {
+        if(it->second->destroyAfterSimulationStop)
+            transientObjects.push_back(it->first);
+    }
+
+    for(size_t i = 0; i < transientObjects.size(); i++)
+    {
+        simInt key = transientObjects[i];
+        T *t = c[key];
+        c.erase(key);
+        delete t;
+    }
+}
+
+void destroyTransientObjects()
+{
+    destroyTransientObjects(tasks);
+    destroyTransientObjects(robots);
+    destroyTransientObjects(statespaces);
+}
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -580,6 +613,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         simInt type = inData->at(1).intData[0];
         simInt objectHandle = inData->at(2).intData[0];
         StateSpaceDef *statespace = new StateSpaceDef();
+        statespace->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
         statespace->handle = nextStateSpaceHandle++;
         statespace->name = name;
         statespace->type = static_cast<StateSpaceType>(type);
@@ -651,6 +685,7 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         RobotDef *robot = new RobotDef();
+        robot->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
         robot->handle = nextRobotHandle++;
         robot->name = name;
         robots[robot->handle] = robot;
@@ -806,6 +841,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         TaskDef *task = new TaskDef();
+        task->destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
         task->handle = nextTaskHandle++;
         task->name = name;
         tasks[task->handle] = task;
@@ -1434,6 +1470,7 @@ VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customD
 
 	if (message == sim_message_eventcallback_simulationended)
 	{ // Simulation just ended
+        destroyTransientObjects();
 
 	}
 
