@@ -133,14 +133,15 @@ struct TaskDef
     std::vector<simInt> obstacleHandles;
     // start state:
     std::vector<simFloat> startState;
-    // goal state:
-    std::vector<simFloat> goalState;
-    // goal dummy pair:
-    struct
+    // goal can be specified in different ways:
+    struct Goal
     {
-        simInt goalDummy;
-        simInt robotDummy;
-    } goalDummyPair;
+        enum {GOAL_STATE, GOAL_DUMMY_PAIR} type;
+        // goal state:
+        std::vector<simFloat> state;
+        // goal dummy pair:
+        struct {simInt goalDummy, robotDummy;} dummyPair;
+    } goal;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -160,39 +161,41 @@ public:
         : ob::ProjectionEvaluator(space)
     {
         this->task = task;
-        dim = 0;
 
-        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
-        {
-            // goal is specified by a dummy pair -> project robot pos
-            dim = 3;
-            return;
-        }
+        dim = 0;
 
         RobotDef *robot = robots[task->robotHandle];
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        switch(task->goal.type)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            case TaskDef::Goal::GOAL_STATE:
+                for(int i = 0; i < robot->stateSpaces.size(); i++)
+                {
+                    StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
-            if(!stateSpace->defaultProjection) continue;
+                    if(!stateSpace->defaultProjection) continue;
 
-            switch(stateSpace->type)
-            {
-                case simx_ompl_statespacetype_pose2d:
-                case simx_ompl_statespacetype_position2d:
-                    dim = 2;
-                    break;
-                case simx_ompl_statespacetype_pose3d:
-                case simx_ompl_statespacetype_position3d:
-                    dim = 3;
-                    break;
-                case simx_ompl_statespacetype_joint_position:
-                    dim = 1;
-                    break;
-            }
+                    switch(stateSpace->type)
+                    {
+                        case simx_ompl_statespacetype_pose2d:
+                        case simx_ompl_statespacetype_position2d:
+                            dim = 2;
+                            break;
+                        case simx_ompl_statespacetype_pose3d:
+                        case simx_ompl_statespacetype_position3d:
+                            dim = 3;
+                            break;
+                        case simx_ompl_statespacetype_joint_position:
+                            dim = 1;
+                            break;
+                    }
 
-            break;
+                    break;
+                }
+                break;
+            case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                dim = 3;
+                break;
         }
     }
 
@@ -217,49 +220,51 @@ public:
 
         RobotDef *robot = robots[task->robotHandle];
 
-        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
+        simFloat pos[3];
+
+        switch(task->goal.type)
         {
-            // goal is specified by a dummy pair -> project robot pos
-            simFloat pos[3];
-            simGetObjectPosition(task->goalDummyPair.robotDummy, -1, &pos[0]);
-            projection(0) = pos[0];
-            projection(1) = pos[1];
-            projection(2) = pos[2];
-            return;
-        }
+            case TaskDef::Goal::GOAL_STATE:
+                for(int i = 0; i < robot->stateSpaces.size(); i++)
+                {
+                    StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
-        {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+                    if(!stateSpace->defaultProjection) continue;
 
-            if(!stateSpace->defaultProjection) continue;
+                    switch(stateSpace->type)
+                    {
+                        case simx_ompl_statespacetype_pose2d:
+                            projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                            projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                            break;
+                        case simx_ompl_statespacetype_pose3d:
+                            projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                            projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                            projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                            break;
+                        case simx_ompl_statespacetype_position2d:
+                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                            projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                            break;
+                        case simx_ompl_statespacetype_position3d:
+                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                            projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                            projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                            break;
+                        case simx_ompl_statespacetype_joint_position:
+                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                            break;
+                    }
 
-            switch(stateSpace->type)
-            {
-                case simx_ompl_statespacetype_pose2d:
-                    projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                    projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                     break;
-                case simx_ompl_statespacetype_pose3d:
-                    projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                    projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                    projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                    break;
-                case simx_ompl_statespacetype_position2d:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    break;
-                case simx_ompl_statespacetype_position3d:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                    break;
-                case simx_ompl_statespacetype_joint_position:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    break;
-            }
-
-            break;
+                }
+                break;
+            case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
+                projection(0) = pos[0];
+                projection(1) = pos[1];
+                projection(2) = pos[2];
+                break;
         }
     }
 
@@ -532,8 +537,8 @@ public:
         statespace->as<StateSpace>()->writeState(s);
 
         simFloat goalPos[3], robotPos[3];
-        simGetObjectPosition(task->goalDummyPair.goalDummy, -1, &goalPos[0]);
-        simGetObjectPosition(task->goalDummyPair.robotDummy, -1, &robotPos[0]);
+        simGetObjectPosition(task->goal.dummyPair.goalDummy, -1, &goalPos[0]);
+        simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &robotPos[0]);
         *distance = sqrt(pow(goalPos[0] - robotPos[0], 2) + pow(goalPos[1] - robotPos[1], 2) + pow(goalPos[2] - robotPos[2], 2));
         bool satisfied = *distance <= tolerance;
 
@@ -963,10 +968,20 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < task->startState.size(); i++)
             s << (i ? ", " : "") << task->startState[i];
         s << "}" << std::endl;
-        s << prefix << "goal state: {";
-        for(int i = 0; i < task->goalState.size(); i++)
-            s << (i ? ", " : "") << task->goalState[i];
-        s << "}" << std::endl;
+        switch(task->goal.type)
+        {
+        case TaskDef::Goal::GOAL_STATE:
+            s << prefix << "goal state: {";
+            for(int i = 0; i < task->goal.state.size(); i++)
+                s << (i ? ", " : "") << task->goal.state[i];
+            s << "}" << std::endl;
+            break;
+        case TaskDef::Goal::GOAL_DUMMY_PAIR:
+            s << prefix << "goal dummy:" << std::endl;
+            s << prefix << "    robot dummy:" << task->goal.dummyPair.robotDummy << std::endl;
+            s << prefix << "    goal dummy:" << task->goal.dummyPair.goalDummy << std::endl;
+            break;
+        }
 
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
@@ -1119,11 +1134,10 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->goalDummyPair.goalDummy = 0;
-        task->goalDummyPair.robotDummy = 0;
-        task->goalState.clear();
+        task->goal.type = TaskDef::Goal::GOAL_STATE;
+        task->goal.state.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
-            task->goalState.push_back(inData->at(1).floatData[i]);
+            task->goal.state.push_back(inData->at(1).floatData[i]);
         returnResult = 1;
 	}
     while(0);
@@ -1157,9 +1171,9 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->goalState.clear();
-        task->goalDummyPair.goalDummy = inData->at(1).intData[0];
-        task->goalDummyPair.robotDummy = inData->at(2).intData[0];
+        task->goal.type = TaskDef::Goal::GOAL_DUMMY_PAIR;
+        task->goal.dummyPair.goalDummy = inData->at(1).intData[0];
+        task->goal.dummyPair.robotDummy = inData->at(2).intData[0];
         returnResult = 1;
 	}
     while(0);
@@ -1209,26 +1223,29 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         space->registerDefaultProjection(projectionEval);
         og::SimpleSetup setup(space);
         setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
+
         ob::ScopedState<> start(space);
-        ob::ScopedState<> goal(space);
         // TODO: check if task->startState is set/valid
         for(int i = 0; i < task->startState.size(); i++)
             start[i] = task->startState[i];
-        // TODO: check if task->goalState is set/valid
-        for(int i = 0; i < task->goalState.size(); i++)
-            goal[i] = task->goalState[i];
         setup.setStartState(start);
-        if(task->goalDummyPair.goalDummy && task->goalDummyPair.robotDummy)
+
+        if(task->goal.type == TaskDef::Goal::GOAL_STATE)
+        {
+            ob::ScopedState<> goal(space);
+            // TODO: check if task->goal.state is set/valid
+            for(int i = 0; i < task->goal.state.size(); i++)
+                goal[i] = task->goal.state[i];
+            // goal is specified with a state
+            setup.setGoalState(goal);
+        }
+        else if(task->goal.type == TaskDef::Goal::GOAL_DUMMY_PAIR)
         {
             // goal is specified by a dummy pair -> create goal class
             ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
             setup.setGoal(goal);
         }
-        else
-        {
-            // goal is specified with a state
-            setup.setGoalState(goal);
-        }
+
         ob::SpaceInformationPtr si = setup.getSpaceInformation();
         //ob::PlannerPtr planner(new og::BiTRRT(si));
         //ob::PlannerPtr planner(new og::BITstar(si));
