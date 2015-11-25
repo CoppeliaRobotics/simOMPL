@@ -1544,6 +1544,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
+        task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
         task->projectionEvaluation.dim = projectionSize;
         task->projectionEvaluation.callback = callback;
 
