@@ -158,6 +158,8 @@ struct TaskDef
         enum {DEFAULT, CALLBACK} type;
         // projection evaluation callback:
         std::string callback;
+        // size of projection when using callback
+        int dim;
     } projectionEvaluation;
 };
 
@@ -212,35 +214,34 @@ public:
 
         RobotDef *robot = robots[task->robotHandle];
 
-        switch(task->goal.type)
+        switch(task->projectionEvaluation.type)
         {
-            case TaskDef::Goal::GOAL_STATE:
-                for(int i = 0; i < robot->stateSpaces.size(); i++)
+            case TaskDef::ProjectionEvaluation::DEFAULT:
+                switch(task->goal.type)
                 {
-                    StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
-
-                    if(!stateSpace->defaultProjection) continue;
-
-                    switch(stateSpace->type)
-                    {
-                        case simx_ompl_statespacetype_pose2d:
-                        case simx_ompl_statespacetype_position2d:
-                            dim = 2;
-                            break;
-                        case simx_ompl_statespacetype_pose3d:
-                        case simx_ompl_statespacetype_position3d:
-                            dim = 3;
-                            break;
-                        case simx_ompl_statespacetype_joint_position:
-                            dim = 1;
-                            break;
-                    }
-
-                    break;
+                    case TaskDef::Goal::GOAL_STATE:
+                        dim = defaultProjectionSize();
+                        break;
+                    case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                        dim = dummyPairProjectionSize();
+                        break;
+                    case TaskDef::Goal::GOAL_CALLBACK:
+                        dim = 0;
+                        // this situation is not feasible
+                        // a warning should be issued at begin of compute
+                        break;
+                    default:
+                        // this will never happen
+                        dim = 0;
+                        break;
                 }
                 break;
-            case TaskDef::Goal::GOAL_DUMMY_PAIR:
-                dim = 3;
+            case TaskDef::ProjectionEvaluation::CALLBACK:
+                dim = luaProjectCallbackSize();
+                break;
+            default:
+                // this will never happen
+                dim = 0;
                 break;
         }
     }
@@ -252,6 +253,7 @@ public:
 
     virtual void defaultCellSizes(void)
     {
+        // TODO: handle this in the plugin API
         cellSizes_.resize(dim);
         for(int i = 0; i < dim; i++)
             cellSizes_[i] = 0.25;
@@ -266,55 +268,121 @@ public:
 
         RobotDef *robot = robots[task->robotHandle];
 
-        simFloat pos[3];
-
-        switch(task->goal.type)
+        switch(task->projectionEvaluation.type)
         {
-            case TaskDef::Goal::GOAL_STATE:
-                for(int i = 0; i < robot->stateSpaces.size(); i++)
+            case TaskDef::ProjectionEvaluation::DEFAULT:
+                switch(task->goal.type)
                 {
-                    StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
-
-                    if(!stateSpace->defaultProjection) continue;
-
-                    switch(stateSpace->type)
-                    {
-                        case simx_ompl_statespacetype_pose2d:
-                            projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                            projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                            break;
-                        case simx_ompl_statespacetype_pose3d:
-                            projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                            projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                            projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                            break;
-                        case simx_ompl_statespacetype_position2d:
-                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                            projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                            break;
-                        case simx_ompl_statespacetype_position3d:
-                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                            projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                            projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                            break;
-                        case simx_ompl_statespacetype_joint_position:
-                            projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                            break;
-                    }
-
-                    break;
+                    case TaskDef::Goal::GOAL_STATE:
+                        defaultProjection(state, projection);
+                        break;
+                    case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                        dummyPairProjection(state, projection);
+                        break;
+                    default:
+                        break;
                 }
                 break;
-            case TaskDef::Goal::GOAL_DUMMY_PAIR:
-                simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
-                projection(0) = pos[0];
-                projection(1) = pos[1];
-                projection(2) = pos[2];
+            case TaskDef::ProjectionEvaluation::CALLBACK:
+                luaProjectCallback(state, projection);
+                break;
+            default:
                 break;
         }
     }
 
 protected:
+    virtual int defaultProjectionSize() const
+    {
+        RobotDef *robot = robots[task->robotHandle];
+
+        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+
+            if(!stateSpace->defaultProjection) continue;
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                case simx_ompl_statespacetype_position2d:
+                    return 2;
+                case simx_ompl_statespacetype_pose3d:
+                case simx_ompl_statespacetype_position3d:
+                    return 3;
+                case simx_ompl_statespacetype_joint_position:
+                    return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    virtual void defaultProjection(const ob::State *state, ob::EuclideanProjection& projection) const
+    {
+        RobotDef *robot = robots[task->robotHandle];
+        const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
+
+        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+
+            if(!stateSpace->defaultProjection) continue;
+
+            switch(stateSpace->type)
+            {
+                case simx_ompl_statespacetype_pose2d:
+                    projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                    projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                    break;
+                case simx_ompl_statespacetype_pose3d:
+                    projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                    projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                    projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                    break;
+                case simx_ompl_statespacetype_position2d:
+                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    break;
+                case simx_ompl_statespacetype_position3d:
+                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                    break;
+                case simx_ompl_statespacetype_joint_position:
+                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    break;
+            }
+
+            break;
+        }
+    }
+
+    virtual int dummyPairProjectionSize() const
+    {
+        return 3;
+    }
+
+    virtual void dummyPairProjection(const ob::State *state, ob::EuclideanProjection& projection) const
+    {
+        simFloat pos[3];
+        simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
+        projection(0) = pos[0];
+        projection(1) = pos[1];
+        projection(2) = pos[2];
+    }
+
+    virtual int luaProjectCallbackSize() const
+    {
+        return task->projectionEvaluation.dim;
+    }
+
+    virtual void luaProjectCallback(const ob::State *state, ob::EuclideanProjection& projection) const
+    {
+        RobotDef *robot = robots[task->robotHandle];
+        const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
+    }
+
     TaskDef *task;
     int dim;
 };
@@ -1005,7 +1073,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         if(task->stateValidation.type == TaskDef::StateValidation::DEFAULT)
             s << " default";
         else if(task->stateValidation.type == TaskDef::StateValidation::CALLBACK)
-            s << std::endl << prefix << "    callback: " << task->stateValidatino.callback;
+            s << std::endl << prefix << "    callback: " << task->stateValidation.callback;
         else
             s << " ???";
         s << std::endl;
@@ -1437,8 +1505,8 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
-#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback)"
-const int inArgs_SET_PROJ_EVAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback, number projectionSize)"
+const int inArgs_SET_PROJ_EVAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
 
 void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1453,6 +1521,8 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
+        std::string callback = inData->at(1).stringData[0];
+		simInt projectionSize = inData->at(2).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1468,10 +1538,14 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        RobotDef *robot = robots[task->robotHandle];
+        if(projectionSize < 1)
+        {
+			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Projection size must be positive.");
+            break;
+        }
 
-        simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Method not implemented.");
-        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+        task->projectionEvaluation.dim = projectionSize;
+        task->projectionEvaluation.callback = callback;
 
         returnResult = 1;
 	}
