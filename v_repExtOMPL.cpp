@@ -1544,9 +1544,18 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
-        task->projectionEvaluation.dim = projectionSize;
-        task->projectionEvaluation.callback = callback;
+        if(callback == "")
+        {
+            task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
+            task->projectionEvaluation.dim = 0;
+            task->projectionEvaluation.callback = "";
+        }
+        else
+        {
+            task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
+            task->projectionEvaluation.dim = projectionSize;
+            task->projectionEvaluation.callback = callback;
+        }
 
         returnResult = 1;
 	}
@@ -1573,6 +1582,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
+        std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1588,10 +1598,16 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        RobotDef *robot = robots[task->robotHandle];
-
-        simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Method not implemented.");
-        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+        if(callback == "")
+        {
+            task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
+            task->stateValidation.callback = "";
+        }
+        else
+        {
+            task->stateValidation.type = TaskDef::StateValidation::CALLBACK;
+            task->stateValidation.callback = callback;
+        }
 
         returnResult = 1;
 	}
