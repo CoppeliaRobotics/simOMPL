@@ -379,8 +379,58 @@ protected:
 
     virtual void luaProjectCallback(const ob::State *state, ob::EuclideanProjection& projection) const
     {
+        std::vector<double> stateVec;
+        statespace->copyToReals(stateVec, state);
+
         RobotDef *robot = robots[task->robotHandle];
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
+
+#if 0
+        // The expected return arguments (2):
+        const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+
+        SLuaCallBack c;
+        CLuaFunctionData D;
+
+        // Prepare the input arguments:
+        std::vector<float> stateVecf;
+        for(int i = 0; i < stateVec.size(); i++)
+            stateVecf.push_back(stateVec[i]);
+        D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
+        D.writeDataToLua_luaFunctionCall(&c, outArgs);
+
+        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluator.callback << "..." << std::endl;
+
+        // Call the function "test" in the calling script:
+        if(simCallScriptFunction(p->scriptID, task->projectionEvaluator.callback, &c, NULL) != -1)
+        {
+            // the call succeeded
+
+            // Now check the return arguments:
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluator.callback))
+            {
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback << " returned ";
+                std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
+                for(int i = 0; i < outData->at(0).floatData.size(); i++)
+                {
+                    projection(i) = outData->at(0).floatData[i];
+                    std::cout << (i ? ", " : "") << outData->at(0).floatData[i];
+                }
+                std::cout << std::endl;
+            }
+            else
+            {
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback << " return type(s) are wrong" << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluator.callback << " failed" << std::endl;
+        }
+
+        // Release the data:
+        D.releaseBuffers_luaFunctionCall(&c);
+#endif
     }
 
     TaskDef *task;
@@ -745,6 +795,9 @@ protected:
 
     virtual bool checkCallback(const ob::State *state, double *distance) const
     {
+        std::vector<double> stateVec;
+        statespace->copyToReals(stateVec, state);
+
         double dist = std::numeric_limits<double>::infinity();
         bool ret = false;
 
