@@ -978,20 +978,45 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < task->startState.size(); i++)
             s << (i ? ", " : "") << task->startState[i];
         s << "}" << std::endl;
+        s << prefix << "goal:";
         switch(task->goal.type)
         {
         case TaskDef::Goal::GOAL_STATE:
-            s << prefix << "goal state: {";
+            s << std::endl;
+            s << prefix << "    goal state: {";
             for(int i = 0; i < task->goal.state.size(); i++)
                 s << (i ? ", " : "") << task->goal.state[i];
             s << "}" << std::endl;
             break;
         case TaskDef::Goal::GOAL_DUMMY_PAIR:
-            s << prefix << "goal dummy:" << std::endl;
+            s << std::endl;
             s << prefix << "    robot dummy:" << task->goal.dummyPair.robotDummy << std::endl;
             s << prefix << "    goal dummy:" << task->goal.dummyPair.goalDummy << std::endl;
             break;
+        case TaskDef::Goal::GOAL_CALLBACK:
+            s << std::endl;
+            s << prefix << "    callback: " << task->goal.callback << std::endl;
+            break;
+        default:
+            s << " ???" << std::endl;
+            break;
         }
+        s << prefix << "state validation:";
+        if(task->stateValidation.type == TaskDef::StateValidation::DEFAULT)
+            s << " default";
+        else if(task->stateValidation.type == TaskDef::StateValidation::CALLBACK)
+            s << std::endl << prefix << "    callback: " << task->stateValidatino.callback;
+        else
+            s << " ???";
+        s << std::endl;
+        s << prefix << "projection evaluation:";
+        if(task->projectionEvaluation.type == TaskDef::ProjectionEvaluation::DEFAULT)
+            s << " default";
+        else if(task->projectionEvaluation.type == TaskDef::ProjectionEvaluation::CALLBACK)
+            s << std::endl << prefix << "    callback: " << task->projectionEvaluation.callback;
+        else
+            s << " ???";
+        s << std::endl;
 
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
