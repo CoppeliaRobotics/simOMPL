@@ -631,7 +631,54 @@ protected:
 
     virtual bool checkCallback(const ob::State *state) const
     {
-        return true;
+        std::vector<double> stateVec;
+        statespace->copyToReals(stateVec, state);
+
+        bool ret = false;
+
+#if 0
+        // The expected return arguments (2):
+        const int outArgs[]={1, sim_lua_arg_bool, 0};
+
+        SLuaCallBack c;
+        CLuaFunctionData D;
+
+        // Prepare the input arguments:
+        std::vector<float> stateVecf;
+        for(int i = 0; i < stateVec.size(); i++)
+            stateVecf.push_back(stateVec[i]);
+        D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
+        D.writeDataToLua_luaFunctionCall(&c, outArgs);
+
+        std::cout << "StateValidityChecker::checkCallback - calling Lua callback " << task->stateValidation.callback << "..." << std::endl;
+
+        // Call the function "test" in the calling script:
+        if(simCallScriptFunction(p->scriptID, task->stateValidation.callback, &c, NULL) != -1)
+        {
+            // the call succeeded
+
+            // Now check the return arguments:
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback))
+            {
+                std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
+                ret = outData->at(0).boolData[0];
+                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback << " returned " << ret << std::endl;
+            }
+            else
+            {
+                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback << " return type(s) are wrong" << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "StateValidityChecker::checkCallback - call to Lua callback " << task->stateValidation.callback << " failed" << std::endl;
+        }
+
+        // Release the data:
+        D.releaseBuffers_luaFunctionCall(&c);
+#endif
+
+        return ret;
     }
 
     ob::StateSpacePtr statespace;
