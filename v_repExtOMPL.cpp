@@ -582,6 +582,18 @@ public:
 
     virtual bool isValid(const ob::State *state) const
     {
+        switch(task->stateValidation.type)
+        {
+        case TaskDef::StateValidation::DEFAULT:
+            return checkDefault(state);
+        case TaskDef::StateValidation::CALLBACK:
+            return checkCallback(state);
+        }
+    }
+
+protected:
+    virtual bool checkDefault(const ob::State *state) const
+    {
         RobotDef *robot = robots[task->robotHandle];
 
         //ob::CompoundStateSpace *ss = statespace->as<ob::CompoundStateSpace>();
@@ -617,7 +629,11 @@ public:
         return !inCollision;
     }
 
-protected:
+    virtual bool checkCallback(const ob::State *state) const
+    {
+        return true;
+    }
+
     ob::StateSpacePtr statespace;
     TaskDef *task;
 };
@@ -637,6 +653,24 @@ public:
     }
 
     virtual bool isSatisfied(const ob::State *state, double *distance) const
+    {
+        switch(task->goal.type)
+        {
+        case TaskDef::Goal::GOAL_STATE:
+            // silence -Wswitch warning
+            // if really type is GOAL_STATE we are not using this class for goal check
+            return false;
+        case TaskDef::Goal::GOAL_DUMMY_PAIR:
+            return checkDummyPair(state, distance);
+        case TaskDef::Goal::GOAL_CALLBACK:
+            return checkCallback(state, distance);
+        }
+
+        return false;
+    }
+
+protected:
+    virtual bool checkDummyPair(const ob::State *state, double *distance) const
     {
         ob::StateSpacePtr statespace = getSpaceInformation()->getStateSpace();
 
@@ -662,7 +696,12 @@ public:
         return satisfied;
     }
 
-protected:
+    virtual bool checkCallback(const ob::State *state, double *distance) const
+    {
+        *distance = std::numeric_limits<double>::infinity();
+        return false;
+    }
+
     TaskDef *task;
     double tolerance;
 };
@@ -1342,9 +1381,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             // goal is specified with a state
             setup.setGoalState(goal);
         }
-        else if(task->goal.type == TaskDef::Goal::GOAL_DUMMY_PAIR)
+        else if(task->goal.type == TaskDef::Goal::GOAL_DUMMY_PAIR || task->goal.type == TaskDef::Goal::GOAL_CALLBACK)
         {
-            // goal is specified by a dummy pair -> create goal class
             ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
             setup.setGoal(goal);
         }
