@@ -1532,12 +1532,6 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(robots.find(task->robotHandle) == robots.end())
-        {
-			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
         if(projectionSize < 1)
         {
 			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Projection size must be positive.");
@@ -1592,12 +1586,6 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(robots.find(task->robotHandle) == robots.end())
-        {
-			simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
         if(callback == "")
         {
             task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
@@ -1634,6 +1622,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
+        std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1649,10 +1638,16 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        RobotDef *robot = robots[task->robotHandle];
-
-        simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Method not implemented.");
-        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+        if(callback == "")
+        {
+			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid robot handle.");
+            break;
+        }
+        else
+        {
+            task->goal.type = TaskDef::Goal::GOAL_CALLBACK;
+            task->goal.callback = callback;
+        }
 
         returnResult = 1;
 	}
