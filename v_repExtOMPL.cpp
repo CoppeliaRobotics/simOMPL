@@ -137,12 +137,28 @@ struct TaskDef
     // goal can be specified in different ways:
     struct Goal
     {
-        enum {GOAL_STATE, GOAL_DUMMY_PAIR} type;
+        enum {GOAL_STATE, GOAL_DUMMY_PAIR, GOAL_CALLBACK} type;
         // goal state:
         std::vector<simFloat> state;
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
+        // goal callback:
+        std::string callback;
     } goal;
+    // state validation:
+    struct StateValidation
+    {
+        enum {DEFAULT, CALLBACK} type;
+        // state validation callback:
+        std::string callback;
+    } stateValidation;
+    // projection evaluation:
+    struct ProjectionEvaluation
+    {
+        enum {DEFAULT, CALLBACK} type;
+        // projection evaluation callback:
+        std::string callback;
+    } projectionEvaluation;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -841,6 +857,8 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
         task->header.handle = nextTaskHandle++;
         task->header.name = name;
+        task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
+        task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         tasks[task->header.handle] = task;
         returnResult = task->header.handle;
 	}
