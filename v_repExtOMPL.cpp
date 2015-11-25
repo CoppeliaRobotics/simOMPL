@@ -1301,6 +1301,233 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_READ_STATE_COMMAND "simExtOMPL_readState"
+#define LUA_READ_STATE_APIHELP "number result, table state=" LUA_READ_STATE_COMMAND "(number taskHandle)"
+const int inArgs_READ_STATE[]={1, sim_lua_arg_int, 0};
+
+void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+    std::vector<simFloat> stateOut;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_READ_STATE, inArgs_READ_STATE[0], LUA_READ_STATE_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_READ_STATE_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(robots.find(task->robotHandle) == robots.end())
+        {
+			simSetLastError(LUA_READ_STATE_COMMAND, "Invalid robot handle.");
+            break;
+        }
+
+        RobotDef *robot = robots[task->robotHandle];
+
+        simSetLastError(LUA_READ_STATE_COMMAND, "Method not implemented.");
+        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.pushOutData(CLuaFunctionDataItem(stateOut));
+	D.writeDataToLua(p);
+}
+
+#define LUA_WRITE_STATE_COMMAND "simExtOMPL_writeState"
+#define LUA_WRITE_STATE_APIHELP "number result=" LUA_WRITE_STATE_COMMAND "(number taskHandle, table state)"
+const int inArgs_WRITE_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0};
+
+void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_WRITE_STATE, inArgs_WRITE_STATE[0], LUA_WRITE_STATE_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(robots.find(task->robotHandle) == robots.end())
+        {
+			simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid robot handle.");
+            break;
+        }
+
+        RobotDef *robot = robots[task->robotHandle];
+
+        simSetLastError(LUA_WRITE_STATE_COMMAND, "Method not implemented.");
+        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
+#define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
+#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback)"
+const int inArgs_SET_PROJ_EVAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+
+void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_PROJ_EVAL_CB, inArgs_SET_PROJ_EVAL_CB[0], LUA_SET_PROJ_EVAL_CB_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(robots.find(task->robotHandle) == robots.end())
+        {
+			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid robot handle.");
+            break;
+        }
+
+        RobotDef *robot = robots[task->robotHandle];
+
+        simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Method not implemented.");
+        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
+#define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
+#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
+const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+
+void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_STATE_VAL_CB, inArgs_SET_STATE_VAL_CB[0], LUA_SET_STATE_VAL_CB_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(robots.find(task->robotHandle) == robots.end())
+        {
+			simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid robot handle.");
+            break;
+        }
+
+        RobotDef *robot = robots[task->robotHandle];
+
+        simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Method not implemented.");
+        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
+#define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
+#define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
+const int inArgs_SET_GOAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+
+void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_GOAL_CB, inArgs_SET_GOAL_CB[0], LUA_SET_GOAL_CB_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+		simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(robots.find(task->robotHandle) == robots.end())
+        {
+			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid robot handle.");
+            break;
+        }
+
+        RobotDef *robot = robots[task->robotHandle];
+
+        simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Method not implemented.");
+        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+
+        returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
 VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 {
 	char curDirAndFile[1024];
@@ -1349,56 +1576,42 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 	std::vector<int> inArgs;
 
 	// Register Lua commands:
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_CREATE_STATE_SPACE, inArgs);
-	simRegisterCustomLuaFunction(LUA_CREATE_STATE_SPACE_COMMAND, LUA_CREATE_STATE_SPACE_APIHELP, &inArgs[0], LUA_CREATE_STATE_SPACE_CALLBACK);
+#define REGISTER_LUA_COMMAND(NAME) { \
+	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_##NAME, inArgs); \
+	simRegisterCustomLuaFunction(LUA_##NAME##_COMMAND, LUA_##NAME##_APIHELP, &inArgs[0], LUA_##NAME##_CALLBACK); \
+}
 
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_DESTROY_STATE_SPACE, inArgs);
-	simRegisterCustomLuaFunction(LUA_DESTROY_STATE_SPACE_COMMAND, LUA_DESTROY_STATE_SPACE_APIHELP, &inArgs[0], LUA_DESTROY_STATE_SPACE_CALLBACK);
+	REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
+	REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
+	REGISTER_LUA_COMMAND(CREATE_ROBOT);
+	REGISTER_LUA_COMMAND(DESTROY_ROBOT);
+	REGISTER_LUA_COMMAND(SET_STATE_SPACE);
+	REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
+	REGISTER_LUA_COMMAND(CREATE_TASK);
+	REGISTER_LUA_COMMAND(DESTROY_TASK);
+	REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
+	REGISTER_LUA_COMMAND(SET_ROBOT);
+	REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
+	REGISTER_LUA_COMMAND(SET_START_STATE);
+	REGISTER_LUA_COMMAND(SET_GOAL_STATE);
+	REGISTER_LUA_COMMAND(SET_GOAL);
+	REGISTER_LUA_COMMAND(COMPUTE);
+    REGISTER_LUA_COMMAND(READ_STATE);
+    REGISTER_LUA_COMMAND(WRITE_STATE);
+    REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
+    REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
+    REGISTER_LUA_COMMAND(SET_GOAL_CB);
 
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_CREATE_ROBOT, inArgs);
-	simRegisterCustomLuaFunction(LUA_CREATE_ROBOT_COMMAND, LUA_CREATE_ROBOT_APIHELP, &inArgs[0], LUA_CREATE_ROBOT_CALLBACK);
+#undef REGISTER_LUA_COMMAND
+#define REGISTER_LUA_VARIABLE(NAME) simRegisterCustomLuaVariable(#NAME, (boost::lexical_cast<std::string>(NAME)).c_str())
 
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_DESTROY_ROBOT, inArgs);
-	simRegisterCustomLuaFunction(LUA_DESTROY_ROBOT_COMMAND, LUA_DESTROY_ROBOT_APIHELP, &inArgs[0], LUA_DESTROY_ROBOT_CALLBACK);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position3d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose3d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_joint_position);
 
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_STATE_SPACE, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_STATE_SPACE_COMMAND, LUA_SET_STATE_SPACE_APIHELP, &inArgs[0], LUA_SET_STATE_SPACE_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_COLLISION_OBJECTS, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_COLLISION_OBJECTS_COMMAND, LUA_SET_COLLISION_OBJECTS_APIHELP, &inArgs[0], LUA_SET_COLLISION_OBJECTS_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_CREATE_TASK, inArgs);
-	simRegisterCustomLuaFunction(LUA_CREATE_TASK_COMMAND, LUA_CREATE_TASK_APIHELP, &inArgs[0], LUA_CREATE_TASK_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_DESTROY_TASK, inArgs);
-	simRegisterCustomLuaFunction(LUA_DESTROY_TASK_COMMAND, LUA_DESTROY_TASK_APIHELP, &inArgs[0], LUA_DESTROY_TASK_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_PRINT_TASK_INFO, inArgs);
-	simRegisterCustomLuaFunction(LUA_PRINT_TASK_INFO_COMMAND, LUA_PRINT_TASK_INFO_APIHELP, &inArgs[0], LUA_PRINT_TASK_INFO_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_ROBOT, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_ROBOT_COMMAND, LUA_SET_ROBOT_APIHELP, &inArgs[0], LUA_SET_ROBOT_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_ENVIRONMENT, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_ENVIRONMENT_COMMAND, LUA_SET_ENVIRONMENT_APIHELP, &inArgs[0], LUA_SET_ENVIRONMENT_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_START_STATE, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_START_STATE_COMMAND, LUA_SET_START_STATE_APIHELP, &inArgs[0], LUA_SET_START_STATE_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_GOAL_STATE, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_GOAL_STATE_COMMAND, LUA_SET_GOAL_STATE_APIHELP, &inArgs[0], LUA_SET_GOAL_STATE_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_SET_GOAL, inArgs);
-	simRegisterCustomLuaFunction(LUA_SET_GOAL_COMMAND, LUA_SET_GOAL_APIHELP, &inArgs[0], LUA_SET_GOAL_CALLBACK);
-
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_COMPUTE, inArgs);
-	simRegisterCustomLuaFunction(LUA_COMPUTE_COMMAND, LUA_COMPUTE_APIHELP, &inArgs[0], LUA_COMPUTE_CALLBACK);
-
-    simRegisterCustomLuaVariable("simx_ompl_statespacetype_position2d", (boost::lexical_cast<std::string>(int(simx_ompl_statespacetype_position2d))).c_str());
-    simRegisterCustomLuaVariable("simx_ompl_statespacetype_pose2d", (boost::lexical_cast<std::string>(int(simx_ompl_statespacetype_pose2d))).c_str());
-    simRegisterCustomLuaVariable("simx_ompl_statespacetype_position3d", (boost::lexical_cast<std::string>(int(simx_ompl_statespacetype_position3d))).c_str());
-    simRegisterCustomLuaVariable("simx_ompl_statespacetype_pose3d", (boost::lexical_cast<std::string>(int(simx_ompl_statespacetype_pose3d))).c_str());
-    simRegisterCustomLuaVariable("simx_ompl_statespacetype_joint_position", (boost::lexical_cast<std::string>(int(simx_ompl_statespacetype_joint_position))).c_str());
+#undef REGISTER_LUA_VARIABLE
 
 	return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
