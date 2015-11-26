@@ -1117,6 +1117,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
         task->header.handle = nextTaskHandle++;
         task->header.name = name;
+        task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         tasks[task->header.handle] = task;
