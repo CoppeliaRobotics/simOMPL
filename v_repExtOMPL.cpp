@@ -155,23 +155,21 @@ struct TaskDef
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
         // goal callback:
-        std::string callback;
+        struct {std::string function; simInt scriptId;} callback;
     } goal;
     // state validation:
     struct StateValidation
     {
         enum {DEFAULT, CALLBACK} type;
         // state validation callback:
-        std::string callback;
+        struct {std::string function; simInt scriptId;} callback;
     } stateValidation;
     // projection evaluation:
     struct ProjectionEvaluation
     {
         enum {DEFAULT, CALLBACK} type;
         // projection evaluation callback:
-        std::string callback;
-        // size of projection when using callback
-        int dim;
+        struct {std::string function; simInt scriptId; int dim;} callback;
     } projectionEvaluation;
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
@@ -385,7 +383,7 @@ protected:
 
     virtual int luaProjectCallbackSize() const
     {
-        return task->projectionEvaluation.dim;
+        return task->projectionEvaluation.callback.dim;
     }
 
     virtual void luaProjectCallback(const ob::State *state, ob::EuclideanProjection& projection) const
@@ -398,7 +396,7 @@ protected:
 
 #if 0
         // The expected return arguments (2):
-        const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+        const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, luaProjectCallbackSize()};
 
         SLuaCallBack c;
         CLuaFunctionData D;
@@ -410,17 +408,17 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluator.callback << "..." << std::endl;
+        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluator.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(p->scriptID, task->projectionEvaluator.callback, &c, NULL) != -1)
+        if(simCallScriptFunction(task->projectionEvaluator.callback.scriptId, task->projectionEvaluator.callback.function, &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluator.callback))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluator.callback.function))
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback << " returned ";
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback.function << " returned ";
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 for(int i = 0; i < outData->at(0).floatData.size(); i++)
                 {
@@ -431,12 +429,12 @@ protected:
             }
             else
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback << " return type(s) are wrong" << std::endl;
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback.function << " return type(s) are wrong" << std::endl;
             }
         }
         else
         {
-            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluator.callback << " failed" << std::endl;
+            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluator.callback.function << " failed" << std::endl;
         }
 
         // Release the data:
@@ -710,28 +708,28 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "StateValidityChecker::checkCallback - calling Lua callback " << task->stateValidation.callback << "..." << std::endl;
+        std::cout << "StateValidityChecker::checkCallback - calling Lua callback " << task->stateValidation.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(p->scriptID, task->stateValidation.callback, &c, NULL) != -1)
+        if(simCallScriptFunction(task->stateValidation.callback.scriptId, task->stateValidation.callback.function, &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback.function))
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
-                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback << " returned " << ret << std::endl;
+                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback.function << " returned " << ret << std::endl;
             }
             else
             {
-                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback << " return type(s) are wrong" << std::endl;
+                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback.function << " return type(s) are wrong" << std::endl;
             }
         }
         else
         {
-            std::cout << "StateValidityChecker::checkCallback - call to Lua callback " << task->stateValidation.callback << " failed" << std::endl;
+            std::cout << "StateValidityChecker::checkCallback - call to Lua callback " << task->stateValidation.callback.function << " failed" << std::endl;
         }
 
         // Release the data:
@@ -823,29 +821,29 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "Goal::checkCallback - calling Lua callback " << task->goal.callback << "..." << std::endl;
+        std::cout << "Goal::checkCallback - calling Lua callback " << task->goal.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(p->scriptID, task->goal.callback, &c, NULL) != -1)
+        if(simCallScriptFunction(task->goal.callback.scriptId, task->goal.callback.function, &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->goal.callback))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->goal.callback.function))
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
                 dist = outData->at(1).floatData[0];
-                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback << " returned " << ret << ", " << dist << std::endl;
+                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback.function << " returned " << ret << ", " << dist << std::endl;
             }
             else
             {
-                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback << " return type(s) are wrong" << std::endl;
+                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback.function << " return type(s) are wrong" << std::endl;
             }
         }
         else
         {
-            std::cout << "Goal::checkCallback - call to Lua callback " << task->goal.callback << " failed" << std::endl;
+            std::cout << "Goal::checkCallback - call to Lua callback " << task->goal.callback.function << " failed" << std::endl;
         }
 
         // Release the data:
@@ -1257,28 +1255,46 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             break;
         case TaskDef::Goal::CALLBACK:
             s << std::endl;
-            s << prefix << "    callback: " << task->goal.callback << std::endl;
+            s << prefix << "    callback:" << std::endl;
+            s << prefix << "        scriptId: " << task->goal.callback.scriptId << std::endl;
+            s << prefix << "        function: " << task->goal.callback.function << std::endl;
             break;
         default:
             s << " ???" << std::endl;
             break;
         }
         s << prefix << "state validation:";
-        if(task->stateValidation.type == TaskDef::StateValidation::DEFAULT)
-            s << " default";
-        else if(task->stateValidation.type == TaskDef::StateValidation::CALLBACK)
-            s << std::endl << prefix << "    callback: " << task->stateValidation.callback;
-        else
-            s << " ???";
-        s << std::endl;
+        switch(task->stateValidation.type)
+        {
+        case TaskDef::StateValidation::DEFAULT:
+            s << " default" << std::endl;
+            break;
+        case TaskDef::StateValidation::CALLBACK:
+            s << std::endl;
+            s << prefix << "    callback:" << std::endl;
+            s << prefix << "        scriptId: " << task->stateValidation.callback.scriptId << std::endl;
+            s << prefix << "        function: " << task->stateValidation.callback.function << std::endl;
+            break;
+        default:
+            s << " ???" << std::endl;
+            break;
+        }
         s << prefix << "projection evaluation:";
-        if(task->projectionEvaluation.type == TaskDef::ProjectionEvaluation::DEFAULT)
-            s << " default";
-        else if(task->projectionEvaluation.type == TaskDef::ProjectionEvaluation::CALLBACK)
-            s << std::endl << prefix << "    callback: " << task->projectionEvaluation.callback;
-        else
-            s << " ???";
-        s << std::endl;
+        switch(task->projectionEvaluation.type)
+        {
+        case TaskDef::ProjectionEvaluation::DEFAULT:
+            s << " default" << std::endl;
+            break;
+        case TaskDef::ProjectionEvaluation::CALLBACK:
+            s << std::endl;
+            s << prefix << "    callback:" << std::endl;
+            s << prefix << "        scriptId:" << task->projectionEvaluation.callback.scriptId << std::endl;
+            s << prefix << "        function:" << task->projectionEvaluation.callback.function << std::endl;
+            break;
+        default:
+            s << " ???" << std::endl;
+            break;
+        }
 
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
@@ -1698,8 +1714,8 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
-#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback, number projectionSize)"
-const int inArgs_SET_PROJ_EVAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
+#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, number scriptId, string callback, number projectionSize)"
+const int inArgs_SET_PROJ_EVAL_CB[]={4, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
 
 void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1714,8 +1730,9 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        std::string callback = inData->at(1).stringData[0];
-		simInt projectionSize = inData->at(2).intData[0];
+        simInt scriptId = inData->at(1).intData[0];
+        std::string callback = inData->at(2).stringData[0];
+		simInt projectionSize = inData->at(3).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1731,17 +1748,21 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
+        // TODO: validate scriptId argument
+
         if(callback == "")
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
-            task->projectionEvaluation.dim = 0;
-            task->projectionEvaluation.callback = "";
+            task->projectionEvaluation.callback.dim = 0;
+            task->projectionEvaluation.callback.scriptId = 0;
+            task->projectionEvaluation.callback.function = "";
         }
         else
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
-            task->projectionEvaluation.dim = projectionSize;
-            task->projectionEvaluation.callback = callback;
+            task->projectionEvaluation.callback.dim = projectionSize;
+            task->projectionEvaluation.callback.scriptId = scriptId;
+            task->projectionEvaluation.callback.function = callback;
         }
 
         returnResult = 1;
@@ -1753,8 +1774,8 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
-#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
-const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, number scriptId, string callback)"
+const int inArgs_SET_STATE_VAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
 
 void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1769,7 +1790,8 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        std::string callback = inData->at(1).stringData[0];
+        simInt scriptId = inData->at(1).intData[0];
+        std::string callback = inData->at(2).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1782,12 +1804,14 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
         if(callback == "")
         {
             task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
-            task->stateValidation.callback = "";
+            task->stateValidation.callback.scriptId = 0;
+            task->stateValidation.callback.function = "";
         }
         else
         {
             task->stateValidation.type = TaskDef::StateValidation::CALLBACK;
-            task->stateValidation.callback = callback;
+            task->stateValidation.callback.scriptId = scriptId;
+            task->stateValidation.callback.function = callback;
         }
 
         returnResult = 1;
@@ -1799,8 +1823,8 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
-#define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
-const int inArgs_SET_GOAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+#define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, number scriptId, string callback)"
+const int inArgs_SET_GOAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
 
 void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1815,7 +1839,8 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        std::string callback = inData->at(1).stringData[0];
+        simInt scriptId = inData->at(1).intData[0];
+        std::string callback = inData->at(2).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1839,7 +1864,8 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         else
         {
             task->goal.type = TaskDef::Goal::CALLBACK;
-            task->goal.callback = callback;
+            task->goal.callback.scriptId = scriptId;
+            task->goal.callback.function = callback;
         }
 
         returnResult = 1;
