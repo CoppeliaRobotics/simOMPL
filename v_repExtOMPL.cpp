@@ -146,7 +146,7 @@ struct TaskDef
     // goal can be specified in different ways:
     struct Goal
     {
-        enum {GOAL_STATE, GOAL_DUMMY_PAIR, GOAL_CALLBACK} type;
+        enum {STATE, DUMMY_PAIR, CALLBACK} type;
         // goal state:
         std::vector<simFloat> state;
         // goal dummy pair:
@@ -228,13 +228,13 @@ public:
             case TaskDef::ProjectionEvaluation::DEFAULT:
                 switch(task->goal.type)
                 {
-                    case TaskDef::Goal::GOAL_STATE:
+                    case TaskDef::Goal::STATE:
                         dim = defaultProjectionSize();
                         break;
-                    case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                    case TaskDef::Goal::DUMMY_PAIR:
                         dim = dummyPairProjectionSize();
                         break;
-                    case TaskDef::Goal::GOAL_CALLBACK:
+                    case TaskDef::Goal::CALLBACK:
                         dim = 0;
                         // this situation is not feasible
                         // a warning should be issued at begin of compute
@@ -282,10 +282,10 @@ public:
             case TaskDef::ProjectionEvaluation::DEFAULT:
                 switch(task->goal.type)
                 {
-                    case TaskDef::Goal::GOAL_STATE:
+                    case TaskDef::Goal::STATE:
                         defaultProjection(state, projection);
                         break;
-                    case TaskDef::Goal::GOAL_DUMMY_PAIR:
+                    case TaskDef::Goal::DUMMY_PAIR:
                         dummyPairProjection(state, projection);
                         break;
                     default:
@@ -762,13 +762,13 @@ public:
     {
         switch(task->goal.type)
         {
-        case TaskDef::Goal::GOAL_STATE:
+        case TaskDef::Goal::STATE:
             // silence -Wswitch warning
-            // if really type is GOAL_STATE we are not using this class for goal check
+            // if really type is STATE we are not using this class for goal check
             return false;
-        case TaskDef::Goal::GOAL_DUMMY_PAIR:
+        case TaskDef::Goal::DUMMY_PAIR:
             return checkDummyPair(state, distance);
-        case TaskDef::Goal::GOAL_CALLBACK:
+        case TaskDef::Goal::CALLBACK:
             return checkCallback(state, distance);
         }
 
@@ -1243,19 +1243,19 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         s << prefix << "goal:";
         switch(task->goal.type)
         {
-        case TaskDef::Goal::GOAL_STATE:
+        case TaskDef::Goal::STATE:
             s << std::endl;
             s << prefix << "    goal state: {";
             for(int i = 0; i < task->goal.state.size(); i++)
                 s << (i ? ", " : "") << task->goal.state[i];
             s << "}" << std::endl;
             break;
-        case TaskDef::Goal::GOAL_DUMMY_PAIR:
+        case TaskDef::Goal::DUMMY_PAIR:
             s << std::endl;
             s << prefix << "    robot dummy:" << task->goal.dummyPair.robotDummy << std::endl;
             s << prefix << "    goal dummy:" << task->goal.dummyPair.goalDummy << std::endl;
             break;
-        case TaskDef::Goal::GOAL_CALLBACK:
+        case TaskDef::Goal::CALLBACK:
             s << std::endl;
             s << prefix << "    callback: " << task->goal.callback << std::endl;
             break;
@@ -1431,7 +1431,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->goal.type = TaskDef::Goal::GOAL_STATE;
+        task->goal.type = TaskDef::Goal::STATE;
         task->goal.state.clear();
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->goal.state.push_back(inData->at(1).floatData[i]);
@@ -1468,7 +1468,7 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->goal.type = TaskDef::Goal::GOAL_DUMMY_PAIR;
+        task->goal.type = TaskDef::Goal::DUMMY_PAIR;
         task->goal.dummyPair.goalDummy = inData->at(1).intData[0];
         task->goal.dummyPair.robotDummy = inData->at(2).intData[0];
         returnResult = 1;
@@ -1527,7 +1527,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             start[i] = task->startState[i];
         setup.setStartState(start);
 
-        if(task->goal.type == TaskDef::Goal::GOAL_STATE)
+        if(task->goal.type == TaskDef::Goal::STATE)
         {
             ob::ScopedState<> goal(space);
             // TODO: check if task->goal.state is set/valid
@@ -1536,7 +1536,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             // goal is specified with a state
             setup.setGoalState(goal);
         }
-        else if(task->goal.type == TaskDef::Goal::GOAL_DUMMY_PAIR || task->goal.type == TaskDef::Goal::GOAL_CALLBACK)
+        else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CALLBACK)
         {
             ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
             setup.setGoal(goal);
@@ -1838,7 +1838,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         }
         else
         {
-            task->goal.type = TaskDef::Goal::GOAL_CALLBACK;
+            task->goal.type = TaskDef::Goal::CALLBACK;
             task->goal.callback = callback;
         }
 
