@@ -265,7 +265,7 @@ public:
         // TODO: handle this in the plugin API
         cellSizes_.resize(dim);
         for(int i = 0; i < dim; i++)
-            cellSizes_[i] = 0.25;
+            cellSizes_[i] = 0.05;
     }
 
     virtual void project(const ob::State *state, ob::EuclideanProjection& projection) const
