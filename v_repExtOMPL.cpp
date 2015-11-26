@@ -394,7 +394,6 @@ protected:
         RobotDef *robot = robots[task->robotHandle];
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-#if 0
         // The expected return arguments (2):
         const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, luaProjectCallbackSize()};
 
@@ -408,17 +407,17 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluator.callback.function << "..." << std::endl;
+        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluation.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->projectionEvaluator.callback.scriptId, task->projectionEvaluator.callback.function, &c, NULL) != -1)
+        if(simCallScriptFunction(task->projectionEvaluation.callback.scriptId, task->projectionEvaluation.callback.function.c_str(), &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluator.callback.function))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluation.callback.function.c_str()))
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback.function << " returned ";
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluation.callback.function << " returned ";
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 for(int i = 0; i < outData->at(0).floatData.size(); i++)
                 {
@@ -429,17 +428,16 @@ protected:
             }
             else
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluator.callback.function << " return type(s) are wrong" << std::endl;
+                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluation.callback.function << " return type(s) are wrong" << std::endl;
             }
         }
         else
         {
-            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluator.callback.function << " failed" << std::endl;
+            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluation.callback.function << " failed" << std::endl;
         }
 
         // Release the data:
         D.releaseBuffers_luaFunctionCall(&c);
-#endif
     }
 
     TaskDef *task;
@@ -694,7 +692,6 @@ protected:
 
         bool ret = false;
 
-#if 0
         // The expected return arguments (2):
         const int outArgs[]={1, sim_lua_arg_bool, 0};
 
@@ -711,12 +708,12 @@ protected:
         std::cout << "StateValidityChecker::checkCallback - calling Lua callback " << task->stateValidation.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->stateValidation.callback.scriptId, task->stateValidation.callback.function, &c, NULL) != -1)
+        if(simCallScriptFunction(task->stateValidation.callback.scriptId, task->stateValidation.callback.function.c_str(), &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback.function))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback.function.c_str()))
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
@@ -734,7 +731,6 @@ protected:
 
         // Release the data:
         D.releaseBuffers_luaFunctionCall(&c);
-#endif
 
         return ret;
     }
@@ -807,7 +803,6 @@ protected:
         double dist = std::numeric_limits<double>::infinity();
         bool ret = false;
 
-#if 0
         // The expected return arguments (2):
         const int outArgs[]={2, sim_lua_arg_bool, 0, sim_lua_arg_float, 0};
 
@@ -824,12 +819,12 @@ protected:
         std::cout << "Goal::checkCallback - calling Lua callback " << task->goal.callback.function << "..." << std::endl;
 
         // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->goal.callback.scriptId, task->goal.callback.function, &c, NULL) != -1)
+        if(simCallScriptFunction(task->goal.callback.scriptId, task->goal.callback.function.c_str(), &c, NULL) != -1)
         {
             // the call succeeded
 
             // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->goal.callback.function))
+            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->goal.callback.function.c_str()))
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
@@ -848,7 +843,6 @@ protected:
 
         // Release the data:
         D.releaseBuffers_luaFunctionCall(&c);
-#endif
 
         *distance = dist;
         return ret;
