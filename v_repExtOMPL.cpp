@@ -229,15 +229,11 @@ public:
                 switch(task->goal.type)
                 {
                     case TaskDef::Goal::STATE:
+                    case TaskDef::Goal::CALLBACK:
                         dim = defaultProjectionSize();
                         break;
                     case TaskDef::Goal::DUMMY_PAIR:
                         dim = dummyPairProjectionSize();
-                        break;
-                    case TaskDef::Goal::CALLBACK:
-                        dim = 0;
-                        // this situation is not feasible
-                        // a warning should be issued at begin of compute
                         break;
                     default:
                         // this will never happen
@@ -283,19 +279,16 @@ public:
                 switch(task->goal.type)
                 {
                     case TaskDef::Goal::STATE:
+                    case TaskDef::Goal::CALLBACK:
                         defaultProjection(state, projection);
                         break;
                     case TaskDef::Goal::DUMMY_PAIR:
                         dummyPairProjection(state, projection);
                         break;
-                    default:
-                        break;
                 }
                 break;
             case TaskDef::ProjectionEvaluation::CALLBACK:
                 luaProjectCallback(state, projection);
-                break;
-            default:
                 break;
         }
     }
@@ -645,6 +638,7 @@ public:
         case TaskDef::StateValidation::CALLBACK:
             return checkCallback(state);
         }
+        return false;
     }
 
 protected:
@@ -1526,88 +1520,98 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
         RobotDef *robot = robots[task->robotHandle];
 
-        ob::StateSpacePtr space(new StateSpace(task));
-        task->stateSpacePtr = space;
-        ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
-        space->registerDefaultProjection(projectionEval);
-        og::SimpleSetup setup(space);
-        setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
-
-        ob::ScopedState<> start(space);
-        // TODO: check if task->startState is set and valid
-        for(int i = 0; i < task->startState.size(); i++)
-            start[i] = task->startState[i];
-        setup.setStartState(start);
-
-        if(task->goal.type == TaskDef::Goal::STATE)
+        try
         {
-            ob::ScopedState<> goal(space);
-            // TODO: check if task->goal.state is set and valid
-            for(int i = 0; i < task->goal.state.size(); i++)
-                goal[i] = task->goal.state[i];
-            setup.setGoalState(goal);
-        }
-        else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CALLBACK)
-        {
-            ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
-            setup.setGoal(goal);
-        }
+            ob::StateSpacePtr space(new StateSpace(task));
+            task->stateSpacePtr = space;
+            ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
+            space->registerDefaultProjection(projectionEval);
+            og::SimpleSetup setup(space);
+            setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
 
-        ob::SpaceInformationPtr si = setup.getSpaceInformation();
-        //ob::PlannerPtr planner(new og::BiTRRT(si));
-        //ob::PlannerPtr planner(new og::BITstar(si));
-        //ob::PlannerPtr planner(new og::BKPIECE1(si));
-        //ob::PlannerPtr planner(new og::CForest(si));
-        //ob::PlannerPtr planner(new og::EST(si)); // needs projection
-        //ob::PlannerPtr planner(new og::FMT(si));
-        ob::PlannerPtr planner(new og::KPIECE1(si)); // needs projection
-        //ob::PlannerPtr planner(new og::LazyPRM(si));
-        //ob::PlannerPtr planner(new og::LazyPRMstar(si));
-        //ob::PlannerPtr planner(new og::LazyRRT(si));
-        //ob::PlannerPtr planner(new og::LBKPIECE1(si));
-        //ob::PlannerPtr planner(new og::LBTRRT(si));
-        //ob::PlannerPtr planner(new og::LightningRetrieveRepair(si));
-        //ob::PlannerPtr planner(new og::PDST(si)); // needs projection
-        //ob::PlannerPtr planner(new og::PRM(si));
-        //ob::PlannerPtr planner(new og::PRMstar(si));
-        //ob::PlannerPtr planner(new og::pRRT(si));
-        //ob::PlannerPtr planner(new og::pSBL(si));
-        //ob::PlannerPtr planner(new og::RRT(si));
-        //ob::PlannerPtr planner(new og::RRTConnect(si));
-        //ob::PlannerPtr planner(new og::RRTstar(si));
-        //ob::PlannerPtr planner(new og::SBL(si)); // needs projection
-        //ob::PlannerPtr planner(new og::SPARS(si));
-        //ob::PlannerPtr planner(new og::SPARStwo(si));
-        //ob::PlannerPtr planner(new og::STRIDE(si));
-        //ob::PlannerPtr planner(new og::TRRT(si));
-        setup.setPlanner(planner);
-        ob::PlannerStatus solved = setup.solve(maxTime);
-        if(solved)
-        {
-            //simAddStatusbarMessage("OMPL: found solution:");
-            setup.simplifySolution();
-            //std::stringstream s;
-            og::PathGeometric& path = setup.getSolutionPath();
-            //path.print(s);
-            //simAddStatusbarMessage(s.str().c_str());
-            //simAddStatusbarMessage("OMPL: interpolated:");
-            path.interpolate();
-            //path.print(s);
-            //simAddStatusbarMessage(s.str().c_str());
-            for(int i = 0; i < path.getStateCount(); i++)
+            ob::ScopedState<> start(space);
+            // TODO: check if task->startState is set and valid
+            for(int i = 0; i < task->startState.size(); i++)
+                start[i] = task->startState[i];
+            setup.setStartState(start);
+
+            if(task->goal.type == TaskDef::Goal::STATE)
             {
-                const ob::StateSpace::StateType *s = path.getState(i);
-                std::vector<double> v;
-                space->copyToReals(v, s);
-                for(int i = 0; i < v.size(); i++)
-                    pathOut.push_back(v[i]);
+                ob::ScopedState<> goal(space);
+                // TODO: check if task->goal.state is set and valid
+                for(int i = 0; i < task->goal.state.size(); i++)
+                    goal[i] = task->goal.state[i];
+                setup.setGoalState(goal);
             }
+            else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CALLBACK)
+            {
+                ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
+                setup.setGoal(goal);
+            }
+
+            ob::SpaceInformationPtr si = setup.getSpaceInformation();
+            //ob::PlannerPtr planner(new og::BiTRRT(si));
+            //ob::PlannerPtr planner(new og::BITstar(si));
+            //ob::PlannerPtr planner(new og::BKPIECE1(si));
+            //ob::PlannerPtr planner(new og::CForest(si));
+            //ob::PlannerPtr planner(new og::EST(si)); // needs projection
+            //ob::PlannerPtr planner(new og::FMT(si));
+            ob::PlannerPtr planner(new og::KPIECE1(si)); // needs projection
+            //ob::PlannerPtr planner(new og::LazyPRM(si));
+            //ob::PlannerPtr planner(new og::LazyPRMstar(si));
+            //ob::PlannerPtr planner(new og::LazyRRT(si));
+            //ob::PlannerPtr planner(new og::LBKPIECE1(si));
+            //ob::PlannerPtr planner(new og::LBTRRT(si));
+            //ob::PlannerPtr planner(new og::LightningRetrieveRepair(si));
+            //ob::PlannerPtr planner(new og::PDST(si)); // needs projection
+            //ob::PlannerPtr planner(new og::PRM(si));
+            //ob::PlannerPtr planner(new og::PRMstar(si));
+            //ob::PlannerPtr planner(new og::pRRT(si));
+            //ob::PlannerPtr planner(new og::pSBL(si));
+            //ob::PlannerPtr planner(new og::RRT(si));
+            //ob::PlannerPtr planner(new og::RRTConnect(si));
+            //ob::PlannerPtr planner(new og::RRTstar(si));
+            //ob::PlannerPtr planner(new og::SBL(si)); // needs projection
+            //ob::PlannerPtr planner(new og::SPARS(si));
+            //ob::PlannerPtr planner(new og::SPARStwo(si));
+            //ob::PlannerPtr planner(new og::STRIDE(si));
+            //ob::PlannerPtr planner(new og::TRRT(si));
+            setup.setPlanner(planner);
+            ob::PlannerStatus solved = setup.solve(maxTime);
+            if(solved)
+            {
+                //simAddStatusbarMessage("OMPL: found solution:");
+                setup.simplifySolution();
+                //std::stringstream s;
+                og::PathGeometric& path = setup.getSolutionPath();
+                //path.print(s);
+                //simAddStatusbarMessage(s.str().c_str());
+                //simAddStatusbarMessage("OMPL: interpolated:");
+                path.interpolate();
+                //path.print(s);
+                //simAddStatusbarMessage(s.str().c_str());
+                for(int i = 0; i < path.getStateCount(); i++)
+                {
+                    const ob::StateSpace::StateType *s = path.getState(i);
+                    std::vector<double> v;
+                    space->copyToReals(v, s);
+                    for(int i = 0; i < v.size(); i++)
+                        pathOut.push_back(v[i]);
+                }
+            }
+            else
+            {
+                //simAddStatusbarMessage("OMPL: could not find solution.");
+            }
+            returnResult = 1;
         }
-        else
+        catch(ompl::Exception& ex)
         {
-            //simAddStatusbarMessage("OMPL: could not find solution.");
+            std::string s = "OMPL exception: ";
+            s += ex.what();
+            std::cout << s << std::endl;
+			simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
         }
-        returnResult = 1;
 	}
     while(0);
 
@@ -1709,8 +1713,8 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
-#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, number scriptId, string callback, number projectionSize)"
-const int inArgs_SET_PROJ_EVAL_CB[]={4, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
+#define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback, number projectionSize)"
+const int inArgs_SET_PROJ_EVAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
 
 void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1725,9 +1729,8 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        simInt scriptId = inData->at(1).intData[0];
-        std::string callback = inData->at(2).stringData[0];
-		simInt projectionSize = inData->at(3).intData[0];
+        std::string callback = inData->at(1).stringData[0];
+		simInt projectionSize = inData->at(2).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1756,7 +1759,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
             task->projectionEvaluation.callback.dim = projectionSize;
-            task->projectionEvaluation.callback.scriptId = scriptId;
+            task->projectionEvaluation.callback.scriptId = p->scriptID;
             task->projectionEvaluation.callback.function = callback;
         }
 
@@ -1769,8 +1772,8 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
-#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, number scriptId, string callback)"
-const int inArgs_SET_STATE_VAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
+const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
 
 void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1785,8 +1788,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        simInt scriptId = inData->at(1).intData[0];
-        std::string callback = inData->at(2).stringData[0];
+        std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1805,7 +1807,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
         else
         {
             task->stateValidation.type = TaskDef::StateValidation::CALLBACK;
-            task->stateValidation.callback.scriptId = scriptId;
+            task->stateValidation.callback.scriptId = p->scriptID;
             task->stateValidation.callback.function = callback;
         }
 
@@ -1818,8 +1820,8 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
-#define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, number scriptId, string callback)"
-const int inArgs_SET_GOAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
+#define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
+const int inArgs_SET_GOAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
 
 void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 {
@@ -1834,8 +1836,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 
 		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 		simInt taskHandle = inData->at(0).intData[0];
-        simInt scriptId = inData->at(1).intData[0];
-        std::string callback = inData->at(2).stringData[0];
+        std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1845,21 +1846,15 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(robots.find(task->robotHandle) == robots.end())
-        {
-			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
         if(callback == "")
         {
-			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid robot handle.");
+			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid callback name.");
             break;
         }
         else
         {
             task->goal.type = TaskDef::Goal::CALLBACK;
-            task->goal.callback.scriptId = scriptId;
+            task->goal.callback.scriptId = p->scriptID;
             task->goal.callback.function = callback;
         }
 
