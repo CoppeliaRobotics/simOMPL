@@ -91,6 +91,9 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 //#include <ompl/geometric/planners/stride/STRIDE.h>
 //#include <ompl/geometric/planners/rrt/TRRT.h>
 
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
+
 enum StateSpaceType
 {
     simx_ompl_statespacetype_position2d = 1,
@@ -170,6 +173,8 @@ struct TaskDef
         // size of projection when using callback
         int dim;
     } projectionEvaluation;
+    // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
+    ob::StateSpacePtr stateSpacePtr;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -208,14 +213,11 @@ void destroyTransientObjects()
     destroyTransientObjects(statespaces);
 }
 
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
-
 class ProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
     ProjectionEvaluator(const ob::StateSpacePtr& space, TaskDef *task)
-        : ob::ProjectionEvaluator(space)
+        : ob::ProjectionEvaluator(space), statespace(space)
     {
         this->task = task;
 
@@ -443,6 +445,7 @@ protected:
     }
 
     TaskDef *task;
+    const ob::StateSpacePtr& statespace;
     int dim;
 };
 
@@ -629,10 +632,8 @@ class StateValidityChecker : public ob::StateValidityChecker
 {
 public:
     StateValidityChecker(const ob::SpaceInformationPtr &si, TaskDef *task)
-        : ob::StateValidityChecker(si)
+        : ob::StateValidityChecker(si), statespace(si->getStateSpace()), task(task)
     {
-        this->statespace = si->getStateSpace();
-        this->task = task;
     }
 
     virtual ~StateValidityChecker()
@@ -748,7 +749,7 @@ class Goal : public ob::Goal
 {
 public:
     Goal(const ob::SpaceInformationPtr &si, TaskDef *task, double tolerance = 1e-3)
-        : ob::Goal(si), task(task), tolerance(tolerance)
+        : ob::Goal(si), statespace(si->getStateSpace()), task(task), tolerance(tolerance)
     {
     }
 
@@ -778,8 +779,6 @@ public:
 protected:
     virtual bool checkDummyPair(const ob::State *state, double *distance) const
     {
-        ob::StateSpacePtr statespace = getSpaceInformation()->getStateSpace();
-
         ob::ScopedState<ob::CompoundStateSpace> s(statespace);
         s = state;
 
@@ -857,6 +856,7 @@ protected:
         return ret;
     }
 
+    ob::StateSpacePtr statespace;
     TaskDef *task;
     double tolerance;
 };
@@ -1516,6 +1516,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         RobotDef *robot = robots[task->robotHandle];
 
         ob::StateSpacePtr space(new StateSpace(task));
+        task->stateSpacePtr = space;
         ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
         space->registerDefaultProjection(projectionEval);
         og::SimpleSetup setup(space);
