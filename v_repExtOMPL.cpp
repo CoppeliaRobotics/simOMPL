@@ -1522,7 +1522,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
 
         ob::ScopedState<> start(space);
-        // TODO: check if task->startState is set/valid
+        // TODO: check if task->startState is set and valid
         for(int i = 0; i < task->startState.size(); i++)
             start[i] = task->startState[i];
         setup.setStartState(start);
@@ -1530,10 +1530,9 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         if(task->goal.type == TaskDef::Goal::STATE)
         {
             ob::ScopedState<> goal(space);
-            // TODO: check if task->goal.state is set/valid
+            // TODO: check if task->goal.state is set and valid
             for(int i = 0; i < task->goal.state.size(); i++)
                 goal[i] = task->goal.state[i];
-            // goal is specified with a state
             setup.setGoalState(goal);
         }
         else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CALLBACK)
