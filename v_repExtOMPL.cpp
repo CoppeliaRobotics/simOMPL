@@ -91,6 +91,46 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 //#include <ompl/geometric/planners/stride/STRIDE.h>
 //#include <ompl/geometric/planners/rrt/TRRT.h>
 
+std::string luaTypeToString(simInt x)
+{
+    switch(x)
+    {
+    case sim_lua_arg_bool: return "sim_lua_arg_bool";
+    case sim_lua_arg_int: return "sim_lua_arg_int";
+    case sim_lua_arg_float: return "sim_lua_arg_float";
+    case sim_lua_arg_double: return "sim_lua_arg_double";
+    case sim_lua_arg_string: return "sim_lua_arg_string";
+    case sim_lua_arg_charbuff: return "sim_lua_arg_charbuff";
+    case sim_lua_arg_nil: return "sim_lua_arg_nil";
+    case sim_lua_arg_table: return "sim_lua_arg_table";
+    case sim_lua_arg_invalid: return "sim_lua_arg_invalid";
+    }
+    if(x & sim_lua_arg_nil)
+        return luaTypeToString(x & ~sim_lua_arg_nil) + "|" + luaTypeToString(sim_lua_arg_nil);
+    if(x & sim_lua_arg_table)
+        return luaTypeToString(x & ~sim_lua_arg_table) + "|" + luaTypeToString(sim_lua_arg_table);
+    return "???";
+}
+
+std::string luaCallbackToString(SLuaCallBack *c)
+{
+    std::stringstream ss;
+    ss << "{inputArgsTypeAndSize: [";
+    for(int i = 0; i < c->inputArgCount; i++)
+    {
+        ss << (i ? ", " : "") << luaTypeToString(c->inputArgTypeAndSize[2*i]);
+        if(c->inputArgTypeAndSize[1+2*i]) ss << "_" << c->inputArgTypeAndSize[1+2*i];
+    }
+    ss << "], outputArgsTypeAndSize: [";
+    for(int i = 0; i < c->outputArgCount; i++)
+    {
+        ss << (i ? ", " : "") << luaTypeToString(c->outputArgTypeAndSize[2*i]);
+        if(c->outputArgTypeAndSize[1+2*i]) ss << "_" << c->outputArgTypeAndSize[1+2*i];
+    }
+    ss << "]}";
+    return ss.str();
+}
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
@@ -400,8 +440,6 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "ProjectionEvaluator::luaProjectCallback - calling Lua callback " << task->projectionEvaluation.callback.function << "..." << std::endl;
-
         // Call the function "test" in the calling script:
         if(simCallScriptFunction(task->projectionEvaluation.callback.scriptId, task->projectionEvaluation.callback.function.c_str(), &c, NULL) != -1)
         {
@@ -421,12 +459,12 @@ protected:
             }
             else
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluation.callback.function << " return type(s) are wrong" << std::endl;
+                throw ompl::Exception("Projection evaliator callback " + task->projectionEvaluation.callback.function + " return value size and/or type is incorrect");
             }
         }
         else
         {
-            std::cout << "ProjectionEvaluator::luaProjectCallback - call to Lua callback " << task->projectionEvaluation.callback.function << " failed" << std::endl;
+            throw ompl::Exception("Projection evaliator callback " + task->projectionEvaluation.callback.function + " returned an error");
         }
 
         // Release the data:
@@ -699,8 +737,6 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "StateValidityChecker::checkCallback - calling Lua callback " << task->stateValidation.callback.function << "..." << std::endl;
-
         // Call the function "test" in the calling script:
         if(simCallScriptFunction(task->stateValidation.callback.scriptId, task->stateValidation.callback.function.c_str(), &c, NULL) != -1)
         {
@@ -715,12 +751,12 @@ protected:
             }
             else
             {
-                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback.function << " return type(s) are wrong" << std::endl;
+                throw ompl::Exception("State validation callback " + task->stateValidation.callback.function + " return value size and/or type is incorrect");
             }
         }
         else
         {
-            std::cout << "StateValidityChecker::checkCallback - call to Lua callback " << task->stateValidation.callback.function << " failed" << std::endl;
+            throw ompl::Exception("State validation callback " + task->stateValidation.callback.function + " returned an error");
         }
 
         // Release the data:
@@ -791,6 +827,8 @@ protected:
 
     virtual bool checkCallback(const ob::State *state, double *distance) const
     {
+        std::cout << "***** thread id inside lua function caller: " << simGetThreadId() << std::endl;
+
         std::vector<double> stateVec;
         statespace->copyToReals(stateVec, state);
 
@@ -810,8 +848,6 @@ protected:
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
-        std::cout << "Goal::checkCallback - calling Lua callback " << task->goal.callback.function << "..." << std::endl;
-
         // Call the function "test" in the calling script:
         if(simCallScriptFunction(task->goal.callback.scriptId, task->goal.callback.function.c_str(), &c, NULL) != -1)
         {
@@ -827,12 +863,12 @@ protected:
             }
             else
             {
-                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback.function << " return type(s) are wrong" << std::endl;
+                throw ompl::Exception("Goal callback " + task->goal.callback.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
             }
         }
         else
         {
-            std::cout << "Goal::checkCallback - call to Lua callback " << task->goal.callback.function << " failed" << std::endl;
+            throw ompl::Exception("Goal callback " + task->goal.callback.function + " returned an error");
         }
 
         // Release the data:
@@ -847,6 +883,14 @@ protected:
     double tolerance;
 };
 
+#define LUA_CREATE_STATE_SPACE_DESCR "Create a component of the state space for the motion planning problem."
+#define LUA_CREATE_STATE_SPACE_PARAMS "name: a name for this state space" \
+    "|type: the type of this state space component (must be one of simx_ompl_statespacetype_position2d, simx_ompl_statespacetype_pose2d, simx_ompl_statespacetype_position3d, simx_ompl_statespacetype_pose3d, simx_ompl_statespacetype_joint_position)" \
+    "|objectHandle: the object handle (a joint object if type is simx_ompl_statespacetype_joint_position, otherwise a shape)" \
+    "|boundsLow: lower bounds (if type is pose, specify only the 3 position components)" \
+    "|boundsHigh: upper bounds (if type is pose, specify only the 3 position components)" \
+    "|useForProjection: if true, this object position or joint value will be used for computing a default projection"
+#define LUA_CREATE_STATE_SPACE_RET "stateSpaceHandle: a handle to the created state space component"
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
 #define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection)"
 const int inArgs_CREATE_STATE_SPACE[]={6, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0};
@@ -893,6 +937,10 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_DESTROY_STATE_SPACE_DESCR "Destroy the spacified state space component.<br /><br />" \
+    "Note: state space components created during simulation are automatically destroyed when simulation ends."
+#define LUA_DESTROY_STATE_SPACE_PARAMS "stateSpaceHandle: handle to state space component"
+#define LUA_DESTROY_STATE_SPACE_RET ""
 #define LUA_DESTROY_STATE_SPACE_COMMAND "simExtOMPL_destroyStateSpace"
 #define LUA_DESTROY_STATE_SPACE_APIHELP "number result=" LUA_DESTROY_STATE_SPACE_COMMAND "(number stateSpaceHandle)"
 const int inArgs_DESTROY_STATE_SPACE[]={1, sim_lua_arg_int, 0};
@@ -928,6 +976,12 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_CREATE_ROBOT_DESCR "Create a robot object. A robot object contains informations about: <ul>" \
+    "<li> the state space components" \
+    "<li> the collision objects of the robot" \
+    "</ul>"
+#define LUA_CREATE_ROBOT_PARAMS "name: a name for this robot object"
+#define LUA_CREATE_ROBOT_RET "robotHandle: a handle to the created robot object"
 #define LUA_CREATE_ROBOT_COMMAND "simExtOMPL_createRobot"
 #define LUA_CREATE_ROBOT_APIHELP "number robotHandle=" LUA_CREATE_ROBOT_COMMAND "(string name)"
 const int inArgs_CREATE_ROBOT[]={1, sim_lua_arg_string, 0};
@@ -958,6 +1012,10 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_DESTROY_ROBOT_DESCR "Destroy the spacified robot object.<br /><br />" \
+    "Note: robot objects created during simulation are automatically destroyed when simulation ends."
+#define LUA_DESTROY_ROBOT_PARAMS "robotHandle: handle to the robot object to destroy"
+#define LUA_DESTROY_ROBOT_RET ""
 #define LUA_DESTROY_ROBOT_COMMAND "simExtOMPL_destroyRobot"
 #define LUA_DESTROY_ROBOT_APIHELP "number result=" LUA_DESTROY_ROBOT_COMMAND "(number robotHandle)"
 const int inArgs_DESTROY_ROBOT[]={1, sim_lua_arg_int, 0};
@@ -993,6 +1051,11 @@ void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_PARAM_ROBOT_HANDLE "handle to a robot object created with <a href=\"#" LUA_CREATE_ROBOT_COMMAND "\">" LUA_CREATE_ROBOT_COMMAND "</a>"
+#define LUA_SET_STATE_SPACE_DESCR "Set the state space of this robot object."
+#define LUA_SET_STATE_SPACE_PARAMS "robotHandle: " LUA_PARAM_ROBOT_HANDLE "" \
+    "|stateSpaceHandles: a table of handles to state space components, created with <a href=\"#" LUA_CREATE_STATE_SPACE_COMMAND "\">" LUA_CREATE_STATE_SPACE_COMMAND "</a>"
+#define LUA_SET_STATE_SPACE_RET ""
 #define LUA_SET_STATE_SPACE_COMMAND "simExtOMPL_setStateSpace"
 #define LUA_SET_STATE_SPACE_APIHELP "number result=" LUA_SET_STATE_SPACE_COMMAND "(number robotHandle, table stateSpaceHandles)"
 const int inArgs_SET_STATE_SPACE[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
@@ -1048,6 +1111,10 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision objects for this robot object. Collision object are used to compute collisions between robot and environment in the default state validity checker function."
+#define LUA_SET_COLLISION_OBJECTS_PARAMS "robotHandle: " LUA_PARAM_ROBOT_HANDLE "" \
+    "|objectHandles: a table of handle to V-REP objects (shapes)"
+#define LUA_SET_COLLISION_OBJECTS_RET ""
 #define LUA_SET_COLLISION_OBJECTS_COMMAND "simExtOMPL_setCollisionObjects"
 #define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table objectHandles)"
 const int inArgs_SET_COLLISION_OBJECTS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
@@ -1084,6 +1151,15 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
+    "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)" \
+    "<li>robot object (created with <a href=\"#" LUA_CREATE_ROBOT_COMMAND "\">" LUA_CREATE_ROBOT_COMMAND "</a>)" \
+    "<li>start state" \
+    "<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)" \
+    "<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)" \
+    "<ul>"
+#define LUA_CREATE_TASK_PARAMS "name: a name for this task object"
+#define LUA_CREATE_TASK_RET "taskHandle: a handle to the created task object"
 #define LUA_CREATE_TASK_COMMAND "simExtOMPL_createTask"
 #define LUA_CREATE_TASK_APIHELP "number taskHandle=" LUA_CREATE_TASK_COMMAND "(string name)"
 const int inArgs_CREATE_TASK[]={1, sim_lua_arg_string, 0};
@@ -1117,6 +1193,11 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_PARAM_TASK_HANDLE "a handle to a task object created with <a href=\"#" LUA_CREATE_TASK_COMMAND "\">" LUA_CREATE_TASK_COMMAND "</a>"
+#define LUA_DESTROY_TASK_DESCR "Destroy the specified task object.<br /><br />" \
+    "NOTE: task objects created during simulation are automatically destroyed when simulation ends"
+#define LUA_DESTROY_TASK_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE
+#define LUA_DESTROY_TASK_RET ""
 #define LUA_DESTROY_TASK_COMMAND "simExtOMPL_destroyTask"
 #define LUA_DESTROY_TASK_APIHELP "number result=" LUA_DESTROY_TASK_COMMAND "(number taskHandle)"
 const int inArgs_DESTROY_TASK[]={1, sim_lua_arg_int, 0};
@@ -1165,6 +1246,9 @@ const char * state_space_type_string(StateSpaceType type)
     }
 };
 
+#define LUA_PRINT_TASK_INFO_DESCR "Print a summary of the specified task object, including information about robot and its state spaces."
+#define LUA_PRINT_TASK_INFO_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE
+#define LUA_PRINT_TASK_INFO_RET ""
 #define LUA_PRINT_TASK_INFO_COMMAND "simExtOMPL_printTaskInfo"
 #define LUA_PRINT_TASK_INFO_APIHELP "number result=" LUA_PRINT_TASK_INFO_COMMAND "(number taskHandle)"
 const int inArgs_PRINT_TASK_INFO[]={1, sim_lua_arg_int, 0};
@@ -1296,6 +1380,10 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_ROBOT_DESCR "Set the robot object for the specified task."
+#define LUA_SET_ROBOT_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|robotHandle: " LUA_PARAM_ROBOT_HANDLE
+#define LUA_SET_ROBOT_RET ""
 #define LUA_SET_ROBOT_COMMAND "simExtOMPL_setRobot"
 #define LUA_SET_ROBOT_APIHELP "number result=" LUA_SET_ROBOT_COMMAND "(number taskHandle, number robotHandle)"
 const int inArgs_SET_ROBOT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
@@ -1337,6 +1425,10 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
+#define LUA_SET_ENVIRONMENT_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|obstacleHandles: a table of handles to V-REP objects (shapes)"
+#define LUA_SET_ENVIRONMENT_RET ""
 #define LUA_SET_ENVIRONMENT_COMMAND "simExtOMPL_setEnvironment"
 #define LUA_SET_ENVIRONMENT_APIHELP "number result=" LUA_SET_ENVIRONMENT_COMMAND "(number taskHandle, table obstacleHandles)"
 const int inArgs_SET_ENVIRONMENT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
@@ -1375,6 +1467,11 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_PARAM_ROBOT_STATE "a table of numbers, whose size must be consistent with the robot's state space specified in this task object"
+#define LUA_SET_START_STATE_DESCR "Set the start state for the specified task object."
+#define LUA_SET_START_STATE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|state: " LUA_PARAM_ROBOT_STATE
+#define LUA_SET_START_STATE_RET ""
 #define LUA_SET_START_STATE_COMMAND "simExtOMPL_setStartState"
 #define LUA_SET_START_STATE_APIHELP "number result=" LUA_SET_START_STATE_COMMAND "(number taskHandle, table state)"
 const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
@@ -1411,6 +1508,10 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_GOAL_STATE_DESCR "Set the goal state for the specified task object."
+#define LUA_SET_GOAL_STATE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "state: " LUA_PARAM_ROBOT_STATE
+#define LUA_SET_GOAL_STATE_RET ""
 #define LUA_SET_GOAL_STATE_COMMAND "simExtOMPL_setGoalState"
 #define LUA_SET_GOAL_STATE_APIHELP "number result=" LUA_SET_GOAL_STATE_COMMAND "(number taskHandle, table state)"
 const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
@@ -1448,6 +1549,11 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same."
+#define LUA_SET_GOAL_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "robotDummy: a dummy attached to the robot" \
+    "goalDummy: a dummy fixed in the environment, representing the goal pose/position"
+#define LUA_SET_GOAL_RET ""
 #define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
 #define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy)"
 const int inArgs_SET_GOAL[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
@@ -1484,12 +1590,18 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
+#define LUA_COMPUTE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "maxTime: maximum time to use in seconds"
+#define LUA_COMPUTE_RET "states: a table of states, representing the solution, from start to goal. States are specified linearly."
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
 #define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime)"
 const int inArgs_COMPUTE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
 
 void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 {
+    std::cout << "***** thread id inside lua compute callback: " << simGetThreadId() << std::endl;
+
 	p->outputArgCount = 0;
     CLuaFunctionData D;
 	simInt returnResult = 0;
@@ -1577,6 +1689,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             //ob::PlannerPtr planner(new og::STRIDE(si));
             //ob::PlannerPtr planner(new og::TRRT(si));
             setup.setPlanner(planner);
+            std::cout << "COMPUTE: p->scriptID = " << p->scriptID << std::endl;
+            std::cout << "COMPUTE: task->goal.callback.scriptId = " << task->goal.callback.scriptId << std::endl;
             ob::PlannerStatus solved = setup.solve(maxTime);
             if(solved)
             {
@@ -1620,6 +1734,10 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_READ_STATE_NODOC ""
+#define LUA_READ_STATE_DESCR ""
+#define LUA_READ_STATE_PARAMS ""
+#define LUA_READ_STATE_RET ""
 #define LUA_READ_STATE_COMMAND "simExtOMPL_readState"
 #define LUA_READ_STATE_APIHELP "number result, table state=" LUA_READ_STATE_COMMAND "(number taskHandle)"
 const int inArgs_READ_STATE[]={1, sim_lua_arg_int, 0};
@@ -1667,6 +1785,10 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_WRITE_STATE_NODOC ""
+#define LUA_WRITE_STATE_DESCR ""
+#define LUA_WRITE_STATE_PARAMS ""
+#define LUA_WRITE_STATE_RET ""
 #define LUA_WRITE_STATE_COMMAND "simExtOMPL_writeState"
 #define LUA_WRITE_STATE_APIHELP "number result=" LUA_WRITE_STATE_COMMAND "(number taskHandle, table state)"
 const int inArgs_WRITE_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0};
@@ -1712,6 +1834,11 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_PROJ_EVAL_CB_DESCR "Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument."
+#define LUA_SET_PROJ_EVAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|callback: name of the Lua callback" \
+    "|projectionSize: size of the projection (usually 2 or 3)"
+#define LUA_SET_PROJ_EVAL_CB_RET ""
 #define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
 #define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback, number projectionSize)"
 const int inArgs_SET_PROJ_EVAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_int, 0};
@@ -1771,6 +1898,10 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state."
+#define LUA_SET_STATE_VAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|callback: name of the Lua calback"
+#define LUA_SET_STATE_VAL_CB_RET ""
 #define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
 #define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
 const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
@@ -1819,6 +1950,10 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
+#define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal. If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
+#define LUA_SET_GOAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "callback: the name of the Lua callback"
+#define LUA_SET_GOAL_CB_RET ""
 #define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
 #define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
 const int inArgs_SET_GOAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
@@ -1859,6 +1994,52 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         }
 
         returnResult = 1;
+	}
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+	D.writeDataToLua(p);
+}
+
+#define LUA_TEST_LUA_CB_NODOC ""
+#define LUA_TEST_LUA_CB_COMMAND "simExtOMPL_testLuaCallback"
+#define LUA_TEST_LUA_CB_APIHELP "number result=" LUA_TEST_LUA_CB_COMMAND "(string callback, number arg)"
+const int inArgs_TEST_LUA_CB[]={2, sim_lua_arg_string, 0, sim_lua_arg_float, 0};
+
+void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
+{
+	p->outputArgCount = 0;
+    CLuaFunctionData D;
+	simFloat returnResult = -1;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_TEST_LUA_CB, inArgs_TEST_LUA_CB[0], LUA_TEST_LUA_CB_COMMAND))
+            break;
+
+		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        std::string callback = inData->at(0).stringData[0];
+        simFloat arg = inData->at(1).floatData[0];
+
+        SLuaCallBack c;
+        CLuaFunctionData D1;
+        D1.pushOutData_luaFunctionCall(CLuaFunctionDataItem(arg));
+        const int outArgs[]={1, sim_lua_arg_float, 0};
+        D1.writeDataToLua_luaFunctionCall(&c, outArgs);
+
+        if(simCallScriptFunction(p->scriptID, callback.c_str(), &c, NULL) != -1 &&
+                D1.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], callback.c_str()))
+        {
+            std::vector<CLuaFunctionDataItem> *outData = D1.getOutDataPtr_luaFunctionCall();
+            returnResult = outData->at(0).floatData[0];
+            std::cout << "Test Lua callback " << callback << " returned " << returnResult << std::endl;
+        }
+        else
+        {
+            std::cout << "Test Lua callback error" << std::endl;
+        }
+
+        D1.releaseBuffers_luaFunctionCall(&c);
 	}
     while(0);
 
@@ -1939,6 +2120,7 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
     REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
+    REGISTER_LUA_COMMAND(TEST_LUA_CB);
 
 #undef REGISTER_LUA_COMMAND
 #define REGISTER_LUA_VARIABLE(NAME) simRegisterCustomLuaVariable(#NAME, (boost::lexical_cast<std::string>(NAME)).c_str())
