@@ -1510,7 +1510,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 
 #define LUA_SET_GOAL_STATE_DESCR "Set the goal state for the specified task object."
 #define LUA_SET_GOAL_STATE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
-    "state: " LUA_PARAM_ROBOT_STATE
+    "|state: " LUA_PARAM_ROBOT_STATE
 #define LUA_SET_GOAL_STATE_RET ""
 #define LUA_SET_GOAL_STATE_COMMAND "simExtOMPL_setGoalState"
 #define LUA_SET_GOAL_STATE_APIHELP "number result=" LUA_SET_GOAL_STATE_COMMAND "(number taskHandle, table state)"
@@ -1551,8 +1551,8 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 
 #define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same."
 #define LUA_SET_GOAL_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
-    "robotDummy: a dummy attached to the robot" \
-    "goalDummy: a dummy fixed in the environment, representing the goal pose/position"
+    "|robotDummy: a dummy attached to the robot" \
+    "|goalDummy: a dummy fixed in the environment, representing the goal pose/position"
 #define LUA_SET_GOAL_RET ""
 #define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
 #define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy)"
@@ -1592,7 +1592,7 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
 #define LUA_COMPUTE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
-    "maxTime: maximum time to use in seconds"
+    "|maxTime: maximum time to use in seconds"
 #define LUA_COMPUTE_RET "states: a table of states, representing the solution, from start to goal. States are specified linearly."
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
 #define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime)"
@@ -1952,7 +1952,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 
 #define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal. If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
 #define LUA_SET_GOAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
-    "callback: the name of the Lua callback"
+    "|callback: the name of the Lua callback"
 #define LUA_SET_GOAL_CB_RET ""
 #define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
 #define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
