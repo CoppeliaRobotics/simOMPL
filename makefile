@@ -22,7 +22,12 @@ else
 	INSTALL_DIR ?= ../../vrep.app/Contents/MacOS/
 endif
 
-all: libv_repExtOMPL.$(EXT)
+all: libv_repExtOMPL.$(EXT) doc
+
+doc: reference.html
+
+reference.html: v_repExtOMPL.cpp
+	./gen_reference.py > reference.html
 
 libv_repExtOMPL.$(EXT): v_repExtOMPL.o v_repLib.o
 	$(CXX) $^ $(LDLIBS) -o $@
