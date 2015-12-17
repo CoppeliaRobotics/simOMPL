@@ -778,7 +778,6 @@ protected:
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
-                std::cout << "StateValidityChecker::checkCallback - Lua callback " << task->stateValidation.callback.function << " returned " << ret << std::endl;
             }
             else
             {
@@ -888,7 +887,6 @@ protected:
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 ret = outData->at(0).boolData[0];
                 dist = outData->at(1).floatData[0];
-                std::cout << "Goal::checkCallback - Lua callback " << task->goal.callback.function << " returned " << ret << ", " << dist << std::endl;
             }
             else
             {
@@ -2191,54 +2189,6 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_TEST_LUA_CB_DESCR ""
-#define LUA_TEST_LUA_CB_PARAMS ""
-#define LUA_TEST_LUA_CB_RET ""
-#define LUA_TEST_LUA_CB_COMMAND "simExtOMPL_testLuaCallback"
-#define LUA_TEST_LUA_CB_APIHELP "number result=" LUA_TEST_LUA_CB_COMMAND "(string callback, number arg)"
-const int inArgs_TEST_LUA_CB[]={2, sim_lua_arg_string, 0, sim_lua_arg_float, 0};
-
-void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simFloat returnResult = -1;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_TEST_LUA_CB, inArgs_TEST_LUA_CB[0], LUA_TEST_LUA_CB_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-        std::string callback = inData->at(0).stringData[0];
-        simFloat arg = inData->at(1).floatData[0];
-
-        SLuaCallBack c;
-        CLuaFunctionData D1;
-        D1.pushOutData_luaFunctionCall(CLuaFunctionDataItem(arg));
-        const int outArgs[]={1, sim_lua_arg_float, 0};
-        D1.writeDataToLua_luaFunctionCall(&c, outArgs);
-
-        if(simCallScriptFunction(p->scriptID, callback.c_str(), &c, NULL) != -1 &&
-                D1.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], callback.c_str()))
-        {
-            std::vector<CLuaFunctionDataItem> *outData = D1.getOutDataPtr_luaFunctionCall();
-            returnResult = outData->at(0).floatData[0];
-            std::cout << "Test Lua callback " << callback << " returned " << returnResult << std::endl;
-        }
-        else
-        {
-            std::cout << "Test Lua callback error" << std::endl;
-        }
-
-        D1.releaseBuffers_luaFunctionCall(&c);
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
 #ifdef GENERATE_DOC
 #define REGISTER_LUA_COMMAND(NAME) \
     std::cout << "    <command name=\"" LUA_##NAME##_COMMAND "\">" << std::endl \
@@ -2290,7 +2240,6 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
     REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
-    REGISTER_LUA_COMMAND(TEST_LUA_CB);
 
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
