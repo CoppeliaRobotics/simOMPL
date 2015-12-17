@@ -64,32 +64,32 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
 #include <ompl/geometric/SimpleSetup.h>
 
-//#include <ompl/geometric/planners/rrt/BiTRRT.h>
-//#include <ompl/geometric/planners/bitstar/BITstar.h>
-//#include <ompl/geometric/planners/kpiece/BKPIECE1.h>
-//#include <ompl/geometric/planners/cforest/CForest.h>
-//#include <ompl/geometric/planners/est/EST.h>
-//#include <ompl/geometric/planners/fmt/FMT.h>
+#include <ompl/geometric/planners/rrt/BiTRRT.h>
+#include <ompl/geometric/planners/bitstar/BITstar.h>
+#include <ompl/geometric/planners/kpiece/BKPIECE1.h>
+#include <ompl/geometric/planners/cforest/CForest.h>
+#include <ompl/geometric/planners/est/EST.h>
+#include <ompl/geometric/planners/fmt/FMT.h>
 #include <ompl/geometric/planners/kpiece/KPIECE1.h>
-//#include <ompl/geometric/planners/prm/LazyPRM.h>
-//#include <ompl/geometric/planners/prm/LazyPRMstar.h>
-//#include <ompl/geometric/planners/rrt/LazyRRT.h>
-//#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
-//#include <ompl/geometric/planners/rrt/LBTRRT.h>
+#include <ompl/geometric/planners/prm/LazyPRM.h>
+#include <ompl/geometric/planners/prm/LazyPRMstar.h>
+#include <ompl/geometric/planners/rrt/LazyRRT.h>
+#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
+#include <ompl/geometric/planners/rrt/LBTRRT.h>
 //#include <ompl/geometric/planners/experience/LightningRetrieveRepair.h>
-//#include <ompl/geometric/planners/pdst/PDST.h>
-//#include <ompl/geometric/planners/prm/PRM.h>
-//#include <ompl/geometric/planners/prm/PRMstar.h>
-//#include <ompl/geometric/planners/rrt/pRRT.h>
-//#include <ompl/geometric/planners/sbl/pSBL.h>
-//#include <ompl/geometric/planners/rrt/RRT.h>
-//#include <ompl/geometric/planners/rrt/RRTConnect.h>
-//#include <ompl/geometric/planners/rrt/RRTstar.h>
-//#include <ompl/geometric/planners/sbl/SBL.h>
-//#include <ompl/geometric/planners/prm/SPARS.h>
-//#include <ompl/geometric/planners/prm/SPARStwo.h>
-//#include <ompl/geometric/planners/stride/STRIDE.h>
-//#include <ompl/geometric/planners/rrt/TRRT.h>
+#include <ompl/geometric/planners/pdst/PDST.h>
+#include <ompl/geometric/planners/prm/PRM.h>
+#include <ompl/geometric/planners/prm/PRMstar.h>
+#include <ompl/geometric/planners/rrt/pRRT.h>
+#include <ompl/geometric/planners/sbl/pSBL.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/sbl/SBL.h>
+#include <ompl/geometric/planners/prm/SPARS.h>
+#include <ompl/geometric/planners/prm/SPARStwo.h>
+#include <ompl/geometric/planners/stride/STRIDE.h>
+#include <ompl/geometric/planners/rrt/TRRT.h>
 
 std::string luaTypeToString(simInt x)
 {
@@ -136,11 +136,41 @@ namespace og = ompl::geometric;
 
 enum StateSpaceType
 {
-    simx_ompl_statespacetype_position2d = 1,
+    simx_ompl_statespacetype_position2d = 50001,
     simx_ompl_statespacetype_pose2d,
     simx_ompl_statespacetype_position3d,
     simx_ompl_statespacetype_pose3d,
     simx_ompl_statespacetype_joint_position
+};
+
+enum Algorithm
+{
+    simx_ompl_algorithm_BiTRRT = 30001,
+    simx_ompl_algorithm_BITstar,
+    simx_ompl_algorithm_BKPIECE1,
+    simx_ompl_algorithm_CForest,
+    simx_ompl_algorithm_EST,
+    simx_ompl_algorithm_FMT,
+    simx_ompl_algorithm_KPIECE1,
+    simx_ompl_algorithm_LazyPRM,
+    simx_ompl_algorithm_LazyPRMstar,
+    simx_ompl_algorithm_LazyRRT,
+    simx_ompl_algorithm_LBKPIECE1,
+    simx_ompl_algorithm_LBTRRT,
+    //simx_ompl_algorithm_LightningRetrieveRepair,
+    simx_ompl_algorithm_PDST,
+    simx_ompl_algorithm_PRM,
+    simx_ompl_algorithm_PRMstar,
+    simx_ompl_algorithm_pRRT,
+    simx_ompl_algorithm_pSBL,
+    simx_ompl_algorithm_RRT,
+    simx_ompl_algorithm_RRTConnect,
+    simx_ompl_algorithm_RRTstar,
+    simx_ompl_algorithm_SBL,
+    simx_ompl_algorithm_SPARS,
+    simx_ompl_algorithm_SPARStwo,
+    simx_ompl_algorithm_STRIDE,
+    simx_ompl_algorithm_TRRT
 };
 
 struct ObjectDefHeader
@@ -211,6 +241,8 @@ struct TaskDef
         // projection evaluation callback:
         struct {std::string function; simInt scriptId; int dim;} callback;
     } projectionEvaluation;
+    // search algorithm to use:
+    Algorithm algorithm;
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
 };
@@ -1184,6 +1216,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
+        task->algorithm = simx_ompl_algorithm_KPIECE1;
         tasks[task->header.handle] = task;
         returnResult = task->header.handle;
     }
@@ -1242,6 +1275,40 @@ const char * state_space_type_string(StateSpaceType type)
         case simx_ompl_statespacetype_position3d: return "simx_ompl_statespacetype_position3d";
         case simx_ompl_statespacetype_pose3d: return "simx_ompl_statespacetype_pose3d";
         case simx_ompl_statespacetype_joint_position: return "simx_ompl_statespacetype_joint_position";
+        default: return "???";
+    }
+};
+
+const char * algorithm_string(Algorithm alg)
+{
+    switch(alg)
+    {
+        case simx_ompl_algorithm_BiTRRT: return "simx_ompl_algorithm_BiTRRT";
+        case simx_ompl_algorithm_BITstar: return "simx_ompl_algorithm_BITstar";
+        case simx_ompl_algorithm_BKPIECE1: return "simx_ompl_algorithm_BKPIECE1";
+        case simx_ompl_algorithm_CForest: return "simx_ompl_algorithm_CForest";
+        case simx_ompl_algorithm_EST: return "simx_ompl_algorithm_EST";
+        case simx_ompl_algorithm_FMT: return "simx_ompl_algorithm_FMT";
+        case simx_ompl_algorithm_KPIECE1: return "simx_ompl_algorithm_KPIECE1";
+        case simx_ompl_algorithm_LazyPRM: return "simx_ompl_algorithm_LazyPRM";
+        case simx_ompl_algorithm_LazyPRMstar: return "simx_ompl_algorithm_LazyPRMstar";
+        case simx_ompl_algorithm_LazyRRT: return "simx_ompl_algorithm_LazyRRT";
+        case simx_ompl_algorithm_LBKPIECE1: return "simx_ompl_algorithm_LBKPIECE1";
+        case simx_ompl_algorithm_LBTRRT: return "simx_ompl_algorithm_LBTRRT";
+        //case simx_ompl_algorithm_LightningRetrieveRepair: return "simx_ompl_algorithm_LightningRetrieveRepair";
+        case simx_ompl_algorithm_PDST: return "simx_ompl_algorithm_PDST";
+        case simx_ompl_algorithm_PRM: return "simx_ompl_algorithm_PRM";
+        case simx_ompl_algorithm_PRMstar: return "simx_ompl_algorithm_PRMstar";
+        case simx_ompl_algorithm_pRRT: return "simx_ompl_algorithm_pRRT";
+        case simx_ompl_algorithm_pSBL: return "simx_ompl_algorithm_pSBL";
+        case simx_ompl_algorithm_RRT: return "simx_ompl_algorithm_RRT";
+        case simx_ompl_algorithm_RRTConnect: return "simx_ompl_algorithm_RRTConnect";
+        case simx_ompl_algorithm_RRTstar: return "simx_ompl_algorithm_RRTstar";
+        case simx_ompl_algorithm_SBL: return "simx_ompl_algorithm_SBL";
+        case simx_ompl_algorithm_SPARS: return "simx_ompl_algorithm_SPARS";
+        case simx_ompl_algorithm_SPARStwo: return "simx_ompl_algorithm_SPARStwo";
+        case simx_ompl_algorithm_STRIDE: return "simx_ompl_algorithm_STRIDE";
+        case simx_ompl_algorithm_TRRT: return "simx_ompl_algorithm_TRRT";
         default: return "???";
     }
 };
@@ -1372,6 +1439,45 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
 
+        returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
+#define LUA_SET_ALGORITHM_DESCR "Set the search algorithm for the specified task. Default algorithm used is KPIECE1."
+#define LUA_SET_ALGORITHM_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
+    "|algorithm: one of simx_ompl_algorithm_BiTRRT, simx_ompl_algorithm_BITstar, simx_ompl_algorithm_BKPIECE1, simx_ompl_algorithm_CForest, simx_ompl_algorithm_EST, simx_ompl_algorithm_FMT, simx_ompl_algorithm_KPIECE1, simx_ompl_algorithm_LazyPRM, simx_ompl_algorithm_LazyPRMstar, simx_ompl_algorithm_LazyRRT, simx_ompl_algorithm_LBKPIECE1, simx_ompl_algorithm_LBTRRT, simx_ompl_algorithm_PDST, simx_ompl_algorithm_PRM, simx_ompl_algorithm_PRMstar, simx_ompl_algorithm_pRRT, simx_ompl_algorithm_pSBL, simx_ompl_algorithm_RRT, simx_ompl_algorithm_RRTConnect, simx_ompl_algorithm_RRTstar, simx_ompl_algorithm_SBL, simx_ompl_algorithm_SPARS, simx_ompl_algorithm_SPARStwo, simx_ompl_algorithm_STRIDE, simx_ompl_algorithm_TRRT"
+#define LUA_SET_ALGORITHM_RET ""
+#define LUA_SET_ALGORITHM_COMMAND "simExtOMPL_setAlgorithm"
+#define LUA_SET_ALGORITHM_APIHELP "number result=" LUA_SET_ALGORITHM_COMMAND "(number taskHandle, number algorithm)"
+const int inArgs_SET_ALGORITHM[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+
+void LUA_SET_ALGORITHM_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_ALGORITHM, inArgs_SET_ALGORITHM[0], LUA_SET_ALGORITHM_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        Algorithm algorithm = static_cast<Algorithm>(inData->at(1).intData[0]);
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_SET_ALGORITHM_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+        task->algorithm = algorithm;
         returnResult = 1;
     }
     while(0);
@@ -1662,32 +1768,95 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             }
 
             ob::SpaceInformationPtr si = setup.getSpaceInformation();
-            //ob::PlannerPtr planner(new og::BiTRRT(si));
-            //ob::PlannerPtr planner(new og::BITstar(si));
-            //ob::PlannerPtr planner(new og::BKPIECE1(si));
-            //ob::PlannerPtr planner(new og::CForest(si));
-            //ob::PlannerPtr planner(new og::EST(si)); // needs projection
-            //ob::PlannerPtr planner(new og::FMT(si));
-            ob::PlannerPtr planner(new og::KPIECE1(si)); // needs projection
-            //ob::PlannerPtr planner(new og::LazyPRM(si));
-            //ob::PlannerPtr planner(new og::LazyPRMstar(si));
-            //ob::PlannerPtr planner(new og::LazyRRT(si));
-            //ob::PlannerPtr planner(new og::LBKPIECE1(si));
-            //ob::PlannerPtr planner(new og::LBTRRT(si));
-            //ob::PlannerPtr planner(new og::LightningRetrieveRepair(si));
-            //ob::PlannerPtr planner(new og::PDST(si)); // needs projection
-            //ob::PlannerPtr planner(new og::PRM(si));
-            //ob::PlannerPtr planner(new og::PRMstar(si));
-            //ob::PlannerPtr planner(new og::pRRT(si));
-            //ob::PlannerPtr planner(new og::pSBL(si));
-            //ob::PlannerPtr planner(new og::RRT(si));
-            //ob::PlannerPtr planner(new og::RRTConnect(si));
-            //ob::PlannerPtr planner(new og::RRTstar(si));
-            //ob::PlannerPtr planner(new og::SBL(si)); // needs projection
-            //ob::PlannerPtr planner(new og::SPARS(si));
-            //ob::PlannerPtr planner(new og::SPARStwo(si));
-            //ob::PlannerPtr planner(new og::STRIDE(si));
-            //ob::PlannerPtr planner(new og::TRRT(si));
+            ob::PlannerPtr planner;
+            bool validAlgorithm = true;
+            switch(task->algorithm)
+            {
+                case simx_ompl_algorithm_BiTRRT:
+                    planner = ob::PlannerPtr(new og::BiTRRT(si));
+                    break;
+                case simx_ompl_algorithm_BITstar:
+                    planner = ob::PlannerPtr(new og::BITstar(si));
+                    break;
+                case simx_ompl_algorithm_BKPIECE1:
+                    planner = ob::PlannerPtr(new og::BKPIECE1(si));
+                    break;
+                case simx_ompl_algorithm_CForest:
+                    planner = ob::PlannerPtr(new og::CForest(si));
+                    break;
+                case simx_ompl_algorithm_EST:
+                    planner = ob::PlannerPtr(new og::EST(si)); // needs projection
+                    break;
+                case simx_ompl_algorithm_FMT:
+                    planner = ob::PlannerPtr(new og::FMT(si));
+                    break;
+                case simx_ompl_algorithm_KPIECE1:
+                    planner = ob::PlannerPtr(new og::KPIECE1(si)); // needs projection
+                    break;
+                case simx_ompl_algorithm_LazyPRM:
+                    planner = ob::PlannerPtr(new og::LazyPRM(si));
+                    break;
+                case simx_ompl_algorithm_LazyPRMstar:
+                    planner = ob::PlannerPtr(new og::LazyPRMstar(si));
+                    break;
+                case simx_ompl_algorithm_LazyRRT:
+                    planner = ob::PlannerPtr(new og::LazyRRT(si));
+                    break;
+                case simx_ompl_algorithm_LBKPIECE1:
+                    planner = ob::PlannerPtr(new og::LBKPIECE1(si));
+                    break;
+                case simx_ompl_algorithm_LBTRRT:
+                    planner = ob::PlannerPtr(new og::LBTRRT(si));
+                    break;
+                //case simx_ompl_algorithm_LightningRetrieveRepair:
+                    //planner = ob::PlannerPtr(new og::LightningRetrieveRepair(si));
+                    //break;
+                case simx_ompl_algorithm_PDST:
+                    planner = ob::PlannerPtr(new og::PDST(si)); // needs projection
+                    break;
+                case simx_ompl_algorithm_PRM:
+                    planner = ob::PlannerPtr(new og::PRM(si));
+                    break;
+                case simx_ompl_algorithm_PRMstar:
+                    planner = ob::PlannerPtr(new og::PRMstar(si));
+                    break;
+                case simx_ompl_algorithm_pRRT:
+                    planner = ob::PlannerPtr(new og::pRRT(si));
+                    break;
+                case simx_ompl_algorithm_pSBL:
+                    planner = ob::PlannerPtr(new og::pSBL(si));
+                    break;
+                case simx_ompl_algorithm_RRT:
+                    planner = ob::PlannerPtr(new og::RRT(si));
+                    break;
+                case simx_ompl_algorithm_RRTConnect:
+                    planner = ob::PlannerPtr(new og::RRTConnect(si));
+                    break;
+                case simx_ompl_algorithm_RRTstar:
+                    planner = ob::PlannerPtr(new og::RRTstar(si));
+                    break;
+                case simx_ompl_algorithm_SBL:
+                    planner = ob::PlannerPtr(new og::SBL(si)); // needs projection
+                    break;
+                case simx_ompl_algorithm_SPARS:
+                    planner = ob::PlannerPtr(new og::SPARS(si));
+                    break;
+                case simx_ompl_algorithm_SPARStwo:
+                    planner = ob::PlannerPtr(new og::SPARStwo(si));
+                    break;
+                case simx_ompl_algorithm_STRIDE:
+                    planner = ob::PlannerPtr(new og::STRIDE(si));
+                    break;
+                case simx_ompl_algorithm_TRRT:
+                    planner = ob::PlannerPtr(new og::TRRT(si));
+                    break;
+                default:
+                    simSetLastError(LUA_COMPUTE_COMMAND, "Invalid motion planning algorithm.");
+                    validAlgorithm = false;
+                    break;
+            }
+            if(!validAlgorithm)
+                break;
             setup.setPlanner(planner);
             std::cout << "COMPUTE: p->scriptID = " << p->scriptID << std::endl;
             std::cout << "COMPUTE: task->goal.callback.scriptId = " << task->goal.callback.scriptId << std::endl;
@@ -2105,6 +2274,33 @@ void registerLuaCommands()
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position3d);
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose3d);
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_joint_position);
+
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BiTRRT);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BITstar);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BKPIECE1);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_CForest);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_EST);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_FMT);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_KPIECE1);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyPRM);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyPRMstar);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyRRT);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LBKPIECE1);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LBTRRT);
+    //REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LightningRetrieveRepair);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PDST);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PRM);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PRMstar);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_pRRT);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_pSBL);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRT);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRTConnect);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRTstar);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SBL);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SPARS);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SPARStwo);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_STRIDE);
+    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_TRRT);
 }
 
 VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
