@@ -35,20 +35,20 @@
 #include <map>
 
 #ifdef _WIN32
-	#ifdef QT_COMPIL
-		#include <direct.h>
-	#else
-		#include <shlwapi.h>
-		#pragma comment(lib, "Shlwapi.lib")
-	#endif
+    #ifdef QT_COMPIL
+        #include <direct.h>
+    #else
+        #include <shlwapi.h>
+        #pragma comment(lib, "Shlwapi.lib")
+    #endif
 #endif /* _WIN32 */
 #if defined (__linux) || defined (__APPLE__)
-	#include <unistd.h>
+    #include <unistd.h>
 #define _stricmp strcasecmp
 #endif /* __linux || __APPLE__ */
 
 #define CONCAT(x, y, z) x y z
-#define strConCat(x, y, z)	CONCAT(x, y, z)
+#define strConCat(x, y, z)    CONCAT(x, y, z)
 
 #define PLUGIN_VERSION 2 // 2 since version 3.2.1
 
@@ -897,20 +897,20 @@ const int inArgs_CREATE_STATE_SPACE[]={6, sim_lua_arg_string, 0, sim_lua_arg_int
 
 void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0], LUA_CREATE_STATE_SPACE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
 
         if(inData->at(3).floatData.size() != inData->at(4).floatData.size())
         {
-			simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "Lower and upper bounds must have the same length.");
+            simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "Lower and upper bounds must have the same length.");
             break;
         }
 
@@ -930,11 +930,11 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
         statespaces[statespace->header.handle] = statespace;
         returnResult = statespace->header.handle;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_DESTROY_STATE_SPACE_DESCR "Destroy the spacified state space component.<br /><br />" \
@@ -947,21 +947,21 @@ const int inArgs_DESTROY_STATE_SPACE[]={1, sim_lua_arg_int, 0};
 
 void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
-	    if(!D.readDataFromLua(p, inArgs_DESTROY_STATE_SPACE, inArgs_DESTROY_STATE_SPACE[0], LUA_DESTROY_STATE_SPACE_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_DESTROY_STATE_SPACE, inArgs_DESTROY_STATE_SPACE[0], LUA_DESTROY_STATE_SPACE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-		simInt stateSpaceHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt stateSpaceHandle = inData->at(0).intData[0];
 
         if(statespaces.find(stateSpaceHandle) == statespaces.end())
         {
-			simSetLastError(LUA_DESTROY_STATE_SPACE_COMMAND, "Invalid state space handle handle.");
+            simSetLastError(LUA_DESTROY_STATE_SPACE_COMMAND, "Invalid state space handle handle.");
             break;
         }
 
@@ -969,11 +969,11 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         statespaces.erase(stateSpaceHandle);
         delete statespace;
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_CREATE_ROBOT_DESCR "Create a robot object. A robot object contains informations about: <ul>" \
@@ -988,16 +988,16 @@ const int inArgs_CREATE_ROBOT[]={1, sim_lua_arg_string, 0};
 
 void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_CREATE_ROBOT, inArgs_CREATE_ROBOT[0], LUA_CREATE_ROBOT_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         RobotDef *robot = new RobotDef();
         robot->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
@@ -1005,11 +1005,11 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
         robot->header.name = name;
         robots[robot->header.handle] = robot;
         returnResult = robot->header.handle;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_DESTROY_ROBOT_DESCR "Destroy the spacified robot object.<br /><br />" \
@@ -1022,21 +1022,21 @@ const int inArgs_DESTROY_ROBOT[]={1, sim_lua_arg_int, 0};
 
 void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
-	    if(!D.readDataFromLua(p, inArgs_DESTROY_ROBOT, inArgs_DESTROY_ROBOT[0], LUA_DESTROY_ROBOT_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_DESTROY_ROBOT, inArgs_DESTROY_ROBOT[0], LUA_DESTROY_ROBOT_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-		simInt robotHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt robotHandle = inData->at(0).intData[0];
 
         if(robots.find(robotHandle) == robots.end())
         {
-			simSetLastError(LUA_DESTROY_ROBOT_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_DESTROY_ROBOT_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1044,11 +1044,11 @@ void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
         robots.erase(robotHandle);
         delete robot;
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_PARAM_ROBOT_HANDLE "handle to a robot object created with <a href=\"#" LUA_CREATE_ROBOT_COMMAND "\">" LUA_CREATE_ROBOT_COMMAND "</a>"
@@ -1062,21 +1062,21 @@ const int inArgs_SET_STATE_SPACE[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_l
 
 void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
-	    if(!D.readDataFromLua(p, inArgs_SET_STATE_SPACE, inArgs_SET_STATE_SPACE[0], LUA_SET_STATE_SPACE_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_SET_STATE_SPACE, inArgs_SET_STATE_SPACE[0], LUA_SET_STATE_SPACE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-		simInt robotHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt robotHandle = inData->at(0).intData[0];
 
         if(robots.find(robotHandle) == robots.end())
         {
-			simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1104,11 +1104,11 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < inData->at(1).intData.size(); i++)
             robot->stateSpaces.push_back(inData->at(1).intData[i]);
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision objects for this robot object. Collision object are used to compute collisions between robot and environment in the default state validity checker function."
@@ -1121,21 +1121,21 @@ const int inArgs_SET_COLLISION_OBJECTS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int
 
 void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
-	    if(!D.readDataFromLua(p, inArgs_SET_COLLISION_OBJECTS, inArgs_SET_COLLISION_OBJECTS[0], LUA_SET_COLLISION_OBJECTS_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_SET_COLLISION_OBJECTS, inArgs_SET_COLLISION_OBJECTS[0], LUA_SET_COLLISION_OBJECTS_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-		simInt robotHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt robotHandle = inData->at(0).intData[0];
 
         if(robots.find(robotHandle) == robots.end())
         {
-			simSetLastError(LUA_SET_COLLISION_OBJECTS_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_SET_COLLISION_OBJECTS_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1144,11 +1144,11 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < inData->at(1).intData.size(); i++)
             robot->collisionHandles.push_back(inData->at(1).intData[i]);
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
@@ -1166,16 +1166,16 @@ const int inArgs_CREATE_TASK[]={1, sim_lua_arg_string, 0};
 
 void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_CREATE_TASK, inArgs_CREATE_TASK[0], LUA_CREATE_TASK_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         std::string name = inData->at(0).stringData[0];
         TaskDef *task = new TaskDef();
         task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
@@ -1186,11 +1186,11 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         tasks[task->header.handle] = task;
         returnResult = task->header.handle;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_PARAM_TASK_HANDLE "a handle to a task object created with <a href=\"#" LUA_CREATE_TASK_COMMAND "\">" LUA_CREATE_TASK_COMMAND "</a>"
@@ -1204,21 +1204,21 @@ const int inArgs_DESTROY_TASK[]={1, sim_lua_arg_int, 0};
 
 void LUA_DESTROY_TASK_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
-	    if(!D.readDataFromLua(p, inArgs_DESTROY_TASK, inArgs_DESTROY_TASK[0], LUA_DESTROY_TASK_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_DESTROY_TASK, inArgs_DESTROY_TASK[0], LUA_DESTROY_TASK_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_DESTROY_TASK_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_DESTROY_TASK_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1226,11 +1226,11 @@ void LUA_DESTROY_TASK_CALLBACK(SLuaCallBack* p)
         tasks.erase(taskHandle);
         delete task;
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 const char * state_space_type_string(StateSpaceType type)
@@ -1255,21 +1255,21 @@ const int inArgs_PRINT_TASK_INFO[]={1, sim_lua_arg_int, 0};
 
 void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_PRINT_TASK_INFO, inArgs_PRINT_TASK_INFO[0], LUA_PRINT_TASK_INFO_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_PRINT_TASK_INFO_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_PRINT_TASK_INFO_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1373,11 +1373,11 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         std::cout << s.str();
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_ROBOT_DESCR "Set the robot object for the specified task."
@@ -1390,39 +1390,39 @@ const int inArgs_SET_ROBOT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
 
 void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_ROBOT, inArgs_SET_ROBOT[0], LUA_SET_ROBOT_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
-		simInt robotHandle = inData->at(1).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        simInt robotHandle = inData->at(1).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid task handle.");
             break;
         }
 
         if(robots.find(robotHandle) == robots.end())
         {
-			simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid robot handle.");
             break;
         }
 
         TaskDef *task = tasks[taskHandle];
         task->robotHandle = robotHandle;
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
@@ -1435,23 +1435,23 @@ const int inArgs_SET_ENVIRONMENT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_l
 
 void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_ENVIRONMENT, inArgs_SET_ENVIRONMENT[0], LUA_SET_ENVIRONMENT_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
         int numHandles = inData->at(1).intData.size();
         std::vector<simInt>& obstacleHandles = inData->at(1).intData;
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_ENVIRONMENT_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_ENVIRONMENT_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1460,11 +1460,11 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < numHandles; i++)
             task->obstacleHandles.push_back(obstacleHandles[i]);
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_PARAM_ROBOT_STATE "a table of numbers, whose size must be consistent with the robot's state space specified in this task object"
@@ -1478,21 +1478,21 @@ const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim
 
 void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_START_STATE, inArgs_SET_START_STATE[0], LUA_SET_START_STATE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1501,11 +1501,11 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->startState.push_back(inData->at(1).floatData[i]);
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_GOAL_STATE_DESCR "Set the goal state for the specified task object."
@@ -1518,21 +1518,21 @@ const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_
 
 void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_GOAL_STATE, inArgs_SET_GOAL_STATE[0], LUA_SET_GOAL_STATE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1542,11 +1542,11 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         for(int i = 0; i < inData->at(1).floatData.size(); i++)
             task->goal.state.push_back(inData->at(1).floatData[i]);
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same."
@@ -1560,21 +1560,21 @@ const int inArgs_SET_GOAL[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_
 
 void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_GOAL, inArgs_SET_GOAL[0], LUA_SET_GOAL_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_GOAL_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_GOAL_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1583,11 +1583,11 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
         task->goal.dummyPair.goalDummy = inData->at(1).intData[0];
         task->goal.dummyPair.robotDummy = inData->at(2).intData[0];
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
@@ -1602,9 +1602,9 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 {
     std::cout << "***** thread id inside lua compute callback: " << simGetThreadId() << std::endl;
 
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
     std::vector<simFloat> pathOut;
 
     do
@@ -1612,13 +1612,13 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         if(!D.readDataFromLua(p, inArgs_COMPUTE, inArgs_COMPUTE[0], LUA_COMPUTE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
-		simFloat maxTime = inData->at(1).floatData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        simFloat maxTime = inData->at(1).floatData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_COMPUTE_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_COMPUTE_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1626,7 +1626,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
         if(robots.find(task->robotHandle) == robots.end())
         {
-			simSetLastError(LUA_COMPUTE_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_COMPUTE_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1724,14 +1724,14 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             std::string s = "OMPL exception: ";
             s += ex.what();
             std::cout << s << std::endl;
-			simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
+            simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
         }
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
     D.pushOutData(CLuaFunctionDataItem(pathOut));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_READ_STATE_NODOC ""
@@ -1744,9 +1744,9 @@ const int inArgs_READ_STATE[]={1, sim_lua_arg_int, 0};
 
 void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
     std::vector<simFloat> stateOut;
 
     do
@@ -1754,12 +1754,12 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
         if(!D.readDataFromLua(p, inArgs_READ_STATE, inArgs_READ_STATE[0], LUA_READ_STATE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_READ_STATE_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_READ_STATE_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1767,7 +1767,7 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 
         if(robots.find(task->robotHandle) == robots.end())
         {
-			simSetLastError(LUA_READ_STATE_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_READ_STATE_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1777,12 +1777,12 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
         // this would need a pointer to the OMPL state space, which is not yet available at this point.
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
     D.pushOutData(CLuaFunctionDataItem(stateOut));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_WRITE_STATE_NODOC ""
@@ -1795,21 +1795,21 @@ const int inArgs_WRITE_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua
 
 void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_WRITE_STATE, inArgs_WRITE_STATE[0], LUA_WRITE_STATE_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1817,7 +1817,7 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 
         if(robots.find(task->robotHandle) == robots.end())
         {
-			simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid robot handle.");
             break;
         }
 
@@ -1827,11 +1827,11 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
         // this would need a pointer to the OMPL state space, which is not yet available at this point.
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_PROJ_EVAL_CB_DESCR "Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.<br /><br />table projection=evaluateProjection(table state)"
@@ -1845,23 +1845,23 @@ const int inArgs_SET_PROJ_EVAL_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 
 
 void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_PROJ_EVAL_CB, inArgs_SET_PROJ_EVAL_CB[0], LUA_SET_PROJ_EVAL_CB_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
         std::string callback = inData->at(1).stringData[0];
-		simInt projectionSize = inData->at(2).intData[0];
+        simInt projectionSize = inData->at(2).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1869,7 +1869,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 
         if(projectionSize < 1)
         {
-			simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Projection size must be positive.");
+            simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Projection size must be positive.");
             break;
         }
 
@@ -1891,11 +1891,11 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
         }
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)"
@@ -1908,22 +1908,22 @@ const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 
 
 void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_STATE_VAL_CB, inArgs_SET_STATE_VAL_CB[0], LUA_SET_STATE_VAL_CB_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
         std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1943,11 +1943,11 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
         }
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:<br /><br />boolean satisfied, number distance=goalSatisfied(table state)<br /><br />If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
@@ -1960,22 +1960,22 @@ const int inArgs_SET_GOAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
 
 void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simInt returnResult = 0;
+    simInt returnResult = 0;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_SET_GOAL_CB, inArgs_SET_GOAL_CB[0], LUA_SET_GOAL_CB_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-		simInt taskHandle = inData->at(0).intData[0];
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
         std::string callback = inData->at(1).stringData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid task handle.");
             break;
         }
 
@@ -1983,7 +1983,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 
         if(callback == "")
         {
-			simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid callback name.");
+            simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid callback name.");
             break;
         }
         else
@@ -1994,11 +1994,11 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         }
 
         returnResult = 1;
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #define LUA_TEST_LUA_CB_NODOC ""
@@ -2011,16 +2011,16 @@ const int inArgs_TEST_LUA_CB[]={2, sim_lua_arg_string, 0, sim_lua_arg_float, 0};
 
 void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
 {
-	p->outputArgCount = 0;
+    p->outputArgCount = 0;
     CLuaFunctionData D;
-	simFloat returnResult = -1;
+    simFloat returnResult = -1;
 
     do
     {
         if(!D.readDataFromLua(p, inArgs_TEST_LUA_CB, inArgs_TEST_LUA_CB[0], LUA_TEST_LUA_CB_COMMAND))
             break;
 
-		std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         std::string callback = inData->at(0).stringData[0];
         simFloat arg = inData->at(1).floatData[0];
 
@@ -2043,11 +2043,11 @@ void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
         }
 
         D1.releaseBuffers_luaFunctionCall(&c);
-	}
+    }
     while(0);
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
-	D.writeDataToLua(p);
+    D.writeDataToLua(p);
 }
 
 #ifdef GENERATE_DOC
@@ -2072,30 +2072,30 @@ int main(int argc, char ** argv)
 }
 #else
 #define REGISTER_LUA_COMMAND(NAME) { \
-	std::vector<int> inArgs; \
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_##NAME, inArgs); \
-	simRegisterCustomLuaFunction(LUA_##NAME##_COMMAND, LUA_##NAME##_APIHELP, &inArgs[0], LUA_##NAME##_CALLBACK); \
+    std::vector<int> inArgs; \
+    CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_##NAME, inArgs); \
+    simRegisterCustomLuaFunction(LUA_##NAME##_COMMAND, LUA_##NAME##_APIHELP, &inArgs[0], LUA_##NAME##_CALLBACK); \
 }
 #define REGISTER_LUA_VARIABLE(NAME) simRegisterCustomLuaVariable(#NAME, (boost::lexical_cast<std::string>(NAME)).c_str())
 #endif // GENERATE_DOC
 
 void registerLuaCommands()
 {
-	REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
-	REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
-	REGISTER_LUA_COMMAND(CREATE_ROBOT);
-	REGISTER_LUA_COMMAND(DESTROY_ROBOT);
-	REGISTER_LUA_COMMAND(SET_STATE_SPACE);
-	REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
-	REGISTER_LUA_COMMAND(CREATE_TASK);
-	REGISTER_LUA_COMMAND(DESTROY_TASK);
-	REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
-	REGISTER_LUA_COMMAND(SET_ROBOT);
-	REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
-	REGISTER_LUA_COMMAND(SET_START_STATE);
-	REGISTER_LUA_COMMAND(SET_GOAL_STATE);
-	REGISTER_LUA_COMMAND(SET_GOAL);
-	REGISTER_LUA_COMMAND(COMPUTE);
+    REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
+    REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
+    REGISTER_LUA_COMMAND(CREATE_ROBOT);
+    REGISTER_LUA_COMMAND(DESTROY_ROBOT);
+    REGISTER_LUA_COMMAND(SET_STATE_SPACE);
+    REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
+    REGISTER_LUA_COMMAND(CREATE_TASK);
+    REGISTER_LUA_COMMAND(DESTROY_TASK);
+    REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
+    REGISTER_LUA_COMMAND(SET_ROBOT);
+    REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
+    REGISTER_LUA_COMMAND(SET_START_STATE);
+    REGISTER_LUA_COMMAND(SET_GOAL_STATE);
+    REGISTER_LUA_COMMAND(SET_GOAL);
+    REGISTER_LUA_COMMAND(COMPUTE);
     REGISTER_LUA_COMMAND(READ_STATE);
     REGISTER_LUA_COMMAND(WRITE_STATE);
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
@@ -2112,171 +2112,171 @@ void registerLuaCommands()
 
 VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 {
-	char curDirAndFile[1024];
+    char curDirAndFile[1024];
 #ifdef _WIN32
-	#ifdef QT_COMPIL
-		_getcwd(curDirAndFile, sizeof(curDirAndFile));
-	#else
-		GetModuleFileName(NULL, curDirAndFile, 1023);
-		PathRemoveFileSpec(curDirAndFile);
-	#endif
+    #ifdef QT_COMPIL
+        _getcwd(curDirAndFile, sizeof(curDirAndFile));
+    #else
+        GetModuleFileName(NULL, curDirAndFile, 1023);
+        PathRemoveFileSpec(curDirAndFile);
+    #endif
 #elif defined (__linux) || defined (__APPLE__)
-	getcwd(curDirAndFile, sizeof(curDirAndFile));
+    getcwd(curDirAndFile, sizeof(curDirAndFile));
 #endif
 
-	std::string currentDirAndPath(curDirAndFile);
-	std::string temp(currentDirAndPath);
+    std::string currentDirAndPath(curDirAndFile);
+    std::string temp(currentDirAndPath);
 #ifdef _WIN32
-	temp+="\\v_rep.dll";
+    temp+="\\v_rep.dll";
 #elif defined (__linux)
-	temp+="/libv_rep.so";
+    temp+="/libv_rep.so";
 #elif defined (__APPLE__)
-	temp+="/libv_rep.dylib";
+    temp+="/libv_rep.dylib";
 #endif /* __linux || __APPLE__ */
-	vrepLib = loadVrepLibrary(temp.c_str());
-	if (vrepLib == NULL)
-	{
-		std::cout << "Error, could not find or correctly load the V-REP library. Cannot start 'OMPL' plugin.\n";
-		return(0);
-	}
-	if (getVrepProcAddresses(vrepLib)==0)
-	{
-		std::cout << "Error, could not find all required functions in the V-REP library. Cannot start 'OMPL' plugin.\n";
-		unloadVrepLibrary(vrepLib);
-		return(0);
-	}
+    vrepLib = loadVrepLibrary(temp.c_str());
+    if (vrepLib == NULL)
+    {
+        std::cout << "Error, could not find or correctly load the V-REP library. Cannot start 'OMPL' plugin.\n";
+        return(0);
+    }
+    if (getVrepProcAddresses(vrepLib)==0)
+    {
+        std::cout << "Error, could not find all required functions in the V-REP library. Cannot start 'OMPL' plugin.\n";
+        unloadVrepLibrary(vrepLib);
+        return(0);
+    }
 
-	int vrepVer;
-	simGetIntegerParameter(sim_intparam_program_version, &vrepVer);
-	if (vrepVer < 30200) // if V-REP version is smaller than 3.02.00
-	{
-		std::cout << "Sorry, your V-REP copy is somewhat old. Cannot start 'OMPL' plugin.\n";
-		unloadVrepLibrary(vrepLib);
-		return(0);
-	}
+    int vrepVer;
+    simGetIntegerParameter(sim_intparam_program_version, &vrepVer);
+    if (vrepVer < 30200) // if V-REP version is smaller than 3.02.00
+    {
+        std::cout << "Sorry, your V-REP copy is somewhat old. Cannot start 'OMPL' plugin.\n";
+        unloadVrepLibrary(vrepLib);
+        return(0);
+    }
 
-	registerLuaCommands();
+    registerLuaCommands();
 
-	return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
+    return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
 
 // This is the plugin end routine (called just once, when V-REP is ending, i.e. releasing this plugin):
 VREP_DLLEXPORT void v_repEnd()
 {
-	// Here you could handle various clean-up tasks
+    // Here you could handle various clean-up tasks
 
-	unloadVrepLibrary(vrepLib); // release the library
+    unloadVrepLibrary(vrepLib); // release the library
 }
 
 // This is the plugin messaging routine (i.e. V-REP calls this function very often, with various messages):
 VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customData, int* replyData)
 { // This is called quite often. Just watch out for messages/events you want to handle
-	// Keep following 5 lines at the beginning and unchanged:
-	static bool refreshDlgFlag = true;
-	int errorModeSaved;
-	simGetIntegerParameter(sim_intparam_error_report_mode, &errorModeSaved);
-	simSetIntegerParameter(sim_intparam_error_report_mode, sim_api_errormessage_ignore);
-	void* retVal=NULL;
+    // Keep following 5 lines at the beginning and unchanged:
+    static bool refreshDlgFlag = true;
+    int errorModeSaved;
+    simGetIntegerParameter(sim_intparam_error_report_mode, &errorModeSaved);
+    simSetIntegerParameter(sim_intparam_error_report_mode, sim_api_errormessage_ignore);
+    void* retVal=NULL;
 
-	// Here we can intercept many messages from V-REP (actually callbacks). Only the most important messages are listed here.
-	// For a complete list of messages that you can intercept/react with, search for "sim_message_eventcallback"-type constants
-	// in the V-REP user manual.
+    // Here we can intercept many messages from V-REP (actually callbacks). Only the most important messages are listed here.
+    // For a complete list of messages that you can intercept/react with, search for "sim_message_eventcallback"-type constants
+    // in the V-REP user manual.
 
-	if (message == sim_message_eventcallback_refreshdialogs)
-		refreshDlgFlag = true; // V-REP dialogs were refreshed. Maybe a good idea to refresh this plugin's dialog too
+    if (message == sim_message_eventcallback_refreshdialogs)
+        refreshDlgFlag = true; // V-REP dialogs were refreshed. Maybe a good idea to refresh this plugin's dialog too
 
-	if (message == sim_message_eventcallback_menuitemselected)
-	{ // A custom menu bar entry was selected..
-		// here you could make a plugin's main dialog visible/invisible
-	}
+    if (message == sim_message_eventcallback_menuitemselected)
+    { // A custom menu bar entry was selected..
+        // here you could make a plugin's main dialog visible/invisible
+    }
 
-	if (message == sim_message_eventcallback_instancepass)
-	{	// This message is sent each time the scene was rendered (well, shortly after) (very often)
-		// It is important to always correctly react to events in V-REP. This message is the most convenient way to do so:
+    if (message == sim_message_eventcallback_instancepass)
+    {    // This message is sent each time the scene was rendered (well, shortly after) (very often)
+        // It is important to always correctly react to events in V-REP. This message is the most convenient way to do so:
 
-		int flags = auxiliaryData[0];
-		bool sceneContentChanged=((flags&(1+2+4+8+16+32+64+256))!=0); // object erased, created, model or scene loaded, und/redo called, instance switched, or object scaled since last sim_message_eventcallback_instancepass message 
-		bool instanceSwitched=((flags&64)!=0);
+        int flags = auxiliaryData[0];
+        bool sceneContentChanged=((flags&(1+2+4+8+16+32+64+256))!=0); // object erased, created, model or scene loaded, und/redo called, instance switched, or object scaled since last sim_message_eventcallback_instancepass message 
+        bool instanceSwitched=((flags&64)!=0);
 
-		if (instanceSwitched)
-		{
-			// React to an instance switch here!!
-		}
+        if (instanceSwitched)
+        {
+            // React to an instance switch here!!
+        }
 
-		if (sceneContentChanged)
-		{ // we actualize plugin objects for changes in the scene
+        if (sceneContentChanged)
+        { // we actualize plugin objects for changes in the scene
 
-			//...
+            //...
 
-			refreshDlgFlag = true; // always a good idea to trigger a refresh of this plugin's dialog here
-		}
-	}
+            refreshDlgFlag = true; // always a good idea to trigger a refresh of this plugin's dialog here
+        }
+    }
 
-	if (message == sim_message_eventcallback_mainscriptabouttobecalled)
-	{ // The main script is about to be run (only called while a simulation is running (and not paused!))
-		
-	}
+    if (message == sim_message_eventcallback_mainscriptabouttobecalled)
+    { // The main script is about to be run (only called while a simulation is running (and not paused!))
+        
+    }
 
-	if (message == sim_message_eventcallback_simulationabouttostart)
-	{ // Simulation is about to start
+    if (message == sim_message_eventcallback_simulationabouttostart)
+    { // Simulation is about to start
 
-	}
+    }
 
-	if (message == sim_message_eventcallback_simulationended)
-	{ // Simulation just ended
+    if (message == sim_message_eventcallback_simulationended)
+    { // Simulation just ended
         destroyTransientObjects();
 
-	}
+    }
 
-	if (message == sim_message_eventcallback_moduleopen)
-	{ // A script called simOpenModule (by default the main script). Is only called during simulation.
-		if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-		{
-			// we arrive here only at the beginning of a simulation
-		}
-	}
+    if (message == sim_message_eventcallback_moduleopen)
+    { // A script called simOpenModule (by default the main script). Is only called during simulation.
+        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
+        {
+            // we arrive here only at the beginning of a simulation
+        }
+    }
 
-	if (message == sim_message_eventcallback_modulehandle)
-	{ // A script called simHandleModule (by default the main script). Is only called during simulation.
-		if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-		{
-			// we arrive here only while a simulation is running
-		}
-	}
+    if (message == sim_message_eventcallback_modulehandle)
+    { // A script called simHandleModule (by default the main script). Is only called during simulation.
+        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
+        {
+            // we arrive here only while a simulation is running
+        }
+    }
 
-	if (message == sim_message_eventcallback_moduleclose)
-	{ // A script called simCloseModule (by default the main script). Is only called during simulation.
-		if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-		{
-			// we arrive here only at the end of a simulation
-		}
-	}
+    if (message == sim_message_eventcallback_moduleclose)
+    { // A script called simCloseModule (by default the main script). Is only called during simulation.
+        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
+        {
+            // we arrive here only at the end of a simulation
+        }
+    }
 
-	if (message == sim_message_eventcallback_instanceswitch)
-	{ // We switched to a different scene. Such a switch can only happen while simulation is not running
+    if (message == sim_message_eventcallback_instanceswitch)
+    { // We switched to a different scene. Such a switch can only happen while simulation is not running
 
-	}
+    }
 
-	if (message == sim_message_eventcallback_broadcast)
-	{ // Here we have a plugin that is broadcasting data (the broadcaster will also receive this data!)
+    if (message == sim_message_eventcallback_broadcast)
+    { // Here we have a plugin that is broadcasting data (the broadcaster will also receive this data!)
 
-	}
+    }
 
-	if (message == sim_message_eventcallback_scenesave)
-	{ // The scene is about to be saved. If required do some processing here (e.g. add custom scene data to be serialized with the scene)
+    if (message == sim_message_eventcallback_scenesave)
+    { // The scene is about to be saved. If required do some processing here (e.g. add custom scene data to be serialized with the scene)
 
-	}
+    }
 
-	// You can add many more messages to handle here
+    // You can add many more messages to handle here
 
-	if ((message == sim_message_eventcallback_guipass)&&refreshDlgFlag)
-	{ // handle refresh of the plugin's dialogs
-		// ...
-		refreshDlgFlag = false;
-	}
+    if ((message == sim_message_eventcallback_guipass)&&refreshDlgFlag)
+    { // handle refresh of the plugin's dialogs
+        // ...
+        refreshDlgFlag = false;
+    }
 
-	// Keep following unchanged:
-	simSetIntegerParameter(sim_intparam_error_report_mode, errorModeSaved); // restore previous settings
-	return(retVal);
+    // Keep following unchanged:
+    simSetIntegerParameter(sim_intparam_error_report_mode, errorModeSaved); // restore previous settings
+    return(retVal);
 }
 
