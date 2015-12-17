@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 from lxml import etree
-from sys import argv
 
-doc = etree.parse(argv[1])
+from sys import stdin
+doc = etree.fromstring(stdin.read())
 
 print('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN">
 <html>

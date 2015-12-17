@@ -2231,7 +2231,7 @@ void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
 void registerLuaCommands();
 int main(int argc, char ** argv)
 {
-    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+    std::cout << "<?xml version=\"1.0\"?>" << std::endl;
     std::cout << "<doc>" << std::endl;
     registerLuaCommands();
     std::cout << "</doc>" << std::endl;
