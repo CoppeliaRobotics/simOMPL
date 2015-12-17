@@ -1229,7 +1229,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 
 #define LUA_PARAM_TASK_HANDLE "a handle to a task object created with " HYPERLINK(LUA_CREATE_TASK_COMMAND)
 #define LUA_DESTROY_TASK_DESCR "Destroy the specified task object.<br /><br />" \
-    "NOTE: task objects created during simulation are automatically destroyed when simulation ends"
+    "Note: task objects created during simulation are automatically destroyed when simulation ends."
 #define LUA_DESTROY_TASK_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE
 #define LUA_DESTROY_TASK_RET ""
 #define LUA_DESTROY_TASK_COMMAND "simExtOMPL_destroyTask"
