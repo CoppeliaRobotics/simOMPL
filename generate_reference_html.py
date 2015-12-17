@@ -34,7 +34,14 @@ def formatparams(s):
     return '\n'.join(map(formatparam, s.split('|')))
 
 for cmd in sorted(doc.findall('command'), key=lambda x: x.get('name')):
-    if cmd.get('nodoc'): continue
+    d=dict(
+        fn=cmd.get('name'),
+        syn=cmd.find('synopsis').text,
+        descr=cmd.find('description').text,
+        params=formatparams(cmd.find('params').text),
+        ret=formatparams(cmd.find('return').text)
+    )
+    if not d['descr'] and not d['return'] and not d['params']: continue
     print('''
 <h3 class=subsectionBar><a name="{fn}" id="{fn}"></a>{fn}</h3>
 <table class=apiTable>
@@ -70,13 +77,7 @@ Description
 </tr>
 </table>
 <br>
-'''.format(
-        fn=cmd.get('name'),
-        syn=cmd.find('synopsis').text,
-        descr=cmd.find('description').text,
-        params=formatparams(cmd.find('params').text),
-        ret=formatparams(cmd.find('return').text),
-))
+'''.format(**d))
 
 print('''
 <br>

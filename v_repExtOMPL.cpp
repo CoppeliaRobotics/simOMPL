@@ -1734,7 +1734,6 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_READ_STATE_NODOC ""
 #define LUA_READ_STATE_DESCR ""
 #define LUA_READ_STATE_PARAMS ""
 #define LUA_READ_STATE_RET ""
@@ -1785,7 +1784,6 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_WRITE_STATE_NODOC ""
 #define LUA_WRITE_STATE_DESCR ""
 #define LUA_WRITE_STATE_PARAMS ""
 #define LUA_WRITE_STATE_RET ""
@@ -2001,7 +1999,6 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_TEST_LUA_CB_NODOC ""
 #define LUA_TEST_LUA_CB_DESCR ""
 #define LUA_TEST_LUA_CB_PARAMS ""
 #define LUA_TEST_LUA_CB_RET ""
