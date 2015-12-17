@@ -26,22 +26,31 @@ print('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN">
 <p class=infoBox>The list of API functions below allows you to define and solve a motion planning problem with OMPL.</p>
 
 ''')
+def stringify_children(node):
+    from lxml.etree import tostring
+    from itertools import chain
+    parts = ([node.text] +
+            list(chain(*([tostring(c, with_tail=False), c.tail] for c in node.getchildren()))) +
+            [node.tail])
+    # filter removes possible Nones in texts and tails
+    return ''.join(filter(None, map(lambda x: x.decode('utf-8') if isinstance(x,bytes) else x, parts)))
 
 def formatparams(s):
     if not s: return ''
     def formatparam(s):
-        return '<div><strong>{}</strong>: {}</div>'.format(*s.split(': ', 1))
+        s=s.strip()
+        return '<div><strong>{}</strong>: {}</div>'.format(*s.split(': ', 1)) if s else ''
     return '\n'.join(map(formatparam, s.split('|')))
 
 for cmd in sorted(doc.findall('command'), key=lambda x: x.get('name')):
     d=dict(
         fn=cmd.get('name'),
-        syn=cmd.find('synopsis').text,
-        descr=cmd.find('description').text,
-        params=formatparams(cmd.find('params').text),
-        ret=formatparams(cmd.find('return').text)
+        syn=stringify_children(cmd.find('synopsis')),
+        descr=stringify_children(cmd.find('description')),
+        params=formatparams(stringify_children(cmd.find('params'))),
+        ret=formatparams(stringify_children(cmd.find('return')))
     )
-    if not d['descr'] and not d['return'] and not d['params']: continue
+    if not d['descr'].strip(): continue
     print('''
 <h3 class=subsectionBar><a name="{fn}" id="{fn}"></a>{fn}</h3>
 <table class=apiTable>

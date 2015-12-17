@@ -32,7 +32,7 @@ generate_reference_xml: v_repExtOMPL.cpp v_repLib.cpp
 reference.xml: generate_reference_xml
 	./generate_reference_xml > $@
 
-reference.html: reference.xml
+reference.html: reference.xml generate_reference_html.py
 	./generate_reference_html.py $^ > $@.tmp
 	mv $@.tmp $@
 
