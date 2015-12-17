@@ -977,7 +977,7 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_CREATE_ROBOT_DESCR "Create a robot object. A robot object contains informations about: <ul>" \
-    "<li> the state space components" \
+    "<li> the state space components (created with <a href=\"#" LUA_CREATE_STATE_SPACE_COMMAND "\">" LUA_CREATE_STATE_SPACE_COMMAND "</a>)" \
     "<li> the collision objects of the robot" \
     "</ul>"
 #define LUA_CREATE_ROBOT_PARAMS "name: a name for this robot object"
