@@ -977,8 +977,8 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_CREATE_ROBOT_DESCR "Create a robot object. A robot object contains informations about: <ul>" \
-    "<li> the state space components (created with <a href=\"#" LUA_CREATE_STATE_SPACE_COMMAND "\">" LUA_CREATE_STATE_SPACE_COMMAND "</a>)" \
-    "<li> the collision objects of the robot" \
+    "<li> the state space components (created with <a href=\"#" LUA_CREATE_STATE_SPACE_COMMAND "\">" LUA_CREATE_STATE_SPACE_COMMAND "</a>)</li>" \
+    "<li> the collision objects of the robot</li>" \
     "</ul>"
 #define LUA_CREATE_ROBOT_PARAMS "name: a name for this robot object"
 #define LUA_CREATE_ROBOT_RET "robotHandle: a handle to the created robot object"
@@ -1152,12 +1152,12 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
-    "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)" \
-    "<li>robot object (created with <a href=\"#" LUA_CREATE_ROBOT_COMMAND "\">" LUA_CREATE_ROBOT_COMMAND "</a>)" \
-    "<li>start state" \
-    "<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)" \
-    "<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)" \
-    "<ul>"
+    "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)</li>" \
+    "<li>robot object (created with <a href=\"#" LUA_CREATE_ROBOT_COMMAND "\">" LUA_CREATE_ROBOT_COMMAND "</a>)</li>" \
+    "<li>start state</li>" \
+    "<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>" \
+    "<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>" \
+    "</ul>"
 #define LUA_CREATE_TASK_PARAMS "name: a name for this task object"
 #define LUA_CREATE_TASK_RET "taskHandle: a handle to the created task object"
 #define LUA_CREATE_TASK_COMMAND "simExtOMPL_createTask"
@@ -2002,6 +2002,9 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_TEST_LUA_CB_NODOC ""
+#define LUA_TEST_LUA_CB_DESCR ""
+#define LUA_TEST_LUA_CB_PARAMS ""
+#define LUA_TEST_LUA_CB_RET ""
 #define LUA_TEST_LUA_CB_COMMAND "simExtOMPL_testLuaCallback"
 #define LUA_TEST_LUA_CB_APIHELP "number result=" LUA_TEST_LUA_CB_COMMAND "(string callback, number arg)"
 const int inArgs_TEST_LUA_CB[]={2, sim_lua_arg_string, 0, sim_lua_arg_float, 0};
@@ -2045,6 +2048,66 @@ void LUA_TEST_LUA_CB_CALLBACK(SLuaCallBack* p)
 
     D.pushOutData(CLuaFunctionDataItem(returnResult));
 	D.writeDataToLua(p);
+}
+
+#ifdef GENERATE_DOC
+#define REGISTER_LUA_COMMAND(NAME) \
+    std::cout << "    <command name=\"" LUA_##NAME##_COMMAND "\">" << std::endl \
+        << "        <synopsis>" << LUA_##NAME##_APIHELP << "</synopsis>" << std::endl \
+        << "        <description>" << LUA_##NAME##_DESCR << "</description>" << std::endl \
+        << "        <params>" << LUA_##NAME##_PARAMS << "</params>" << std::endl \
+        << "        <return>" << LUA_##NAME##_RET << "</return>" << std::endl \
+        << "    </command>" << std::endl;
+#define REGISTER_LUA_VARIABLE(NAME) \
+    std::cout << "";
+#include "v_repLib.cpp"
+void registerLuaCommands();
+int main(int argc, char ** argv)
+{
+    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+    std::cout << "<?xml-stylesheet type=\"text/xsl\" href=\"reference.xsl\"?>" << std::endl;
+    std::cout << "<doc>" << std::endl;
+    registerLuaCommands();
+    std::cout << "</doc>" << std::endl;
+}
+#else
+#define REGISTER_LUA_COMMAND(NAME) { \
+	std::vector<int> inArgs; \
+	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_##NAME, inArgs); \
+	simRegisterCustomLuaFunction(LUA_##NAME##_COMMAND, LUA_##NAME##_APIHELP, &inArgs[0], LUA_##NAME##_CALLBACK); \
+}
+#define REGISTER_LUA_VARIABLE(NAME) simRegisterCustomLuaVariable(#NAME, (boost::lexical_cast<std::string>(NAME)).c_str())
+#endif // GENERATE_DOC
+
+void registerLuaCommands()
+{
+	REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
+	REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
+	REGISTER_LUA_COMMAND(CREATE_ROBOT);
+	REGISTER_LUA_COMMAND(DESTROY_ROBOT);
+	REGISTER_LUA_COMMAND(SET_STATE_SPACE);
+	REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
+	REGISTER_LUA_COMMAND(CREATE_TASK);
+	REGISTER_LUA_COMMAND(DESTROY_TASK);
+	REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
+	REGISTER_LUA_COMMAND(SET_ROBOT);
+	REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
+	REGISTER_LUA_COMMAND(SET_START_STATE);
+	REGISTER_LUA_COMMAND(SET_GOAL_STATE);
+	REGISTER_LUA_COMMAND(SET_GOAL);
+	REGISTER_LUA_COMMAND(COMPUTE);
+    REGISTER_LUA_COMMAND(READ_STATE);
+    REGISTER_LUA_COMMAND(WRITE_STATE);
+    REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
+    REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
+    REGISTER_LUA_COMMAND(SET_GOAL_CB);
+    REGISTER_LUA_COMMAND(TEST_LUA_CB);
+
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position3d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose3d);
+    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_joint_position);
 }
 
 VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
@@ -2092,46 +2155,7 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 		return(0);
 	}
 
-	std::vector<int> inArgs;
-
-	// Register Lua commands:
-#define REGISTER_LUA_COMMAND(NAME) { \
-	CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_##NAME, inArgs); \
-	simRegisterCustomLuaFunction(LUA_##NAME##_COMMAND, LUA_##NAME##_APIHELP, &inArgs[0], LUA_##NAME##_CALLBACK); \
-}
-
-	REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
-	REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
-	REGISTER_LUA_COMMAND(CREATE_ROBOT);
-	REGISTER_LUA_COMMAND(DESTROY_ROBOT);
-	REGISTER_LUA_COMMAND(SET_STATE_SPACE);
-	REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
-	REGISTER_LUA_COMMAND(CREATE_TASK);
-	REGISTER_LUA_COMMAND(DESTROY_TASK);
-	REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
-	REGISTER_LUA_COMMAND(SET_ROBOT);
-	REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
-	REGISTER_LUA_COMMAND(SET_START_STATE);
-	REGISTER_LUA_COMMAND(SET_GOAL_STATE);
-	REGISTER_LUA_COMMAND(SET_GOAL);
-	REGISTER_LUA_COMMAND(COMPUTE);
-    REGISTER_LUA_COMMAND(READ_STATE);
-    REGISTER_LUA_COMMAND(WRITE_STATE);
-    REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
-    REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
-    REGISTER_LUA_COMMAND(SET_GOAL_CB);
-    REGISTER_LUA_COMMAND(TEST_LUA_CB);
-
-#undef REGISTER_LUA_COMMAND
-#define REGISTER_LUA_VARIABLE(NAME) simRegisterCustomLuaVariable(#NAME, (boost::lexical_cast<std::string>(NAME)).c_str())
-
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position3d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose3d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_joint_position);
-
-#undef REGISTER_LUA_VARIABLE
+	registerLuaCommands();
 
 	return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }

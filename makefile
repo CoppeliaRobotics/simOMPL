@@ -6,8 +6,8 @@ OMPL_DIR ?= $(HOME)/ompl
 OMPL_CFLAGS = -I$(OMPL_DIR)/src
 OMPL_LDLIBS = -L$(OMPL_DIR)/build/Debug/lib -lompl
 
-CXXFLAGS = -ggdb -O0 -I../include -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC -static $(BOOST_CFLAGS) $(OMPL_CFLAGS)
-LDLIBS = -ggdb -O0 -lpthread -ldl -shared $(BOOST_LDLIBS) $(OMPL_LDLIBS)
+CXXFLAGS = -ggdb -O0 -I../include -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC $(BOOST_CFLAGS) $(OMPL_CFLAGS)
+LDLIBS = -ggdb -O0 -lpthread -ldl $(BOOST_LDLIBS) $(OMPL_LDLIBS)
 
 .PHONY: clean all install doc
 
@@ -26,14 +26,27 @@ all: libv_repExtOMPL.$(EXT) doc
 
 doc: reference.html
 
-reference.html: v_repExtOMPL.cpp
-	./gen_reference.py > $@
+generate_reference_xml: v_repExtOMPL.cpp v_repLib.cpp
+	$(CXX) $(CXXFLAGS) -DGENERATE_DOC v_repExtOMPL.cpp $(LDLIBS) -o $@
+
+reference.xml: generate_reference_xml
+	./generate_reference_xml > $@
+
+reference.html: reference.xml
+	./generate_reference_html.py $^ > $@.tmp
+	mv $@.tmp $@
 
 libv_repExtOMPL.$(EXT): v_repExtOMPL.o v_repLib.o
-	$(CXX) $^ $(LDLIBS) -o $@
+	$(CXX) $^ $(LDLIBS) -shared -o $@
 
 clean:
-	rm -f libv_repExtOMPL.$(EXT) *.o
+	rm -f libv_repExtOMPL.$(EXT)
+	rm -f *.o
+	rm -f generate_reference_xml
+	rm -f reference.xml
+	rm -f reference.html
+	rm -f reference.html.tmp
+	rm -rf generate_reference_xml.dSYM
 
 install: all
 	cp libv_repExtOMPL.$(EXT) $(INSTALL_DIR)
