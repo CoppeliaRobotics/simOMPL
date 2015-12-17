@@ -480,7 +480,6 @@ protected:
             // Now check the return arguments:
             if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluation.callback.function.c_str()))
             {
-                std::cout << "ProjectionEvaluator::luaProjectCallback - Lua callback " << task->projectionEvaluation.callback.function << " returned ";
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
                 for(int i = 0; i < outData->at(0).floatData.size(); i++)
                 {
@@ -859,8 +858,6 @@ protected:
 
     virtual bool checkCallback(const ob::State *state, double *distance) const
     {
-        std::cout << "***** thread id inside lua function caller: " << simGetThreadId() << std::endl;
-
         std::vector<double> stateVec;
         statespace->copyToReals(stateVec, state);
 
