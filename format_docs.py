@@ -35,20 +35,18 @@ def stringify_children(node):
     # filter removes possible Nones in texts and tails
     return ''.join(filter(None, map(lambda x: x.decode('utf-8') if isinstance(x,bytes) else x, parts)))
 
-def formatparams(s):
-    if not s: return ''
-    def formatparam(s):
-        s=s.strip()
-        return '<div><strong>{}</strong>: {}</div>'.format(*s.split(': ', 1)) if s else ''
-    return '\n'.join(map(formatparam, s.split('|')))
+def formatparams(el):
+    def formatparam(el):
+        return '<div><strong>{}</strong>: {}</div>'.format(el.get('name'), stringify_children(el))
+    return '\n'.join(map(formatparam, el.findall('param')))
 
 for cmd in sorted(doc.findall('command'), key=lambda x: x.get('name')):
     d=dict(
         fn=cmd.get('name'),
         syn=stringify_children(cmd.find('synopsis')),
         descr=stringify_children(cmd.find('description')),
-        params=formatparams(stringify_children(cmd.find('params'))),
-        ret=formatparams(stringify_children(cmd.find('return')))
+        params=formatparams(cmd.find('params')),
+        ret=formatparams(cmd.find('return'))
     )
     if not d['descr'].strip(): continue
     print('''

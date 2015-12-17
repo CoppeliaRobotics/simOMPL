@@ -916,14 +916,18 @@ protected:
 };
 
 #define HYPERLINK(function) "<a href=\"#" function "\">" function "</a>"
+#define PARAM(name,description) "<param name=\"" name "\">" description "</param>"
+
 #define LUA_CREATE_STATE_SPACE_DESCR "Create a component of the state space for the motion planning problem."
-#define LUA_CREATE_STATE_SPACE_PARAMS "name: a name for this state space" \
-    "|type: the type of this state space component (must be one of simx_ompl_statespacetype_position2d, simx_ompl_statespacetype_pose2d, simx_ompl_statespacetype_position3d, simx_ompl_statespacetype_pose3d, simx_ompl_statespacetype_joint_position)" \
-    "|objectHandle: the object handle (a joint object if type is simx_ompl_statespacetype_joint_position, otherwise a shape)" \
-    "|boundsLow: lower bounds (if type is pose, specify only the 3 position components)" \
-    "|boundsHigh: upper bounds (if type is pose, specify only the 3 position components)" \
-    "|useForProjection: if true, this object position or joint value will be used for computing a default projection"
-#define LUA_CREATE_STATE_SPACE_RET "stateSpaceHandle: a handle to the created state space component"
+#define LUA_CREATE_STATE_SPACE_PARAMS \
+    PARAM("name", "a name for this state space") \
+    PARAM("type", "the type of this state space component (must be one of simx_ompl_statespacetype_position2d, simx_ompl_statespacetype_pose2d, simx_ompl_statespacetype_position3d, simx_ompl_statespacetype_pose3d, simx_ompl_statespacetype_joint_position)") \
+    PARAM("objectHandle", "the object handle (a joint object if type is simx_ompl_statespacetype_joint_position, otherwise a shape)") \
+    PARAM("boundsLow", "lower bounds (if type is pose, specify only the 3 position components)") \
+    PARAM("boundsHigh", "upper bounds (if type is pose, specify only the 3 position components)") \
+    PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection")
+#define LUA_CREATE_STATE_SPACE_RET \
+    PARAM("stateSpaceHandle", "a handle to the created state space component")
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
 #define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection)"
 const int inArgs_CREATE_STATE_SPACE[]={6, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0};
@@ -972,7 +976,8 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
 #define LUA_DESTROY_STATE_SPACE_DESCR "Destroy the spacified state space component.<br /><br />" \
     "Note: state space components created during simulation are automatically destroyed when simulation ends."
-#define LUA_DESTROY_STATE_SPACE_PARAMS "stateSpaceHandle: handle to state space component"
+#define LUA_DESTROY_STATE_SPACE_PARAMS \
+    PARAM("stateSpaceHandle", "handle to state space component")
 #define LUA_DESTROY_STATE_SPACE_RET ""
 #define LUA_DESTROY_STATE_SPACE_COMMAND "simExtOMPL_destroyStateSpace"
 #define LUA_DESTROY_STATE_SPACE_APIHELP "number result=" LUA_DESTROY_STATE_SPACE_COMMAND "(number stateSpaceHandle)"
@@ -1013,8 +1018,10 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
     "<li> the state space components (created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND) ")</li>" \
     "<li> the collision objects of the robot</li>" \
     "</ul>"
-#define LUA_CREATE_ROBOT_PARAMS "name: a name for this robot object"
-#define LUA_CREATE_ROBOT_RET "robotHandle: a handle to the created robot object"
+#define LUA_CREATE_ROBOT_PARAMS \
+    PARAM("name", "a name for this robot object")
+#define LUA_CREATE_ROBOT_RET \
+    PARAM("robotHandle", "a handle to the created robot object")
 #define LUA_CREATE_ROBOT_COMMAND "simExtOMPL_createRobot"
 #define LUA_CREATE_ROBOT_APIHELP "number robotHandle=" LUA_CREATE_ROBOT_COMMAND "(string name)"
 const int inArgs_CREATE_ROBOT[]={1, sim_lua_arg_string, 0};
@@ -1047,7 +1054,8 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
 
 #define LUA_DESTROY_ROBOT_DESCR "Destroy the spacified robot object.<br /><br />" \
     "Note: robot objects created during simulation are automatically destroyed when simulation ends."
-#define LUA_DESTROY_ROBOT_PARAMS "robotHandle: handle to the robot object to destroy"
+#define LUA_DESTROY_ROBOT_PARAMS \
+    PARAM("robotHandle", "handle to the robot object to destroy")
 #define LUA_DESTROY_ROBOT_RET ""
 #define LUA_DESTROY_ROBOT_COMMAND "simExtOMPL_destroyRobot"
 #define LUA_DESTROY_ROBOT_APIHELP "number result=" LUA_DESTROY_ROBOT_COMMAND "(number robotHandle)"
@@ -1086,8 +1094,9 @@ void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
 
 #define LUA_PARAM_ROBOT_HANDLE "handle to a robot object created with " HYPERLINK(LUA_CREATE_ROBOT_COMMAND)
 #define LUA_SET_STATE_SPACE_DESCR "Set the state space of this robot object."
-#define LUA_SET_STATE_SPACE_PARAMS "robotHandle: " LUA_PARAM_ROBOT_HANDLE \
-    "|stateSpaceHandles: a table of handles to state space components, created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND)
+#define LUA_SET_STATE_SPACE_PARAMS \
+    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
+    PARAM("stateSpaceHandles", "a table of handles to state space components, created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND))
 #define LUA_SET_STATE_SPACE_RET ""
 #define LUA_SET_STATE_SPACE_COMMAND "simExtOMPL_setStateSpace"
 #define LUA_SET_STATE_SPACE_APIHELP "number result=" LUA_SET_STATE_SPACE_COMMAND "(number robotHandle, table stateSpaceHandles)"
@@ -1145,8 +1154,9 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision objects for this robot object. Collision object are used to compute collisions between robot and environment in the default state validity checker function."
-#define LUA_SET_COLLISION_OBJECTS_PARAMS "robotHandle: " LUA_PARAM_ROBOT_HANDLE \
-    "|objectHandles: a table of handle to V-REP objects (shapes)"
+#define LUA_SET_COLLISION_OBJECTS_PARAMS \
+    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
+    PARAM("objectHandles", "a table of handle to V-REP objects (shapes)")
 #define LUA_SET_COLLISION_OBJECTS_RET ""
 #define LUA_SET_COLLISION_OBJECTS_COMMAND "simExtOMPL_setCollisionObjects"
 #define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table objectHandles)"
@@ -1191,8 +1201,10 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
     "<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>" \
     "<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>" \
     "</ul>"
-#define LUA_CREATE_TASK_PARAMS "name: a name for this task object"
-#define LUA_CREATE_TASK_RET "taskHandle: a handle to the created task object"
+#define LUA_CREATE_TASK_PARAMS \
+    PARAM("name", "a name for this task object")
+#define LUA_CREATE_TASK_RET \
+    PARAM("taskHandle", "a handle to the created task object")
 #define LUA_CREATE_TASK_COMMAND "simExtOMPL_createTask"
 #define LUA_CREATE_TASK_APIHELP "number taskHandle=" LUA_CREATE_TASK_COMMAND "(string name)"
 const int inArgs_CREATE_TASK[]={1, sim_lua_arg_string, 0};
@@ -1230,7 +1242,8 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
 #define LUA_PARAM_TASK_HANDLE "a handle to a task object created with " HYPERLINK(LUA_CREATE_TASK_COMMAND)
 #define LUA_DESTROY_TASK_DESCR "Destroy the specified task object.<br /><br />" \
     "Note: task objects created during simulation are automatically destroyed when simulation ends."
-#define LUA_DESTROY_TASK_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE
+#define LUA_DESTROY_TASK_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
 #define LUA_DESTROY_TASK_RET ""
 #define LUA_DESTROY_TASK_COMMAND "simExtOMPL_destroyTask"
 #define LUA_DESTROY_TASK_APIHELP "number result=" LUA_DESTROY_TASK_COMMAND "(number taskHandle)"
@@ -1315,7 +1328,8 @@ const char * algorithm_string(Algorithm alg)
 };
 
 #define LUA_PRINT_TASK_INFO_DESCR "Print a summary of the specified task object, including information about robot and its state spaces."
-#define LUA_PRINT_TASK_INFO_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE
+#define LUA_PRINT_TASK_INFO_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
 #define LUA_PRINT_TASK_INFO_RET ""
 #define LUA_PRINT_TASK_INFO_COMMAND "simExtOMPL_printTaskInfo"
 #define LUA_PRINT_TASK_INFO_APIHELP "number result=" LUA_PRINT_TASK_INFO_COMMAND "(number taskHandle)"
@@ -1449,8 +1463,9 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_ALGORITHM_DESCR "Set the search algorithm for the specified task. Default algorithm used is KPIECE1."
-#define LUA_SET_ALGORITHM_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|algorithm: one of simx_ompl_algorithm_BiTRRT, simx_ompl_algorithm_BITstar, simx_ompl_algorithm_BKPIECE1, simx_ompl_algorithm_CForest, simx_ompl_algorithm_EST, simx_ompl_algorithm_FMT, simx_ompl_algorithm_KPIECE1, simx_ompl_algorithm_LazyPRM, simx_ompl_algorithm_LazyPRMstar, simx_ompl_algorithm_LazyRRT, simx_ompl_algorithm_LBKPIECE1, simx_ompl_algorithm_LBTRRT, simx_ompl_algorithm_PDST, simx_ompl_algorithm_PRM, simx_ompl_algorithm_PRMstar, simx_ompl_algorithm_pRRT, simx_ompl_algorithm_pSBL, simx_ompl_algorithm_RRT, simx_ompl_algorithm_RRTConnect, simx_ompl_algorithm_RRTstar, simx_ompl_algorithm_SBL, simx_ompl_algorithm_SPARS, simx_ompl_algorithm_SPARStwo, simx_ompl_algorithm_STRIDE, simx_ompl_algorithm_TRRT"
+#define LUA_SET_ALGORITHM_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("algorithm", "one of simx_ompl_algorithm_BiTRRT, simx_ompl_algorithm_BITstar, simx_ompl_algorithm_BKPIECE1, simx_ompl_algorithm_CForest, simx_ompl_algorithm_EST, simx_ompl_algorithm_FMT, simx_ompl_algorithm_KPIECE1, simx_ompl_algorithm_LazyPRM, simx_ompl_algorithm_LazyPRMstar, simx_ompl_algorithm_LazyRRT, simx_ompl_algorithm_LBKPIECE1, simx_ompl_algorithm_LBTRRT, simx_ompl_algorithm_PDST, simx_ompl_algorithm_PRM, simx_ompl_algorithm_PRMstar, simx_ompl_algorithm_pRRT, simx_ompl_algorithm_pSBL, simx_ompl_algorithm_RRT, simx_ompl_algorithm_RRTConnect, simx_ompl_algorithm_RRTstar, simx_ompl_algorithm_SBL, simx_ompl_algorithm_SPARS, simx_ompl_algorithm_SPARStwo, simx_ompl_algorithm_STRIDE, simx_ompl_algorithm_TRRT")
 #define LUA_SET_ALGORITHM_RET ""
 #define LUA_SET_ALGORITHM_COMMAND "simExtOMPL_setAlgorithm"
 #define LUA_SET_ALGORITHM_APIHELP "number result=" LUA_SET_ALGORITHM_COMMAND "(number taskHandle, number algorithm)"
@@ -1488,8 +1503,9 @@ void LUA_SET_ALGORITHM_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_ROBOT_DESCR "Set the robot object for the specified task."
-#define LUA_SET_ROBOT_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|robotHandle: " LUA_PARAM_ROBOT_HANDLE
+#define LUA_SET_ROBOT_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE)
 #define LUA_SET_ROBOT_RET ""
 #define LUA_SET_ROBOT_COMMAND "simExtOMPL_setRobot"
 #define LUA_SET_ROBOT_APIHELP "number result=" LUA_SET_ROBOT_COMMAND "(number taskHandle, number robotHandle)"
@@ -1533,8 +1549,9 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
-#define LUA_SET_ENVIRONMENT_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|obstacleHandles: a table of handles to V-REP objects (shapes)"
+#define LUA_SET_ENVIRONMENT_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("obstacleHandles", "a table of handles to V-REP objects (shapes)")
 #define LUA_SET_ENVIRONMENT_RET ""
 #define LUA_SET_ENVIRONMENT_COMMAND "simExtOMPL_setEnvironment"
 #define LUA_SET_ENVIRONMENT_APIHELP "number result=" LUA_SET_ENVIRONMENT_COMMAND "(number taskHandle, table obstacleHandles)"
@@ -1576,8 +1593,9 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 
 #define LUA_PARAM_ROBOT_STATE "a table of numbers, whose size must be consistent with the robot's state space specified in this task object"
 #define LUA_SET_START_STATE_DESCR "Set the start state for the specified task object."
-#define LUA_SET_START_STATE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|state: " LUA_PARAM_ROBOT_STATE
+#define LUA_SET_START_STATE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("state", LUA_PARAM_ROBOT_STATE)
 #define LUA_SET_START_STATE_RET ""
 #define LUA_SET_START_STATE_COMMAND "simExtOMPL_setStartState"
 #define LUA_SET_START_STATE_APIHELP "number result=" LUA_SET_START_STATE_COMMAND "(number taskHandle, table state)"
@@ -1616,8 +1634,9 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_GOAL_STATE_DESCR "Set the goal state for the specified task object."
-#define LUA_SET_GOAL_STATE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|state: " LUA_PARAM_ROBOT_STATE
+#define LUA_SET_GOAL_STATE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("state", LUA_PARAM_ROBOT_STATE)
 #define LUA_SET_GOAL_STATE_RET ""
 #define LUA_SET_GOAL_STATE_COMMAND "simExtOMPL_setGoalState"
 #define LUA_SET_GOAL_STATE_APIHELP "number result=" LUA_SET_GOAL_STATE_COMMAND "(number taskHandle, table state)"
@@ -1657,9 +1676,10 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same."
-#define LUA_SET_GOAL_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|robotDummy: a dummy attached to the robot" \
-    "|goalDummy: a dummy fixed in the environment, representing the goal pose/position"
+#define LUA_SET_GOAL_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("robotDummy", "a dummy attached to the robot") \
+    PARAM("goalDummy", "a dummy fixed in the environment, representing the goal pose/position")
 #define LUA_SET_GOAL_RET ""
 #define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
 #define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy)"
@@ -1698,9 +1718,11 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
-#define LUA_COMPUTE_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|maxTime: maximum time to use in seconds"
-#define LUA_COMPUTE_RET "states: a table of states, representing the solution, from start to goal. States are specified linearly."
+#define LUA_COMPUTE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("maxTime", "maximum time to use in seconds")
+#define LUA_COMPUTE_RET \
+    PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
 #define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime)"
 const int inArgs_COMPUTE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
@@ -2003,9 +2025,10 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_PROJ_EVAL_CB_DESCR "Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.<br /><br />table projection=evaluateProjection(table state)"
-#define LUA_SET_PROJ_EVAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|callback: name of the Lua callback" \
-    "|projectionSize: size of the projection (usually 2 or 3)"
+#define LUA_SET_PROJ_EVAL_CB_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("callback", "name of the Lua callback") \
+    PARAM("projectionSize", "size of the projection (usually 2 or 3)")
 #define LUA_SET_PROJ_EVAL_CB_RET ""
 #define LUA_SET_PROJ_EVAL_CB_COMMAND "simExtOMPL_setProjectionEvaluationCallback"
 #define LUA_SET_PROJ_EVAL_CB_APIHELP "number result=" LUA_SET_PROJ_EVAL_CB_COMMAND "(number taskHandle, string callback, number projectionSize)"
@@ -2067,8 +2090,9 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)"
-#define LUA_SET_STATE_VAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|callback: name of the Lua calback"
+#define LUA_SET_STATE_VAL_CB_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("callback", "name of the Lua calback")
 #define LUA_SET_STATE_VAL_CB_RET ""
 #define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
 #define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
@@ -2119,8 +2143,9 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 }
 
 #define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:<br /><br />boolean satisfied, number distance=goalSatisfied(table state)<br /><br />If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
-#define LUA_SET_GOAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE \
-    "|callback: the name of the Lua callback"
+#define LUA_SET_GOAL_CB_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("callback", "the name of the Lua callback")
 #define LUA_SET_GOAL_CB_RET ""
 #define LUA_SET_GOAL_CB_COMMAND "simExtOMPL_setGoalCallback"
 #define LUA_SET_GOAL_CB_APIHELP "number result=" LUA_SET_GOAL_CB_COMMAND "(number taskHandle, string callback)"
