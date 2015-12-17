@@ -9,7 +9,7 @@ OMPL_LDLIBS = -L$(OMPL_DIR)/build/Debug/lib -lompl
 CXXFLAGS = -ggdb -O0 -I../include -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC -static $(BOOST_CFLAGS) $(OMPL_CFLAGS)
 LDLIBS = -ggdb -O0 -lpthread -ldl -shared $(BOOST_LDLIBS) $(OMPL_LDLIBS)
 
-.PHONY: clean all install
+.PHONY: clean all install doc
 
 OS = $(shell uname -s)
 ifeq ($(OS), Linux)
@@ -27,7 +27,7 @@ all: libv_repExtOMPL.$(EXT) doc
 doc: reference.html
 
 reference.html: v_repExtOMPL.cpp
-	./gen_reference.py > reference.html
+	./gen_reference.py > $@
 
 libv_repExtOMPL.$(EXT): v_repExtOMPL.o v_repLib.o
 	$(CXX) $^ $(LDLIBS) -o $@
