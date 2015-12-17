@@ -1834,7 +1834,7 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
-#define LUA_SET_PROJ_EVAL_CB_DESCR "Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument."
+#define LUA_SET_PROJ_EVAL_CB_DESCR "Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.<br /><br />table projection=evaluateProjection(table state)"
 #define LUA_SET_PROJ_EVAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
     "|callback: name of the Lua callback" \
     "|projectionSize: size of the projection (usually 2 or 3)"
@@ -1898,7 +1898,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
-#define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state."
+#define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)"
 #define LUA_SET_STATE_VAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
     "|callback: name of the Lua calback"
 #define LUA_SET_STATE_VAL_CB_RET ""
@@ -1950,7 +1950,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
 	D.writeDataToLua(p);
 }
 
-#define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal. If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
+#define LUA_SET_GOAL_CB_DESCR "Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:<br /><br />boolean satisfied, number distance=goalSatisfied(table state)<br /><br />If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse."
 #define LUA_SET_GOAL_CB_PARAMS "taskHandle: " LUA_PARAM_TASK_HANDLE "" \
     "|callback: the name of the Lua callback"
 #define LUA_SET_GOAL_CB_RET ""
