@@ -2257,6 +2257,7 @@ void registerLuaCommands();
 int main(int argc, char ** argv)
 {
     std::cout << "<?xml version=\"1.0\"?>" << std::endl;
+    std::cout << "<?xml-stylesheet type=\"text/xsl\" href=\"reference.xsl\"?>" << std::endl;
     std::cout << "<doc>" << std::endl;
     registerLuaCommands();
     std::cout << "</doc>" << std::endl;

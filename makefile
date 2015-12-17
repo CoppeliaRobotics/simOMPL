@@ -29,9 +29,11 @@ doc: reference.html
 generate_reference_xml: v_repExtOMPL.cpp v_repLib.cpp
 	$(CXX) $(CXXFLAGS) -DGENERATE_DOC v_repExtOMPL.cpp $(LDLIBS) -o $@
 
-reference.html: v_repExtOMPL.cpp format_docs.py generate_reference_xml
-	./generate_reference_xml | ./format_docs.py > $@.tmp
-	mv $@.tmp $@
+reference.xml: generate_reference_xml v_repExtOMPL.cpp
+	./generate_reference_xml > $@
+
+reference.html: reference.xml reference.xsl
+	saxon -s:reference.xml -a:on -o:$@
 
 libv_repExtOMPL.$(EXT): v_repExtOMPL.o v_repLib.o
 	$(CXX) $^ $(LDLIBS) -shared -o $@
@@ -40,9 +42,9 @@ clean:
 	rm -f libv_repExtOMPL.$(EXT)
 	rm -f *.o
 	rm -f generate_reference_xml
-	rm -f reference.html
-	rm -f reference.html.tmp
 	rm -rf generate_reference_xml.dSYM
+	rm -f reference.html
+	rm -f reference.xml
 
 install: all
 	cp libv_repExtOMPL.$(EXT) $(INSTALL_DIR)
