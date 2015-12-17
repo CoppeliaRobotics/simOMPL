@@ -1445,6 +1445,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << " ???" << std::endl;
             break;
         }
+        s << prefix << "algorithm: " << algorithm_string(task->algorithm) << std::endl;
 
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
@@ -1724,8 +1725,6 @@ const int inArgs_COMPUTE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
 
 void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 {
-    std::cout << "***** thread id inside lua compute callback: " << simGetThreadId() << std::endl;
-
     p->outputArgCount = 0;
     CLuaFunctionData D;
     simInt returnResult = 0;
@@ -1876,8 +1875,6 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             if(!validAlgorithm)
                 break;
             setup.setPlanner(planner);
-            std::cout << "COMPUTE: p->scriptID = " << p->scriptID << std::endl;
-            std::cout << "COMPUTE: task->goal.callback.scriptId = " << task->goal.callback.scriptId << std::endl;
             ob::PlannerStatus solved = setup.solve(maxTime);
             if(solved)
             {
