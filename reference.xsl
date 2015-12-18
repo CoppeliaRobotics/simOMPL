@@ -18,40 +18,42 @@
                                 <p class="infoBox">The list of API functions below allows you to define and solve a motion planning problem with OMPL.</p>
                                 <xsl:for-each select="doc/command">
                                     <xsl:sort select="@name"/>
-                                    <h3 class="subsectionBar"><a name="{@name}" id="{@name}"></a><xsl:value-of select="@name"/></h3>
-                                    <table class="apiTable">
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftDescr">
-                                                Description
-                                            </td>
-                                            <td class="apiTableRightDescr"><xsl:copy-of select="description/node()"/><br/></td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftCSyn">C synopsis</td>
-                                            <td class="apiTableRightCSyn">-</td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftCParam">C parameters</td>
-                                            <td class="apiTableRightCParam">-</td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftCRet">C return value</td>
-                                            <td class="apiTableRightCRet">-</td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftLSyn">Lua synopsis</td>
-                                            <td class="apiTableRightLSyn"><xsl:value-of select="synopsis"/><br/></td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftLParam">Lua parameters</td>
-                                            <td class="apiTableRightLParam"><xsl:for-each select="params/param"><div><strong><xsl:value-of select="@name"/></strong>: <xsl:copy-of select="node()"/></div></xsl:for-each></td>
-                                        </tr>
-                                        <tr class="apiTableTr">
-                                            <td class="apiTableLeftLRet">Lua return values</td>
-                                            <td class="apiTableRightLRet"><xsl:for-each select="return/param"><div><strong><xsl:value-of select="@name"/></strong>: <xsl:copy-of select="node()"/></div></xsl:for-each></td>
-                                        </tr>
-                                    </table>
-                                    <br/>
+                                    <xsl:if test="description != ''">
+                                        <h3 class="subsectionBar"><a name="{@name}" id="{@name}"></a><xsl:value-of select="@name"/></h3>
+                                        <table class="apiTable">
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftDescr">
+                                                    Description
+                                                </td>
+                                                <td class="apiTableRightDescr"><xsl:copy-of select="description/node()"/><br/></td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftCSyn">C synopsis</td>
+                                                <td class="apiTableRightCSyn">-</td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftCParam">C parameters</td>
+                                                <td class="apiTableRightCParam">-</td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftCRet">C return value</td>
+                                                <td class="apiTableRightCRet">-</td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftLSyn">Lua synopsis</td>
+                                                <td class="apiTableRightLSyn"><xsl:value-of select="synopsis"/><br/></td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftLParam">Lua parameters</td>
+                                                <td class="apiTableRightLParam"><xsl:for-each select="params/param"><div><strong><xsl:value-of select="@name"/></strong>: <xsl:copy-of select="node()"/></div></xsl:for-each></td>
+                                            </tr>
+                                            <tr class="apiTableTr">
+                                                <td class="apiTableLeftLRet">Lua return values</td>
+                                                <td class="apiTableRightLRet"><xsl:for-each select="return/param"><div><strong><xsl:value-of select="@name"/></strong>: <xsl:copy-of select="node()"/></div></xsl:for-each></td>
+                                            </tr>
+                                        </table>
+                                        <br/>
+                                    </xsl:if>
                                 </xsl:for-each>
                                 <br/>
                                 <br/>
