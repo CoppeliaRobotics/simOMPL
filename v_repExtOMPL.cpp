@@ -2237,6 +2237,7 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
     REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
+    REGISTER_LUA_COMMAND(SET_ALGORITHM);
 
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
     REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
