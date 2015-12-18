@@ -17,6 +17,7 @@
                                 <h1>OMPL Plugin API reference</h1>
                                 <p class="infoBox">The list of API functions below allows you to define and solve a motion planning problem with OMPL.</p>
                                 <xsl:for-each select="doc/command">
+                                    <xsl:sort select="@name"/>
                                     <h3 class="subsectionBar"><a name="{@name}" id="{@name}"></a><xsl:value-of select="@name"/></h3>
                                     <table class="apiTable">
                                         <tr class="apiTableTr">
