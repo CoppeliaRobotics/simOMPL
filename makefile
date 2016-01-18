@@ -5,6 +5,10 @@ BOOST_LDLIBS = -L$(BOOST_DIR)/lib -lboost_system
 OMPL_DIR ?= $(HOME)/ompl
 OMPL_CFLAGS = -I$(OMPL_DIR)/src
 OMPL_LDLIBS = -L$(OMPL_DIR)/build/Debug/lib -lompl
+#ifdef MARC_ONLY_COMPILATION_STUFF
+OMPL_DIR = ../../../ompl-1.1.0-Source
+OMPL_LDLIBS = -L. -lompl
+#endif
 
 CXXFLAGS = -ggdb -O0 -I../include -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC $(BOOST_CFLAGS) $(OMPL_CFLAGS)
 LDLIBS = -ggdb -O0 -lpthread -ldl $(BOOST_LDLIBS) $(OMPL_LDLIBS)
@@ -35,7 +39,7 @@ reference.xml: generate_reference_xml v_repExtOMPL.cpp
 reference.html: reference.xml reference.xsl
 	saxon -s:reference.xml -a:on -o:$@
 
-libv_repExtOMPL.$(EXT): v_repExtOMPL.o v_repLib.o
+libv_repExtOMPL.$(EXT): v_repExtOMPL.o ../common/v_repLib.o ../common/luaFunctionData.o ../common/luaFunctionDataItem.o
 	$(CXX) $^ $(LDLIBS) -shared -o $@
 
 clean:

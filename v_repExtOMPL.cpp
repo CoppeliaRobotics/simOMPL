@@ -1,5 +1,6 @@
-// Copyright (c) 2015, Federico Ferri
-// All rights reserved.
+// Copyright 2016 Coppelia Robotics GmbH. All rights reserved. 
+// marc@coppeliarobotics.com
+// www.coppeliarobotics.com
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -136,41 +137,41 @@ namespace og = ompl::geometric;
 
 enum StateSpaceType
 {
-    simx_ompl_statespacetype_position2d = 50001,
-    simx_ompl_statespacetype_pose2d,
-    simx_ompl_statespacetype_position3d,
-    simx_ompl_statespacetype_pose3d,
-    simx_ompl_statespacetype_joint_position
+    sim_ompl_statespacetype_position2d = 50001,
+    sim_ompl_statespacetype_pose2d,
+    sim_ompl_statespacetype_position3d,
+    sim_ompl_statespacetype_pose3d,
+    sim_ompl_statespacetype_joint_position
 };
 
 enum Algorithm
 {
-    simx_ompl_algorithm_BiTRRT = 30001,
-    simx_ompl_algorithm_BITstar,
-    simx_ompl_algorithm_BKPIECE1,
-    simx_ompl_algorithm_CForest,
-    simx_ompl_algorithm_EST,
-    simx_ompl_algorithm_FMT,
-    simx_ompl_algorithm_KPIECE1,
-    simx_ompl_algorithm_LazyPRM,
-    simx_ompl_algorithm_LazyPRMstar,
-    simx_ompl_algorithm_LazyRRT,
-    simx_ompl_algorithm_LBKPIECE1,
-    simx_ompl_algorithm_LBTRRT,
-    //simx_ompl_algorithm_LightningRetrieveRepair,
-    simx_ompl_algorithm_PDST,
-    simx_ompl_algorithm_PRM,
-    simx_ompl_algorithm_PRMstar,
-    simx_ompl_algorithm_pRRT,
-    simx_ompl_algorithm_pSBL,
-    simx_ompl_algorithm_RRT,
-    simx_ompl_algorithm_RRTConnect,
-    simx_ompl_algorithm_RRTstar,
-    simx_ompl_algorithm_SBL,
-    simx_ompl_algorithm_SPARS,
-    simx_ompl_algorithm_SPARStwo,
-    simx_ompl_algorithm_STRIDE,
-    simx_ompl_algorithm_TRRT
+    sim_ompl_algorithm_BiTRRT = 30001,
+    sim_ompl_algorithm_BITstar,
+    sim_ompl_algorithm_BKPIECE1,
+    sim_ompl_algorithm_CForest,
+    sim_ompl_algorithm_EST,
+    sim_ompl_algorithm_FMT,
+    sim_ompl_algorithm_KPIECE1,
+    sim_ompl_algorithm_LazyPRM,
+    sim_ompl_algorithm_LazyPRMstar,
+    sim_ompl_algorithm_LazyRRT,
+    sim_ompl_algorithm_LBKPIECE1,
+    sim_ompl_algorithm_LBTRRT,
+    //sim_ompl_algorithm_LightningRetrieveRepair,
+    sim_ompl_algorithm_PDST,
+    sim_ompl_algorithm_PRM,
+    sim_ompl_algorithm_PRMstar,
+    sim_ompl_algorithm_pRRT,
+    sim_ompl_algorithm_pSBL,
+    sim_ompl_algorithm_RRT,
+    sim_ompl_algorithm_RRTConnect,
+    sim_ompl_algorithm_RRTstar,
+    sim_ompl_algorithm_SBL,
+    sim_ompl_algorithm_SPARS,
+    sim_ompl_algorithm_SPARStwo,
+    sim_ompl_algorithm_STRIDE,
+    sim_ompl_algorithm_TRRT
 };
 
 struct ObjectDefHeader
@@ -219,7 +220,7 @@ struct TaskDef
     // goal can be specified in different ways:
     struct Goal
     {
-        enum {STATE, DUMMY_PAIR, CALLBACK} type;
+        enum {STATE, DUMMY_PAIR, CLLBACK} type;
         // goal state:
         std::vector<simFloat> state;
         // goal dummy pair:
@@ -230,14 +231,14 @@ struct TaskDef
     // state validation:
     struct StateValidation
     {
-        enum {DEFAULT, CALLBACK} type;
+        enum {DEFAULT, CLLBACK} type;
         // state validation callback:
         struct {std::string function; simInt scriptId;} callback;
     } stateValidation;
     // projection evaluation:
     struct ProjectionEvaluation
     {
-        enum {DEFAULT, CALLBACK} type;
+        enum {DEFAULT, CLLBACK} type;
         // projection evaluation callback:
         struct {std::string function; simInt scriptId; int dim;} callback;
     } projectionEvaluation;
@@ -301,7 +302,7 @@ public:
                 switch(task->goal.type)
                 {
                     case TaskDef::Goal::STATE:
-                    case TaskDef::Goal::CALLBACK:
+                    case TaskDef::Goal::CLLBACK:
                         dim = defaultProjectionSize();
                         break;
                     case TaskDef::Goal::DUMMY_PAIR:
@@ -313,7 +314,7 @@ public:
                         break;
                 }
                 break;
-            case TaskDef::ProjectionEvaluation::CALLBACK:
+            case TaskDef::ProjectionEvaluation::CLLBACK:
                 dim = luaProjectCallbackSize();
                 break;
             default:
@@ -351,7 +352,7 @@ public:
                 switch(task->goal.type)
                 {
                     case TaskDef::Goal::STATE:
-                    case TaskDef::Goal::CALLBACK:
+                    case TaskDef::Goal::CLLBACK:
                         defaultProjection(state, projection);
                         break;
                     case TaskDef::Goal::DUMMY_PAIR:
@@ -359,7 +360,7 @@ public:
                         break;
                 }
                 break;
-            case TaskDef::ProjectionEvaluation::CALLBACK:
+            case TaskDef::ProjectionEvaluation::CLLBACK:
                 luaProjectCallback(state, projection);
                 break;
         }
@@ -370,7 +371,7 @@ protected:
     {
         RobotDef *robot = robots[task->robotHandle];
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
@@ -378,13 +379,13 @@ protected:
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_position2d:
                     return 2;
-                case simx_ompl_statespacetype_pose3d:
-                case simx_ompl_statespacetype_position3d:
+                case sim_ompl_statespacetype_pose3d:
+                case sim_ompl_statespacetype_position3d:
                     return 3;
-                case simx_ompl_statespacetype_joint_position:
+                case sim_ompl_statespacetype_joint_position:
                     return 1;
             }
         }
@@ -397,7 +398,7 @@ protected:
         RobotDef *robot = robots[task->robotHandle];
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
@@ -405,25 +406,25 @@ protected:
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_pose2d:
                     projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
                     projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                     break;
-                case simx_ompl_statespacetype_pose3d:
+                case sim_ompl_statespacetype_pose3d:
                     projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
                     projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
                     projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
                     break;
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_position2d:
                     projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                     break;
-                case simx_ompl_statespacetype_position3d:
+                case sim_ompl_statespacetype_position3d:
                     projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                     projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
                     break;
-                case simx_ompl_statespacetype_joint_position:
+                case sim_ompl_statespacetype_joint_position:
                     projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     break;
             }
@@ -467,8 +468,8 @@ protected:
 
         // Prepare the input arguments:
         std::vector<float> stateVecf;
-        for(int i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back(stateVec[i]);
+        for(size_t i = 0; i < stateVec.size(); i++)
+            stateVecf.push_back((float)stateVec[i]);
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
@@ -481,7 +482,7 @@ protected:
             if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluation.callback.function.c_str()))
             {
                 std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                for(int i = 0; i < outData->at(0).floatData.size(); i++)
+                for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
                 {
                     projection(i) = outData->at(0).floatData[i];
                     std::cout << (i ? ", " : "") << outData->at(0).floatData[i];
@@ -518,7 +519,7 @@ public:
 
         RobotDef *robot = robots[task->robotHandle];
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
@@ -526,23 +527,23 @@ public:
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_pose2d:
                     subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
                     subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
                     subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
                     break;
-                case simx_ompl_statespacetype_pose3d:
+                case sim_ompl_statespacetype_pose3d:
                     subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
                     subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
                     subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
                     break;
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_position2d:
                     subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
                     break;
-                case simx_ompl_statespacetype_position3d:
+                case sim_ompl_statespacetype_position3d:
                     subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(3));
                     break;
-                case simx_ompl_statespacetype_joint_position:
+                case sim_ompl_statespacetype_joint_position:
                     subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
                     break;
             }
@@ -553,26 +554,26 @@ public:
             // set bounds:
 
             ob::RealVectorBounds bounds(stateSpace->boundsLow.size());;
-            for(int j = 0; j < stateSpace->boundsLow.size(); j++)
+            for(size_t j = 0; j < stateSpace->boundsLow.size(); j++)
                 bounds.setLow(j, stateSpace->boundsLow[j]);
-            for(int j = 0; j < stateSpace->boundsHigh.size(); j++)
+            for(size_t j = 0; j < stateSpace->boundsHigh.size(); j++)
                 bounds.setHigh(j, stateSpace->boundsHigh[j]);
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_pose2d:
                     as<ob::SE2StateSpace>(i)->setBounds(bounds);
                     break;
-                case simx_ompl_statespacetype_pose3d:
+                case sim_ompl_statespacetype_pose3d:
                     as<ob::SE3StateSpace>(i)->setBounds(bounds);
                     break;
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_position2d:
                     as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                     break;
-                case simx_ompl_statespacetype_position3d:
+                case sim_ompl_statespacetype_position3d:
                     as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                     break;
-                case simx_ompl_statespacetype_joint_position:
+                case sim_ompl_statespacetype_joint_position:
                     as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                     break;
             }
@@ -587,47 +588,47 @@ public:
         int j = 0;
         simFloat pos[3], orient[4], value;
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_pose2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                    pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                    pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                    orient[0] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                    pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                    pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                    orient[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
                     // FIXME: make correct quaternion for 2d orientation!
                     simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
                     simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     break;
-                case simx_ompl_statespacetype_pose3d:
-                    pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                    pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                    pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                    orient[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
-                    orient[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
-                    orient[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
-                    orient[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
+                case sim_ompl_statespacetype_pose3d:
+                    pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                    pos[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                    pos[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                    orient[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
+                    orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
+                    orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
+                    orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
                     simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
                     simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     break;
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_position2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                     simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     break;
-                case simx_ompl_statespacetype_position3d:
-                    pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                case sim_ompl_statespacetype_position3d:
+                    pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                    pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                    pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
                     simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     break;
-                case simx_ompl_statespacetype_joint_position:
-                    value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                case sim_ompl_statespacetype_joint_position:
+                    value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     simSetJointPosition(stateSpace->objectHandle, value);
                     break;
             }
@@ -641,20 +642,20 @@ public:
 
         simFloat pos[3], orient[4], value;
 
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
 
             switch(stateSpace->type)
             {
-                case simx_ompl_statespacetype_pose2d:
+                case sim_ompl_statespacetype_pose2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
                     s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
                     s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[0]);
                     // FIXME: make correct quaternion for 2d orientation!
                     break;
-                case simx_ompl_statespacetype_pose3d:
+                case sim_ompl_statespacetype_pose3d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
                     s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
@@ -663,18 +664,18 @@ public:
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
                     break;
-                case simx_ompl_statespacetype_position2d:
+                case sim_ompl_statespacetype_position2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     break;
-                case simx_ompl_statespacetype_position3d:
+                case sim_ompl_statespacetype_position3d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
                     break;
-                case simx_ompl_statespacetype_joint_position:
+                case sim_ompl_statespacetype_joint_position:
                     simGetJointPosition(stateSpace->objectHandle, &value);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
                     break;
@@ -704,7 +705,7 @@ public:
         {
         case TaskDef::StateValidation::DEFAULT:
             return checkDefault(state);
-        case TaskDef::StateValidation::CALLBACK:
+        case TaskDef::StateValidation::CLLBACK:
             return checkCallback(state);
         }
         return false;
@@ -728,9 +729,9 @@ protected:
 
         // check collisions:
         bool inCollision = false;
-        for(int i = 0; i < task->obstacleHandles.size(); i++)
+        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
         {
-            for(int j = 0; j < robot->collisionHandles.size(); j++)
+            for(size_t j = 0; j < robot->collisionHandles.size(); j++)
             {
                 int r = simCheckCollision(robot->collisionHandles[j], task->obstacleHandles[i]);
                 if(r == 1)
@@ -763,8 +764,8 @@ protected:
 
         // Prepare the input arguments:
         std::vector<float> stateVecf;
-        for(int i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back(stateVec[i]);
+        for(size_t i = 0; i < stateVec.size(); i++)
+            stateVecf.push_back((float)stateVec[i]);
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
@@ -823,7 +824,7 @@ public:
             return false;
         case TaskDef::Goal::DUMMY_PAIR:
             return checkDummyPair(state, distance);
-        case TaskDef::Goal::CALLBACK:
+        case TaskDef::Goal::CLLBACK:
             return checkCallback(state, distance);
         }
 
@@ -871,8 +872,8 @@ protected:
 
         // Prepare the input arguments:
         std::vector<float> stateVecf;
-        for(int i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back(stateVec[i]);
+        for(size_t i = 0; i < stateVec.size(); i++)
+            stateVecf.push_back((float)stateVec[i]);
         D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
         D.writeDataToLua_luaFunctionCall(&c, outArgs);
 
@@ -916,8 +917,8 @@ protected:
 #define LUA_CREATE_STATE_SPACE_DESCR "Create a component of the state space for the motion planning problem."
 #define LUA_CREATE_STATE_SPACE_PARAMS \
     PARAM("name", "a name for this state space") \
-    PARAM("type", "the type of this state space component (must be one of simx_ompl_statespacetype_position2d, simx_ompl_statespacetype_pose2d, simx_ompl_statespacetype_position3d, simx_ompl_statespacetype_pose3d, simx_ompl_statespacetype_joint_position)") \
-    PARAM("objectHandle", "the object handle (a joint object if type is simx_ompl_statespacetype_joint_position, otherwise a shape)") \
+    PARAM("type", "the type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position)") \
+    PARAM("objectHandle", "the object handle (a joint object if type is sim_ompl_statespacetype_joint_position, otherwise a shape)") \
     PARAM("boundsLow", "lower bounds (if type is pose, specify only the 3 position components)") \
     PARAM("boundsHigh", "upper bounds (if type is pose, specify only the 3 position components)") \
     PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection")
@@ -955,9 +956,9 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         statespace->header.name = name;
         statespace->type = static_cast<StateSpaceType>(type);
         statespace->objectHandle = objectHandle;
-        for(int i = 0; i < inData->at(3).floatData.size(); i++)
+        for(size_t i = 0; i < inData->at(3).floatData.size(); i++)
             statespace->boundsLow.push_back(inData->at(3).floatData[i]);
-        for(int i = 0; i < inData->at(4).floatData.size(); i++)
+        for(size_t i = 0; i < inData->at(4).floatData.size(); i++)
             statespace->boundsHigh.push_back(inData->at(4).floatData[i]);
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
         statespaces[statespace->header.handle] = statespace;
@@ -1119,7 +1120,7 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
         bool valid_statespace_handles = true;
 
-        for(int i = 0; i < inData->at(1).intData.size(); i++)
+        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
         {
             simInt stateSpaceHandle = inData->at(1).intData[i];
 
@@ -1138,7 +1139,7 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
         RobotDef *robot = robots[robotHandle];
         robot->stateSpaces.clear();
-        for(int i = 0; i < inData->at(1).intData.size(); i++)
+        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
             robot->stateSpaces.push_back(inData->at(1).intData[i]);
         returnResult = 1;
     }
@@ -1179,7 +1180,7 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
 
         RobotDef *robot = robots[robotHandle];
         robot->collisionHandles.clear();
-        for(int i = 0; i < inData->at(1).intData.size(); i++)
+        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
             robot->collisionHandles.push_back(inData->at(1).intData[i]);
         returnResult = 1;
     }
@@ -1224,7 +1225,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
-        task->algorithm = simx_ompl_algorithm_KPIECE1;
+        task->algorithm = sim_ompl_algorithm_KPIECE1;
         tasks[task->header.handle] = task;
         returnResult = task->header.handle;
     }
@@ -1279,11 +1280,11 @@ const char * state_space_type_string(StateSpaceType type)
 {
     switch(type)
     {
-        case simx_ompl_statespacetype_position2d: return "simx_ompl_statespacetype_position2d";
-        case simx_ompl_statespacetype_pose2d: return "simx_ompl_statespacetype_pose2d";
-        case simx_ompl_statespacetype_position3d: return "simx_ompl_statespacetype_position3d";
-        case simx_ompl_statespacetype_pose3d: return "simx_ompl_statespacetype_pose3d";
-        case simx_ompl_statespacetype_joint_position: return "simx_ompl_statespacetype_joint_position";
+        case sim_ompl_statespacetype_position2d: return "sim_ompl_statespacetype_position2d";
+        case sim_ompl_statespacetype_pose2d: return "sim_ompl_statespacetype_pose2d";
+        case sim_ompl_statespacetype_position3d: return "sim_ompl_statespacetype_position3d";
+        case sim_ompl_statespacetype_pose3d: return "sim_ompl_statespacetype_pose3d";
+        case sim_ompl_statespacetype_joint_position: return "sim_ompl_statespacetype_joint_position";
         default: return "???";
     }
 };
@@ -1292,32 +1293,32 @@ const char * algorithm_string(Algorithm alg)
 {
     switch(alg)
     {
-        case simx_ompl_algorithm_BiTRRT: return "simx_ompl_algorithm_BiTRRT";
-        case simx_ompl_algorithm_BITstar: return "simx_ompl_algorithm_BITstar";
-        case simx_ompl_algorithm_BKPIECE1: return "simx_ompl_algorithm_BKPIECE1";
-        case simx_ompl_algorithm_CForest: return "simx_ompl_algorithm_CForest";
-        case simx_ompl_algorithm_EST: return "simx_ompl_algorithm_EST";
-        case simx_ompl_algorithm_FMT: return "simx_ompl_algorithm_FMT";
-        case simx_ompl_algorithm_KPIECE1: return "simx_ompl_algorithm_KPIECE1";
-        case simx_ompl_algorithm_LazyPRM: return "simx_ompl_algorithm_LazyPRM";
-        case simx_ompl_algorithm_LazyPRMstar: return "simx_ompl_algorithm_LazyPRMstar";
-        case simx_ompl_algorithm_LazyRRT: return "simx_ompl_algorithm_LazyRRT";
-        case simx_ompl_algorithm_LBKPIECE1: return "simx_ompl_algorithm_LBKPIECE1";
-        case simx_ompl_algorithm_LBTRRT: return "simx_ompl_algorithm_LBTRRT";
-        //case simx_ompl_algorithm_LightningRetrieveRepair: return "simx_ompl_algorithm_LightningRetrieveRepair";
-        case simx_ompl_algorithm_PDST: return "simx_ompl_algorithm_PDST";
-        case simx_ompl_algorithm_PRM: return "simx_ompl_algorithm_PRM";
-        case simx_ompl_algorithm_PRMstar: return "simx_ompl_algorithm_PRMstar";
-        case simx_ompl_algorithm_pRRT: return "simx_ompl_algorithm_pRRT";
-        case simx_ompl_algorithm_pSBL: return "simx_ompl_algorithm_pSBL";
-        case simx_ompl_algorithm_RRT: return "simx_ompl_algorithm_RRT";
-        case simx_ompl_algorithm_RRTConnect: return "simx_ompl_algorithm_RRTConnect";
-        case simx_ompl_algorithm_RRTstar: return "simx_ompl_algorithm_RRTstar";
-        case simx_ompl_algorithm_SBL: return "simx_ompl_algorithm_SBL";
-        case simx_ompl_algorithm_SPARS: return "simx_ompl_algorithm_SPARS";
-        case simx_ompl_algorithm_SPARStwo: return "simx_ompl_algorithm_SPARStwo";
-        case simx_ompl_algorithm_STRIDE: return "simx_ompl_algorithm_STRIDE";
-        case simx_ompl_algorithm_TRRT: return "simx_ompl_algorithm_TRRT";
+        case sim_ompl_algorithm_BiTRRT: return "sim_ompl_algorithm_BiTRRT";
+        case sim_ompl_algorithm_BITstar: return "sim_ompl_algorithm_BITstar";
+        case sim_ompl_algorithm_BKPIECE1: return "sim_ompl_algorithm_BKPIECE1";
+        case sim_ompl_algorithm_CForest: return "sim_ompl_algorithm_CForest";
+        case sim_ompl_algorithm_EST: return "sim_ompl_algorithm_EST";
+        case sim_ompl_algorithm_FMT: return "sim_ompl_algorithm_FMT";
+        case sim_ompl_algorithm_KPIECE1: return "sim_ompl_algorithm_KPIECE1";
+        case sim_ompl_algorithm_LazyPRM: return "sim_ompl_algorithm_LazyPRM";
+        case sim_ompl_algorithm_LazyPRMstar: return "sim_ompl_algorithm_LazyPRMstar";
+        case sim_ompl_algorithm_LazyRRT: return "sim_ompl_algorithm_LazyRRT";
+        case sim_ompl_algorithm_LBKPIECE1: return "sim_ompl_algorithm_LBKPIECE1";
+        case sim_ompl_algorithm_LBTRRT: return "sim_ompl_algorithm_LBTRRT";
+        //case sim_ompl_algorithm_LightningRetrieveRepair: return "sim_ompl_algorithm_LightningRetrieveRepair";
+        case sim_ompl_algorithm_PDST: return "sim_ompl_algorithm_PDST";
+        case sim_ompl_algorithm_PRM: return "sim_ompl_algorithm_PRM";
+        case sim_ompl_algorithm_PRMstar: return "sim_ompl_algorithm_PRMstar";
+        case sim_ompl_algorithm_pRRT: return "sim_ompl_algorithm_pRRT";
+        case sim_ompl_algorithm_pSBL: return "sim_ompl_algorithm_pSBL";
+        case sim_ompl_algorithm_RRT: return "sim_ompl_algorithm_RRT";
+        case sim_ompl_algorithm_RRTConnect: return "sim_ompl_algorithm_RRTConnect";
+        case sim_ompl_algorithm_RRTstar: return "sim_ompl_algorithm_RRTstar";
+        case sim_ompl_algorithm_SBL: return "sim_ompl_algorithm_SBL";
+        case sim_ompl_algorithm_SPARS: return "sim_ompl_algorithm_SPARS";
+        case sim_ompl_algorithm_SPARStwo: return "sim_ompl_algorithm_SPARStwo";
+        case sim_ompl_algorithm_STRIDE: return "sim_ompl_algorithm_STRIDE";
+        case sim_ompl_algorithm_TRRT: return "sim_ompl_algorithm_TRRT";
         default: return "???";
     }
 };
@@ -1359,11 +1360,11 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         s << prefix << "robot: " << task->robotHandle << std::endl;
         s << prefix << "    name: " << robot->header.name << std::endl;
         s << prefix << "    collidables: {";
-        for(int i = 0; i < robot->collisionHandles.size(); i++)
+        for(size_t i = 0; i < robot->collisionHandles.size(); i++)
             s << (i ? ", " : "") << robot->collisionHandles[i];
         s << "}" << std::endl;
         s << prefix << "    state spaces:" << std::endl;
-        for(int i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
             s << prefix << "        state space: " << stateSpace->header.handle << std::endl;
@@ -1371,21 +1372,21 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << prefix << "            type: " << state_space_type_string(stateSpace->type) << std::endl;
             s << prefix << "            object handle: " << stateSpace->objectHandle << std::endl;
             s << prefix << "            bounds low: {";
-            for(int i = 0; i < stateSpace->boundsLow.size(); i++)
-                s << (i ? ", " : "") << stateSpace->boundsLow[i];
+            for(size_t j = 0; j < stateSpace->boundsLow.size(); j++)
+                s << (j ? ", " : "") << stateSpace->boundsLow[j];
             s << "}" << std::endl;
             s << prefix << "            bounds high: {";
-            for(int i = 0; i < stateSpace->boundsHigh.size(); i++)
-                s << (i ? ", " : "") << stateSpace->boundsHigh[i];
+            for(size_t j = 0; j < stateSpace->boundsHigh.size(); j++)
+                s << (j ? ", " : "") << stateSpace->boundsHigh[j];
             s << "}" << std::endl;
             s << prefix << "            default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
         }
         s << prefix << "obstacles: {";
-        for(int i = 0; i < task->obstacleHandles.size(); i++)
+        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
             s << (i ? ", " : "") << task->obstacleHandles[i];
         s << "}" << std::endl;
         s << prefix << "start state: {";
-        for(int i = 0; i < task->startState.size(); i++)
+        for(size_t i = 0; i < task->startState.size(); i++)
             s << (i ? ", " : "") << task->startState[i];
         s << "}" << std::endl;
         s << prefix << "goal:";
@@ -1394,7 +1395,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         case TaskDef::Goal::STATE:
             s << std::endl;
             s << prefix << "    goal state: {";
-            for(int i = 0; i < task->goal.state.size(); i++)
+            for(size_t i = 0; i < task->goal.state.size(); i++)
                 s << (i ? ", " : "") << task->goal.state[i];
             s << "}" << std::endl;
             break;
@@ -1403,7 +1404,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << prefix << "    robot dummy:" << task->goal.dummyPair.robotDummy << std::endl;
             s << prefix << "    goal dummy:" << task->goal.dummyPair.goalDummy << std::endl;
             break;
-        case TaskDef::Goal::CALLBACK:
+        case TaskDef::Goal::CLLBACK:
             s << std::endl;
             s << prefix << "    callback:" << std::endl;
             s << prefix << "        scriptId: " << task->goal.callback.scriptId << std::endl;
@@ -1419,7 +1420,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         case TaskDef::StateValidation::DEFAULT:
             s << " default" << std::endl;
             break;
-        case TaskDef::StateValidation::CALLBACK:
+        case TaskDef::StateValidation::CLLBACK:
             s << std::endl;
             s << prefix << "    callback:" << std::endl;
             s << prefix << "        scriptId: " << task->stateValidation.callback.scriptId << std::endl;
@@ -1435,7 +1436,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         case TaskDef::ProjectionEvaluation::DEFAULT:
             s << " default" << std::endl;
             break;
-        case TaskDef::ProjectionEvaluation::CALLBACK:
+        case TaskDef::ProjectionEvaluation::CLLBACK:
             s << std::endl;
             s << prefix << "    callback:" << std::endl;
             s << prefix << "        scriptId:" << task->projectionEvaluation.callback.scriptId << std::endl;
@@ -1461,7 +1462,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_ALGORITHM_DESCR "Set the search algorithm for the specified task. Default algorithm used is KPIECE1."
 #define LUA_SET_ALGORITHM_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("algorithm", "one of simx_ompl_algorithm_BiTRRT, simx_ompl_algorithm_BITstar, simx_ompl_algorithm_BKPIECE1, simx_ompl_algorithm_CForest, simx_ompl_algorithm_EST, simx_ompl_algorithm_FMT, simx_ompl_algorithm_KPIECE1, simx_ompl_algorithm_LazyPRM, simx_ompl_algorithm_LazyPRMstar, simx_ompl_algorithm_LazyRRT, simx_ompl_algorithm_LBKPIECE1, simx_ompl_algorithm_LBTRRT, simx_ompl_algorithm_PDST, simx_ompl_algorithm_PRM, simx_ompl_algorithm_PRMstar, simx_ompl_algorithm_pRRT, simx_ompl_algorithm_pSBL, simx_ompl_algorithm_RRT, simx_ompl_algorithm_RRTConnect, simx_ompl_algorithm_RRTstar, simx_ompl_algorithm_SBL, simx_ompl_algorithm_SPARS, simx_ompl_algorithm_SPARStwo, simx_ompl_algorithm_STRIDE, simx_ompl_algorithm_TRRT")
+    PARAM("algorithm", "one of sim_ompl_algorithm_BiTRRT, sim_ompl_algorithm_BITstar, sim_ompl_algorithm_BKPIECE1, sim_ompl_algorithm_CForest, sim_ompl_algorithm_EST, sim_ompl_algorithm_FMT, sim_ompl_algorithm_KPIECE1, sim_ompl_algorithm_LazyPRM, sim_ompl_algorithm_LazyPRMstar, sim_ompl_algorithm_LazyRRT, sim_ompl_algorithm_LBKPIECE1, sim_ompl_algorithm_LBTRRT, sim_ompl_algorithm_PDST, sim_ompl_algorithm_PRM, sim_ompl_algorithm_PRMstar, sim_ompl_algorithm_pRRT, sim_ompl_algorithm_pSBL, sim_ompl_algorithm_RRT, sim_ompl_algorithm_RRTConnect, sim_ompl_algorithm_RRTstar, sim_ompl_algorithm_SBL, sim_ompl_algorithm_SPARS, sim_ompl_algorithm_SPARStwo, sim_ompl_algorithm_STRIDE, sim_ompl_algorithm_TRRT")
 #define LUA_SET_ALGORITHM_RET ""
 #define LUA_SET_ALGORITHM_COMMAND "simExtOMPL_setAlgorithm"
 #define LUA_SET_ALGORITHM_APIHELP "number result=" LUA_SET_ALGORITHM_COMMAND "(number taskHandle, number algorithm)"
@@ -1619,7 +1620,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
         task->startState.clear();
-        for(int i = 0; i < inData->at(1).floatData.size(); i++)
+        for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
             task->startState.push_back(inData->at(1).floatData[i]);
         returnResult = 1;
     }
@@ -1661,7 +1662,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         TaskDef *task = tasks[taskHandle];
         task->goal.type = TaskDef::Goal::STATE;
         task->goal.state.clear();
-        for(int i = 0; i < inData->at(1).floatData.size(); i++)
+        for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
             task->goal.state.push_back(inData->at(1).floatData[i]);
         returnResult = 1;
     }
@@ -1766,7 +1767,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
             ob::ScopedState<> start(space);
             // TODO: check if task->startState is set and valid
-            for(int i = 0; i < task->startState.size(); i++)
+            for(size_t i = 0; i < task->startState.size(); i++)
                 start[i] = task->startState[i];
             setup.setStartState(start);
 
@@ -1774,11 +1775,11 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             {
                 ob::ScopedState<> goal(space);
                 // TODO: check if task->goal.state is set and valid
-                for(int i = 0; i < task->goal.state.size(); i++)
+                for(size_t i = 0; i < task->goal.state.size(); i++)
                     goal[i] = task->goal.state[i];
                 setup.setGoalState(goal);
             }
-            else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CALLBACK)
+            else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
             {
                 ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
                 setup.setGoal(goal);
@@ -1789,82 +1790,82 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             bool validAlgorithm = true;
             switch(task->algorithm)
             {
-                case simx_ompl_algorithm_BiTRRT:
+                case sim_ompl_algorithm_BiTRRT:
                     planner = ob::PlannerPtr(new og::BiTRRT(si));
                     break;
-                case simx_ompl_algorithm_BITstar:
+                case sim_ompl_algorithm_BITstar:
                     planner = ob::PlannerPtr(new og::BITstar(si));
                     break;
-                case simx_ompl_algorithm_BKPIECE1:
+                case sim_ompl_algorithm_BKPIECE1:
                     planner = ob::PlannerPtr(new og::BKPIECE1(si));
                     break;
-                case simx_ompl_algorithm_CForest:
+                case sim_ompl_algorithm_CForest:
                     planner = ob::PlannerPtr(new og::CForest(si));
                     break;
-                case simx_ompl_algorithm_EST:
+                case sim_ompl_algorithm_EST:
                     planner = ob::PlannerPtr(new og::EST(si)); // needs projection
                     break;
-                case simx_ompl_algorithm_FMT:
+                case sim_ompl_algorithm_FMT:
                     planner = ob::PlannerPtr(new og::FMT(si));
                     break;
-                case simx_ompl_algorithm_KPIECE1:
+                case sim_ompl_algorithm_KPIECE1:
                     planner = ob::PlannerPtr(new og::KPIECE1(si)); // needs projection
                     break;
-                case simx_ompl_algorithm_LazyPRM:
+                case sim_ompl_algorithm_LazyPRM:
                     planner = ob::PlannerPtr(new og::LazyPRM(si));
                     break;
-                case simx_ompl_algorithm_LazyPRMstar:
+                case sim_ompl_algorithm_LazyPRMstar:
                     planner = ob::PlannerPtr(new og::LazyPRMstar(si));
                     break;
-                case simx_ompl_algorithm_LazyRRT:
+                case sim_ompl_algorithm_LazyRRT:
                     planner = ob::PlannerPtr(new og::LazyRRT(si));
                     break;
-                case simx_ompl_algorithm_LBKPIECE1:
+                case sim_ompl_algorithm_LBKPIECE1:
                     planner = ob::PlannerPtr(new og::LBKPIECE1(si));
                     break;
-                case simx_ompl_algorithm_LBTRRT:
+                case sim_ompl_algorithm_LBTRRT:
                     planner = ob::PlannerPtr(new og::LBTRRT(si));
                     break;
-                //case simx_ompl_algorithm_LightningRetrieveRepair:
+                //case sim_ompl_algorithm_LightningRetrieveRepair:
                     //planner = ob::PlannerPtr(new og::LightningRetrieveRepair(si));
                     //break;
-                case simx_ompl_algorithm_PDST:
+                case sim_ompl_algorithm_PDST:
                     planner = ob::PlannerPtr(new og::PDST(si)); // needs projection
                     break;
-                case simx_ompl_algorithm_PRM:
+                case sim_ompl_algorithm_PRM:
                     planner = ob::PlannerPtr(new og::PRM(si));
                     break;
-                case simx_ompl_algorithm_PRMstar:
+                case sim_ompl_algorithm_PRMstar:
                     planner = ob::PlannerPtr(new og::PRMstar(si));
                     break;
-                case simx_ompl_algorithm_pRRT:
+                case sim_ompl_algorithm_pRRT:
                     planner = ob::PlannerPtr(new og::pRRT(si));
                     break;
-                case simx_ompl_algorithm_pSBL:
+                case sim_ompl_algorithm_pSBL:
                     planner = ob::PlannerPtr(new og::pSBL(si));
                     break;
-                case simx_ompl_algorithm_RRT:
+                case sim_ompl_algorithm_RRT:
                     planner = ob::PlannerPtr(new og::RRT(si));
                     break;
-                case simx_ompl_algorithm_RRTConnect:
+                case sim_ompl_algorithm_RRTConnect:
                     planner = ob::PlannerPtr(new og::RRTConnect(si));
                     break;
-                case simx_ompl_algorithm_RRTstar:
+                case sim_ompl_algorithm_RRTstar:
                     planner = ob::PlannerPtr(new og::RRTstar(si));
                     break;
-                case simx_ompl_algorithm_SBL:
+                case sim_ompl_algorithm_SBL:
                     planner = ob::PlannerPtr(new og::SBL(si)); // needs projection
                     break;
-                case simx_ompl_algorithm_SPARS:
+                case sim_ompl_algorithm_SPARS:
                     planner = ob::PlannerPtr(new og::SPARS(si));
                     break;
-                case simx_ompl_algorithm_SPARStwo:
+                case sim_ompl_algorithm_SPARStwo:
                     planner = ob::PlannerPtr(new og::SPARStwo(si));
                     break;
-                case simx_ompl_algorithm_STRIDE:
+                case sim_ompl_algorithm_STRIDE:
                     planner = ob::PlannerPtr(new og::STRIDE(si));
                     break;
-                case simx_ompl_algorithm_TRRT:
+                case sim_ompl_algorithm_TRRT:
                     planner = ob::PlannerPtr(new og::TRRT(si));
                     break;
                 default:
@@ -1888,13 +1889,13 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 path.interpolate();
                 //path.print(s);
                 //simAddStatusbarMessage(s.str().c_str());
-                for(int i = 0; i < path.getStateCount(); i++)
+                for(size_t i = 0; i < path.getStateCount(); i++)
                 {
                     const ob::StateSpace::StateType *s = path.getState(i);
                     std::vector<double> v;
                     space->copyToReals(v, s);
-                    for(int i = 0; i < v.size(); i++)
-                        pathOut.push_back(v[i]);
+                    for(size_t j = 0; j < v.size(); j++)
+                        pathOut.push_back((float)v[j]);
                 }
             }
             else
@@ -2067,7 +2068,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
         }
         else
         {
-            task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CALLBACK;
+            task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CLLBACK;
             task->projectionEvaluation.callback.dim = projectionSize;
             task->projectionEvaluation.callback.scriptId = p->scriptID;
             task->projectionEvaluation.callback.function = callback;
@@ -2121,7 +2122,7 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
         }
         else
         {
-            task->stateValidation.type = TaskDef::StateValidation::CALLBACK;
+            task->stateValidation.type = TaskDef::StateValidation::CLLBACK;
             task->stateValidation.callback.scriptId = p->scriptID;
             task->stateValidation.callback.function = callback;
         }
@@ -2173,7 +2174,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         }
         else
         {
-            task->goal.type = TaskDef::Goal::CALLBACK;
+            task->goal.type = TaskDef::Goal::CLLBACK;
             task->goal.callback.scriptId = p->scriptID;
             task->goal.callback.function = callback;
         }
@@ -2239,38 +2240,38 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
     REGISTER_LUA_COMMAND(SET_ALGORITHM);
 
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position2d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose2d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_position3d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_pose3d);
-    REGISTER_LUA_VARIABLE(simx_ompl_statespacetype_joint_position);
+    REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_position2d);
+    REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_pose2d);
+    REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_position3d);
+    REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_pose3d);
+    REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_joint_position);
 
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BiTRRT);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BITstar);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_BKPIECE1);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_CForest);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_EST);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_FMT);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_KPIECE1);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyPRM);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyPRMstar);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LazyRRT);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LBKPIECE1);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LBTRRT);
-    //REGISTER_LUA_VARIABLE(simx_ompl_algorithm_LightningRetrieveRepair);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PDST);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PRM);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_PRMstar);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_pRRT);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_pSBL);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRT);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRTConnect);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_RRTstar);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SBL);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SPARS);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_SPARStwo);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_STRIDE);
-    REGISTER_LUA_VARIABLE(simx_ompl_algorithm_TRRT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_BiTRRT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_BITstar);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_BKPIECE1);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_CForest);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_EST);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_FMT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_KPIECE1);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LazyPRM);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LazyPRMstar);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LazyRRT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LBKPIECE1);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LBTRRT);
+    //REGISTER_LUA_VARIABLE(sim_ompl_algorithm_LightningRetrieveRepair);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_PDST);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_PRM);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_PRMstar);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_pRRT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_pSBL);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_RRT);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_RRTConnect);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_RRTstar);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_SBL);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_SPARS);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_SPARStwo);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_STRIDE);
+    REGISTER_LUA_VARIABLE(sim_ompl_algorithm_TRRT);
 }
 
 VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
@@ -2311,7 +2312,7 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 
     int vrepVer;
     simGetIntegerParameter(sim_intparam_program_version, &vrepVer);
-    if (vrepVer < 30200) // if V-REP version is smaller than 3.02.00
+    if (vrepVer < 30203) // if V-REP version is smaller than 3.02.03
     {
         std::cout << "Sorry, your V-REP copy is somewhat old. Cannot start 'OMPL' plugin.\n";
         unloadVrepLibrary(vrepLib);
@@ -2323,17 +2324,13 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
     return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
 
-// This is the plugin end routine (called just once, when V-REP is ending, i.e. releasing this plugin):
 VREP_DLLEXPORT void v_repEnd()
 {
-    // Here you could handle various clean-up tasks
-
     unloadVrepLibrary(vrepLib); // release the library
 }
 
-// This is the plugin messaging routine (i.e. V-REP calls this function very often, with various messages):
 VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customData, int* replyData)
-{ // This is called quite often. Just watch out for messages/events you want to handle
+{
     // Keep following 5 lines at the beginning and unchanged:
     static bool refreshDlgFlag = true;
     int errorModeSaved;
@@ -2341,101 +2338,9 @@ VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customD
     simSetIntegerParameter(sim_intparam_error_report_mode, sim_api_errormessage_ignore);
     void* retVal=NULL;
 
-    // Here we can intercept many messages from V-REP (actually callbacks). Only the most important messages are listed here.
-    // For a complete list of messages that you can intercept/react with, search for "sim_message_eventcallback"-type constants
-    // in the V-REP user manual.
-
-    if (message == sim_message_eventcallback_refreshdialogs)
-        refreshDlgFlag = true; // V-REP dialogs were refreshed. Maybe a good idea to refresh this plugin's dialog too
-
-    if (message == sim_message_eventcallback_menuitemselected)
-    { // A custom menu bar entry was selected..
-        // here you could make a plugin's main dialog visible/invisible
-    }
-
-    if (message == sim_message_eventcallback_instancepass)
-    {    // This message is sent each time the scene was rendered (well, shortly after) (very often)
-        // It is important to always correctly react to events in V-REP. This message is the most convenient way to do so:
-
-        int flags = auxiliaryData[0];
-        bool sceneContentChanged=((flags&(1+2+4+8+16+32+64+256))!=0); // object erased, created, model or scene loaded, und/redo called, instance switched, or object scaled since last sim_message_eventcallback_instancepass message 
-        bool instanceSwitched=((flags&64)!=0);
-
-        if (instanceSwitched)
-        {
-            // React to an instance switch here!!
-        }
-
-        if (sceneContentChanged)
-        { // we actualize plugin objects for changes in the scene
-
-            //...
-
-            refreshDlgFlag = true; // always a good idea to trigger a refresh of this plugin's dialog here
-        }
-    }
-
-    if (message == sim_message_eventcallback_mainscriptabouttobecalled)
-    { // The main script is about to be run (only called while a simulation is running (and not paused!))
-        
-    }
-
-    if (message == sim_message_eventcallback_simulationabouttostart)
-    { // Simulation is about to start
-
-    }
-
     if (message == sim_message_eventcallback_simulationended)
     { // Simulation just ended
         destroyTransientObjects();
-
-    }
-
-    if (message == sim_message_eventcallback_moduleopen)
-    { // A script called simOpenModule (by default the main script). Is only called during simulation.
-        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-        {
-            // we arrive here only at the beginning of a simulation
-        }
-    }
-
-    if (message == sim_message_eventcallback_modulehandle)
-    { // A script called simHandleModule (by default the main script). Is only called during simulation.
-        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-        {
-            // we arrive here only while a simulation is running
-        }
-    }
-
-    if (message == sim_message_eventcallback_moduleclose)
-    { // A script called simCloseModule (by default the main script). Is only called during simulation.
-        if ( (customData == NULL)||(_stricmp("OMPL", (char*)customData)==0) ) // is the command also meant for this plugin?
-        {
-            // we arrive here only at the end of a simulation
-        }
-    }
-
-    if (message == sim_message_eventcallback_instanceswitch)
-    { // We switched to a different scene. Such a switch can only happen while simulation is not running
-
-    }
-
-    if (message == sim_message_eventcallback_broadcast)
-    { // Here we have a plugin that is broadcasting data (the broadcaster will also receive this data!)
-
-    }
-
-    if (message == sim_message_eventcallback_scenesave)
-    { // The scene is about to be saved. If required do some processing here (e.g. add custom scene data to be serialized with the scene)
-
-    }
-
-    // You can add many more messages to handle here
-
-    if ((message == sim_message_eventcallback_guipass)&&refreshDlgFlag)
-    { // handle refresh of the plugin's dialogs
-        // ...
-        refreshDlgFlag = false;
     }
 
     // Keep following unchanged:
