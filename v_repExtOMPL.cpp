@@ -221,6 +221,12 @@ struct TaskDef
     struct Goal
     {
         enum {STATE, DUMMY_PAIR, CLLBACK} type;
+		// goal ref. dummy:
+		int refDummy;
+		// goal metric:
+		float metric[4]; // x,y,z,angle(orientation), relative to refDummy
+		// goal tolerance:
+		float tolerance;
         // goal state:
         std::vector<simFloat> state;
         // goal dummy pair:
@@ -435,16 +441,45 @@ protected:
 
     virtual int dummyPairProjectionSize() const
     {
+        /*
         return 3;
+        */
+        int s=0;
+        for (int i=0;i<3;i++)
+        {
+            if (task->goal.metric[i]!=0.0)
+                s++;
+        }
+        if (s==0)
+            s=1; // if X/Y/Z are ignored
+        return(s);
     }
 
     virtual void dummyPairProjection(const ob::State *state, ob::EuclideanProjection& projection) const
     {
+        /*
         simFloat pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
         projection(0) = pos[0];
         projection(1) = pos[1];
         projection(2) = pos[2];
+        */
+
+        // TODO: don't we need to apply the provided state to the robot, read the tip dummy's position, then project it?
+
+        // do projection, only for axis that should not be ignored:
+        simFloat pos[3];
+        simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
+        int ind=0;
+        for (int i=0;i<3;i++)
+        {
+            if (task->goal.metric[i]!=0.0)
+                projection(ind++) = pos[i];
+        }
+        if (ind==0)
+            projection(0)=0.0; // if X/Y/Z are ignored 
+
+        // TODO: restore original state, no?
     }
 
     virtual int luaProjectCallbackSize() const
@@ -844,10 +879,26 @@ protected:
         // write query state:
         statespace->as<StateSpace>()->writeState(s);
 
-        simFloat goalPos[3], robotPos[3];
-        simGetObjectPosition(task->goal.dummyPair.goalDummy, -1, &goalPos[0]);
-        simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &robotPos[0]);
-        *distance = sqrt(pow(goalPos[0] - robotPos[0], 2) + pow(goalPos[1] - robotPos[1], 2) + pow(goalPos[2] - robotPos[2], 2));
+        if (task->goal.metric[3]==0.0)
+        { // ignore orientation
+            float goalPos[3];
+            float robotPos[3];
+            simGetObjectPosition(task->goal.dummyPair.goalDummy,task->goal.refDummy, &goalPos[0]);
+            simGetObjectPosition(task->goal.dummyPair.robotDummy,task->goal.refDummy, &robotPos[0]);
+            *distance = sqrt(pow((goalPos[0] - robotPos[0])*task->goal.metric[0], 2) + pow((goalPos[1] - robotPos[1])*task->goal.metric[1], 2) + pow((goalPos[2] - robotPos[2])*task->goal.metric[2], 2));
+        }
+        else
+        { // do not ignore orientation
+            float goalM[12];
+            float robotM[12];
+            simGetObjectMatrix(task->goal.dummyPair.goalDummy,task->goal.refDummy,goalM);
+            simGetObjectMatrix(task->goal.dummyPair.robotDummy,task->goal.refDummy,robotM);
+            float axis[3];
+            float angle;
+            simGetRotationAxis(robotM,goalM,axis,&angle);
+            *distance = sqrt(pow((goalM[3] - robotM[3])*task->goal.metric[0], 2) + pow((goalM[7] - robotM[7])*task->goal.metric[1], 2) + pow((goalM[11] - robotM[11])*task->goal.metric[2], 2) + pow(angle*task->goal.metric[3], 2));
+        }
+
         bool satisfied = *distance <= tolerance;
 
         // restore original state:
@@ -1149,13 +1200,13 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision objects for this robot object. Collision object are used to compute collisions between robot and environment in the default state validity checker function."
+#define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision entities for this robot object. Collision entities are used to compute collisions between robot and environment in the default state validity checker function."
 #define LUA_SET_COLLISION_OBJECTS_PARAMS \
     PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
-    PARAM("objectHandles", "a table of handle to V-REP objects (shapes)")
+    PARAM("entityHandles", "a table of handles to V-REP shapes or collections")
 #define LUA_SET_COLLISION_OBJECTS_RET ""
 #define LUA_SET_COLLISION_OBJECTS_COMMAND "simExtOMPL_setCollisionObjects"
-#define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table objectHandles)"
+#define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table entityHandles)"
 const int inArgs_SET_COLLISION_OBJECTS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
 
 void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
@@ -1401,8 +1452,14 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             break;
         case TaskDef::Goal::DUMMY_PAIR:
             s << std::endl;
-            s << prefix << "    robot dummy:" << task->goal.dummyPair.robotDummy << std::endl;
-            s << prefix << "    goal dummy:" << task->goal.dummyPair.goalDummy << std::endl;
+            s << prefix << "    robot dummy: " << task->goal.dummyPair.robotDummy << std::endl;
+            s << prefix << "    goal dummy: " << task->goal.dummyPair.goalDummy << std::endl;
+            s << prefix << "    ref dummy: " << task->goal.refDummy << std::endl;
+            s << prefix << "    metric: {";
+            for(size_t i = 0; i < 4; i++)
+                s << (i ? ", " : "") << task->goal.metric[i];
+            s << "}" << std::endl;
+            s << prefix << "    tolerance: " << task->goal.tolerance << std::endl;
             break;
         case TaskDef::Goal::CLLBACK:
             s << std::endl;
@@ -1548,7 +1605,7 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
 #define LUA_SET_ENVIRONMENT_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("obstacleHandles", "a table of handles to V-REP objects (shapes)")
+    PARAM("obstacleHandles", "a table of handles to V-REP shapes or collections")
 #define LUA_SET_ENVIRONMENT_RET ""
 #define LUA_SET_ENVIRONMENT_COMMAND "simExtOMPL_setEnvironment"
 #define LUA_SET_ENVIRONMENT_APIHELP "number result=" LUA_SET_ENVIRONMENT_COMMAND "(number taskHandle, table obstacleHandles)"
@@ -1672,15 +1729,18 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same."
+#define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric"
 #define LUA_SET_GOAL_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("robotDummy", "a dummy attached to the robot") \
-    PARAM("goalDummy", "a dummy fixed in the environment, representing the goal pose/position")
+    PARAM("goalDummy", "a dummy fixed in the environment, representing the goal pose/position") \
+    PARAM("tolerance", "the tolerated dummy-dummy distance") \
+    PARAM("metric", "an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance") \
+    PARAM("refDummy", "an optional reference dummy, relative to which the metric will be used")
 #define LUA_SET_GOAL_RET ""
 #define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
-#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy)"
-const int inArgs_SET_GOAL[]={3, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy, table_4 metric=nil, number refDummy=nil)"
+const int inArgs_SET_GOAL[]={6, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float|sim_lua_arg_table, 4, sim_lua_arg_int, 0};
 
 void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 {
@@ -1690,7 +1750,7 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_SET_GOAL, inArgs_SET_GOAL[0], LUA_SET_GOAL_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_SET_GOAL, inArgs_SET_GOAL[0]-3, LUA_SET_GOAL_COMMAND)) // 3 last args are optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
@@ -1706,6 +1766,32 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
         task->goal.type = TaskDef::Goal::DUMMY_PAIR;
         task->goal.dummyPair.goalDummy = inData->at(1).intData[0];
         task->goal.dummyPair.robotDummy = inData->at(2).intData[0];
+
+        if (inData->size()>=4)
+    		task->goal.tolerance=inData->at(3).floatData[0];
+        else
+    		task->goal.tolerance=0.001f;
+
+		if (inData->size()>=5)
+		{
+			task->goal.metric[0]=inData->at(4).floatData[0];
+			task->goal.metric[1]=inData->at(4).floatData[1];
+			task->goal.metric[2]=inData->at(4).floatData[2];
+			task->goal.metric[3]=inData->at(4).floatData[3];
+		}
+		else
+		{
+			task->goal.metric[0]=1.0;
+			task->goal.metric[1]=1.0;
+			task->goal.metric[2]=1.0;
+			task->goal.metric[3]=0.1f;
+		}
+
+		if (inData->size()>=6)
+			task->goal.refDummy=inData->at(5).intData[0];
+		else
+			task->goal.refDummy=-1;
+
         returnResult = 1;
     }
     while(0);
@@ -1781,7 +1867,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             }
             else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
             {
-                ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task));
+                ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task, (double)task->goal.tolerance));
                 setup.setGoal(goal);
             }
 
