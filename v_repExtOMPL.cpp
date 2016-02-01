@@ -2283,7 +2283,6 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
         << "    </command>" << std::endl;
 #define REGISTER_LUA_VARIABLE(NAME) \
     std::cout << "";
-#include "v_repLib.cpp"
 void registerLuaCommands();
 int main(int argc, char ** argv)
 {
