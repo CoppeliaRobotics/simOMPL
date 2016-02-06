@@ -191,6 +191,8 @@ struct StateSpaceDef
     StateSpaceType type;
     // V-REP handle of the object (objects, or joint if type = joint_position):
     simInt objectHandle;
+    // weight of this state space component (used for state distance calculation):
+    simFloat weight;
     // lower bounds of search space:
     std::vector<simFloat> boundsLow;
     // upper bounds of search space:
@@ -584,7 +586,7 @@ public:
             }
 
             subSpace->setName(stateSpace->header.name);
-            addSubspace(subSpace, 1.0);
+            addSubspace(subSpace, stateSpace->weight);
 
             // set bounds:
 
@@ -972,12 +974,13 @@ protected:
     PARAM("objectHandle", "the object handle (a joint object if type is sim_ompl_statespacetype_joint_position, otherwise a shape)") \
     PARAM("boundsLow", "lower bounds (if type is pose, specify only the 3 position components)") \
     PARAM("boundsHigh", "upper bounds (if type is pose, specify only the 3 position components)") \
-    PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection")
+    PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection") \
+    PARAM("weight", "(optional) the weight of this state space component, used for computing distance between states. default 1.0")
 #define LUA_CREATE_STATE_SPACE_RET \
     PARAM("stateSpaceHandle", "a handle to the created state space component")
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
-#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection)"
-const int inArgs_CREATE_STATE_SPACE[]={6, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0};
+#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection, number weight)"
+const int inArgs_CREATE_STATE_SPACE[]={7, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
 
 void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
@@ -987,7 +990,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0], LUA_CREATE_STATE_SPACE_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0]-1, LUA_CREATE_STATE_SPACE_COMMAND)) // last arg is optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
@@ -996,6 +999,17 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         {
             simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "Lower and upper bounds must have the same length.");
             break;
+        }
+
+        float w = 1.0;
+        if(inData->size() >= 7)
+        {
+            w = inData->at(6).floatData[0];
+            if(w <= 0)
+            {
+                simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "State component weight must be positive.");
+                break;
+            }
         }
 
         std::string name = inData->at(0).stringData[0];
@@ -1012,6 +1026,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
         for(size_t i = 0; i < inData->at(4).floatData.size(); i++)
             statespace->boundsHigh.push_back(inData->at(4).floatData[i]);
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
+        statespace->weight = w;
         statespaces[statespace->header.handle] = statespace;
         returnResult = statespace->header.handle;
     }
@@ -1431,6 +1446,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
                 s << (j ? ", " : "") << stateSpace->boundsHigh[j];
             s << "}" << std::endl;
             s << prefix << "            default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
+            s << prefix << "            weight: " << stateSpace->weight << std::endl;
         }
         s << prefix << "obstacles: {";
         for(size_t i = 0; i < task->obstacleHandles.size(); i++)
