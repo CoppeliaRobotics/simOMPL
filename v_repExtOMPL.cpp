@@ -204,8 +204,6 @@ struct StateSpaceDef
 struct RobotDef
 {
     ObjectDefHeader header;
-    // handles of object that will be checked for collision:
-    std::vector<simInt> collisionHandles;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
 };
@@ -215,8 +213,8 @@ struct TaskDef
     ObjectDefHeader header;
     // internal handle of the robot object associated with the task:
     simInt robotHandle;
-    // handle of the obstacles that will be checked for collision:
-    std::vector<simInt> obstacleHandles;
+    // handle of the collision pairs:
+    std::vector<simInt> collisionPairHandles;
     // start state:
     std::vector<simFloat> startState;
     // goal can be specified in different ways:
@@ -633,12 +631,11 @@ public:
             {
                 case sim_ompl_statespacetype_pose2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]); // Euler angles
                     pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
                     pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                    orient[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                    // FIXME: make correct quaternion for 2d orientation!
-                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                    simSetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]);
                     simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
@@ -687,10 +684,9 @@ public:
             {
                 case sim_ompl_statespacetype_pose2d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]); // Euler angles
                     s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
-                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[0]);
-                    // FIXME: make correct quaternion for 2d orientation!
+                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
                     simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
@@ -766,12 +762,12 @@ protected:
 
         // check collisions:
         bool inCollision = false;
-        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
+        for(size_t i = 0; i < task->collisionPairHandles.size()/2; i++)
         {
-            for(size_t j = 0; j < robot->collisionHandles.size(); j++)
+            if (task->collisionPairHandles[2*i+0]>=0)
             {
-                int r = simCheckCollision(robot->collisionHandles[j], task->obstacleHandles[i]);
-                if(r == 1)
+                int r = simCheckCollision(task->collisionPairHandles[2*i+0],task->collisionPairHandles[2*i+1]);
+                if(r >0)
                 {
                     inCollision = true;
                     break;
@@ -1114,7 +1110,7 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_DESTROY_ROBOT_DESCR "Destroy the spacified robot object.<br /><br />" \
+#define LUA_DESTROY_ROBOT_DESCR "Destroy the specified robot object.<br /><br />" \
     "Note: robot objects created during simulation are automatically destroyed when simulation ends."
 #define LUA_DESTROY_ROBOT_PARAMS \
     PARAM("robotHandle", "handle to the robot object to destroy")
@@ -1215,46 +1211,6 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision entities for this robot object. Collision entities are used to compute collisions between robot and environment in the default state validity checker function."
-#define LUA_SET_COLLISION_OBJECTS_PARAMS \
-    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
-    PARAM("entityHandles", "a table of handles to V-REP shapes or collections")
-#define LUA_SET_COLLISION_OBJECTS_RET ""
-#define LUA_SET_COLLISION_OBJECTS_COMMAND "simExtOMPL_setCollisionObjects"
-#define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table entityHandles)"
-const int inArgs_SET_COLLISION_OBJECTS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
-
-void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_SET_COLLISION_OBJECTS, inArgs_SET_COLLISION_OBJECTS[0], LUA_SET_COLLISION_OBJECTS_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        simInt robotHandle = inData->at(0).intData[0];
-
-        if(robots.find(robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_SET_COLLISION_OBJECTS_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        RobotDef *robot = robots[robotHandle];
-        robot->collisionHandles.clear();
-        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-            robot->collisionHandles.push_back(inData->at(1).intData[i]);
-        returnResult = 1;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
 
 #define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
     "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)</li>" \
@@ -1425,10 +1381,6 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         s << prefix << "task name: " << task->header.name << std::endl;
         s << prefix << "robot: " << task->robotHandle << std::endl;
         s << prefix << "    name: " << robot->header.name << std::endl;
-        s << prefix << "    collidables: {";
-        for(size_t i = 0; i < robot->collisionHandles.size(); i++)
-            s << (i ? ", " : "") << robot->collisionHandles[i];
-        s << "}" << std::endl;
         s << prefix << "    state spaces:" << std::endl;
         for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
@@ -1448,9 +1400,9 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << prefix << "            default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
             s << prefix << "            weight: " << stateSpace->weight << std::endl;
         }
-        s << prefix << "obstacles: {";
-        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
-            s << (i ? ", " : "") << task->obstacleHandles[i];
+        s << prefix << "collision pairs: {";
+        for(size_t i = 0; i < task->collisionPairHandles.size(); i++)
+            s << (i ? ", " : "") << task->collisionPairHandles[i];
         s << "}" << std::endl;
         s << prefix << "start state: {";
         for(size_t i = 0; i < task->startState.size(); i++)
@@ -1618,16 +1570,17 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
-#define LUA_SET_ENVIRONMENT_PARAMS \
+#define LUA_SET_COLLISION_PAIRS_DESCR "Set the collision pairs for the specified task object."
+#define LUA_SET_COLLISION_PAIRS_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("obstacleHandles", "a table of handles to V-REP shapes or collections")
-#define LUA_SET_ENVIRONMENT_RET ""
-#define LUA_SET_ENVIRONMENT_COMMAND "simExtOMPL_setEnvironment"
-#define LUA_SET_ENVIRONMENT_APIHELP "number result=" LUA_SET_ENVIRONMENT_COMMAND "(number taskHandle, table obstacleHandles)"
-const int inArgs_SET_ENVIRONMENT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
+    PARAM("collisionPairHandles", "a table containing 2 entity handles for each collision pair. A collision pair is represented by a collider and a collidee, that will be tested against each other. The first pair could be used for robot self-collision testing, and a second pair could be used for robot-environment collision testing. The collider can be an object or a collection handle. The collidee can be an object or collection handle, or sim_handle_all, in which case the collider will be checked agains all other collidable objects in the scene.")
+#define LUA_SET_COLLISION_PAIRS_RET \
+    PARAM("result", "0 if the operation failed.")
+#define LUA_SET_COLLISION_PAIRS_COMMAND "simExtOMPL_setCollisionPairs"
+#define LUA_SET_COLLISION_PAIRS_APIHELP "number result=" LUA_SET_COLLISION_PAIRS_COMMAND "(number taskHandle, table collisionPairHandles)"
+const int inArgs_SET_COLLISION_PAIRS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
 
-void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
+void LUA_SET_COLLISION_PAIRS_CALLBACK(SLuaCallBack* p)
 {
     p->outputArgCount = 0;
     CLuaFunctionData D;
@@ -1635,24 +1588,24 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_SET_ENVIRONMENT, inArgs_SET_ENVIRONMENT[0], LUA_SET_ENVIRONMENT_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_SET_COLLISION_PAIRS, inArgs_SET_COLLISION_PAIRS[0], LUA_SET_COLLISION_PAIRS_COMMAND))
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         simInt taskHandle = inData->at(0).intData[0];
-        int numHandles = inData->at(1).intData.size();
-        std::vector<simInt>& obstacleHandles = inData->at(1).intData;
+        int numHandles = (inData->at(1).intData.size()/2)*2;
+        std::vector<simInt>& pairHandles = inData->at(1).intData;
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-            simSetLastError(LUA_SET_ENVIRONMENT_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_COLLISION_PAIRS_COMMAND, "Invalid task handle.");
             break;
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->obstacleHandles.clear();
+        task->collisionPairHandles.clear();
         for(int i = 0; i < numHandles; i++)
-            task->obstacleHandles.push_back(obstacleHandles[i]);
+            task->collisionPairHandles.push_back(pairHandles[i]);
         returnResult = 1;
     }
     while(0);
@@ -2324,12 +2277,11 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(CREATE_ROBOT);
     REGISTER_LUA_COMMAND(DESTROY_ROBOT);
     REGISTER_LUA_COMMAND(SET_STATE_SPACE);
-    REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
     REGISTER_LUA_COMMAND(CREATE_TASK);
     REGISTER_LUA_COMMAND(DESTROY_TASK);
     REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
     REGISTER_LUA_COMMAND(SET_ROBOT);
-    REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
+    REGISTER_LUA_COMMAND(SET_COLLISION_PAIRS);
     REGISTER_LUA_COMMAND(SET_START_STATE);
     REGISTER_LUA_COMMAND(SET_GOAL_STATE);
     REGISTER_LUA_COMMAND(SET_GOAL);
