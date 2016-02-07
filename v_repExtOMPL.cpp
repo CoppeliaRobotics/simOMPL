@@ -191,6 +191,9 @@ struct StateSpaceDef
     StateSpaceType type;
     // V-REP handle of the object (objects, or joint if type = joint_position):
     simInt objectHandle;
+    // object handle in order to specify optional reference frame that is not absolute
+    // for sim_ompl_statespace_pose2d, etc.
+    simInt refFrameHandle;
     // weight of this state space component (used for state distance calculation):
     simFloat weight;
     // lower bounds of search space:
@@ -630,13 +633,13 @@ public:
             switch(stateSpace->type)
             {
                 case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]); // Euler angles
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
                     pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
                     pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
                     orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                    simSetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
                     pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
@@ -646,20 +649,20 @@ public:
                     orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
                     orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
                     orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
-                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_position3d:
                     pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                     pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_joint_position:
                     value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
@@ -683,14 +686,14 @@ public:
             switch(stateSpace->type)
             {
                 case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectOrientation(stateSpace->objectHandle, -1, &orient[0]); // Euler angles
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
                     s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
                     s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
                     s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
@@ -698,12 +701,12 @@ public:
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
                     break;
                 case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     break;
                 case sim_ompl_statespacetype_position3d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
@@ -971,12 +974,13 @@ protected:
     PARAM("boundsLow", "lower bounds (if type is pose, specify only the 3 position components)") \
     PARAM("boundsHigh", "upper bounds (if type is pose, specify only the 3 position components)") \
     PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection") \
-    PARAM("weight", "(optional) the weight of this state space component, used for computing distance between states. default 1.0")
+    PARAM("weight", "(optional) the weight of this state space component, used for computing distance between states. Default value is 1.0") \
+    PARAM("refObjectHandle", "(optional) an object handle relative to which reference frame position/orientations will be evaluated. Default value is -1, for the absolute reference frame")
 #define LUA_CREATE_STATE_SPACE_RET \
     PARAM("stateSpaceHandle", "a handle to the created state space component")
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
-#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection, number weight)"
-const int inArgs_CREATE_STATE_SPACE[]={7, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
+#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection, number weight, number refObjectHandle)"
+const int inArgs_CREATE_STATE_SPACE[]={8, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
 
 void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
@@ -986,7 +990,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0]-1, LUA_CREATE_STATE_SPACE_COMMAND)) // last arg is optional
+        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0]-2, LUA_CREATE_STATE_SPACE_COMMAND)) // last 2 args are optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
@@ -1007,6 +1011,17 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
                 break;
             }
         }
+        int refFrame = -1;
+        if(inData->size() >= 8)
+        {
+            refFrame = inData->at(7).intData[0];
+            if ( (refFrame != -1)&&((simIsHandleValid(refFrame,sim_appobj_object_type)<=0)) )
+            {
+                simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "Reference object handle is not valid.");
+                break;
+            }
+        }
+
 
         std::string name = inData->at(0).stringData[0];
         simInt type = inData->at(1).intData[0];
@@ -1023,6 +1038,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             statespace->boundsHigh.push_back(inData->at(4).floatData[i]);
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
         statespace->weight = w;
+        statespace->refFrameHandle = refFrame;
         statespaces[statespace->header.handle] = statespace;
         returnResult = statespace->header.handle;
     }
