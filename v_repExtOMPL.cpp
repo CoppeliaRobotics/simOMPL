@@ -191,6 +191,9 @@ struct StateSpaceDef
     StateSpaceType type;
     // V-REP handle of the object (objects, or joint if type = joint_position):
     simInt objectHandle;
+    // object handle in order to specify optional reference frame that is not absolute
+    // for sim_ompl_statespace_pose2d, etc.
+    simInt refFrameHandle;
     // weight of this state space component (used for state distance calculation):
     simFloat weight;
     // lower bounds of search space:
@@ -204,8 +207,6 @@ struct StateSpaceDef
 struct RobotDef
 {
     ObjectDefHeader header;
-    // handles of object that will be checked for collision:
-    std::vector<simInt> collisionHandles;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
 };
@@ -215,8 +216,8 @@ struct TaskDef
     ObjectDefHeader header;
     // internal handle of the robot object associated with the task:
     simInt robotHandle;
-    // handle of the obstacles that will be checked for collision:
-    std::vector<simInt> obstacleHandles;
+    // handle of the collision pairs:
+    std::vector<simInt> collisionPairHandles;
     // start state:
     std::vector<simFloat> startState;
     // goal can be specified in different ways:
@@ -254,6 +255,8 @@ struct TaskDef
     Algorithm algorithm;
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
+    // state space dimension:
+    int dim; // TODO
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -632,14 +635,13 @@ public:
             switch(stateSpace->type)
             {
                 case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
                     pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
                     pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                    orient[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                    // FIXME: make correct quaternion for 2d orientation!
-                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                    simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
                     pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
@@ -649,20 +651,20 @@ public:
                     orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
                     orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
                     orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
-                    simSetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_position3d:
                     pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                     pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                     pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                    simSetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     break;
                 case sim_ompl_statespacetype_joint_position:
                     value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
@@ -686,15 +688,14 @@ public:
             switch(stateSpace->type)
             {
                 case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
                     s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
-                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[0]);
-                    // FIXME: make correct quaternion for 2d orientation!
+                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                     break;
                 case sim_ompl_statespacetype_pose3d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, -1, &orient[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                    simGetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
                     s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
@@ -702,12 +703,12 @@ public:
                     s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
                     break;
                 case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     break;
                 case sim_ompl_statespacetype_position3d:
-                    simGetObjectPosition(stateSpace->objectHandle, -1, &pos[0]);
+                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                     s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
@@ -766,12 +767,12 @@ protected:
 
         // check collisions:
         bool inCollision = false;
-        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
+        for(size_t i = 0; i < task->collisionPairHandles.size()/2; i++)
         {
-            for(size_t j = 0; j < robot->collisionHandles.size(); j++)
+            if (task->collisionPairHandles[2*i+0]>=0)
             {
-                int r = simCheckCollision(robot->collisionHandles[j], task->obstacleHandles[i]);
-                if(r == 1)
+                int r = simCheckCollision(task->collisionPairHandles[2*i+0],task->collisionPairHandles[2*i+1]);
+                if(r >0)
                 {
                     inCollision = true;
                     break;
@@ -975,12 +976,13 @@ protected:
     PARAM("boundsLow", "lower bounds (if type is pose, specify only the 3 position components)") \
     PARAM("boundsHigh", "upper bounds (if type is pose, specify only the 3 position components)") \
     PARAM("useForProjection", "if true, this object position or joint value will be used for computing a default projection") \
-    PARAM("weight", "(optional) the weight of this state space component, used for computing distance between states. default 1.0")
+    PARAM("weight", "(optional) the weight of this state space component, used for computing distance between states. Default value is 1.0") \
+    PARAM("refObjectHandle", "(optional) an object handle relative to which reference frame position/orientations will be evaluated. Default value is -1, for the absolute reference frame")
 #define LUA_CREATE_STATE_SPACE_RET \
     PARAM("stateSpaceHandle", "a handle to the created state space component")
 #define LUA_CREATE_STATE_SPACE_COMMAND "simExtOMPL_createStateSpace"
-#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection, number weight)"
-const int inArgs_CREATE_STATE_SPACE[]={7, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
+#define LUA_CREATE_STATE_SPACE_APIHELP "number stateSpaceHandle=" LUA_CREATE_STATE_SPACE_COMMAND "(string name, number type, number objectHandle, table boundsLow, table boundsHigh, number useForProjection, number weight, number refObjectHandle)"
+const int inArgs_CREATE_STATE_SPACE[]={8, sim_lua_arg_string, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_float|sim_lua_arg_table, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
 
 void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 {
@@ -990,7 +992,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0]-1, LUA_CREATE_STATE_SPACE_COMMAND)) // last arg is optional
+        if(!D.readDataFromLua(p, inArgs_CREATE_STATE_SPACE, inArgs_CREATE_STATE_SPACE[0]-2, LUA_CREATE_STATE_SPACE_COMMAND)) // last 2 args are optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
@@ -1011,6 +1013,17 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
                 break;
             }
         }
+        int refFrame = -1;
+        if(inData->size() >= 8)
+        {
+            refFrame = inData->at(7).intData[0];
+            if ( (refFrame != -1)&&((simIsHandleValid(refFrame,sim_appobj_object_type)<=0)) )
+            {
+                simSetLastError(LUA_CREATE_STATE_SPACE_COMMAND, "Reference object handle is not valid.");
+                break;
+            }
+        }
+
 
         std::string name = inData->at(0).stringData[0];
         simInt type = inData->at(1).intData[0];
@@ -1027,6 +1040,7 @@ void LUA_CREATE_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             statespace->boundsHigh.push_back(inData->at(4).floatData[i]);
         statespace->defaultProjection = inData->at(5).intData[0] > 0;
         statespace->weight = w;
+        statespace->refFrameHandle = refFrame;
         statespaces[statespace->header.handle] = statespace;
         returnResult = statespace->header.handle;
     }
@@ -1114,7 +1128,7 @@ void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_DESTROY_ROBOT_DESCR "Destroy the spacified robot object.<br /><br />" \
+#define LUA_DESTROY_ROBOT_DESCR "Destroy the specified robot object.<br /><br />" \
     "Note: robot objects created during simulation are automatically destroyed when simulation ends."
 #define LUA_DESTROY_ROBOT_PARAMS \
     PARAM("robotHandle", "handle to the robot object to destroy")
@@ -1205,49 +1219,31 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
         RobotDef *robot = robots[robotHandle];
         robot->stateSpaces.clear();
+        int dimensions=0;
         for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-            robot->stateSpaces.push_back(inData->at(1).intData[i]);
-        returnResult = 1;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
-#define LUA_SET_COLLISION_OBJECTS_DESCR "Set the collision entities for this robot object. Collision entities are used to compute collisions between robot and environment in the default state validity checker function."
-#define LUA_SET_COLLISION_OBJECTS_PARAMS \
-    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
-    PARAM("entityHandles", "a table of handles to V-REP shapes or collections")
-#define LUA_SET_COLLISION_OBJECTS_RET ""
-#define LUA_SET_COLLISION_OBJECTS_COMMAND "simExtOMPL_setCollisionObjects"
-#define LUA_SET_COLLISION_OBJECTS_APIHELP "number result=" LUA_SET_COLLISION_OBJECTS_COMMAND "(number robotHandle, table entityHandles)"
-const int inArgs_SET_COLLISION_OBJECTS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
-
-void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_SET_COLLISION_OBJECTS, inArgs_SET_COLLISION_OBJECTS[0], LUA_SET_COLLISION_OBJECTS_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        simInt robotHandle = inData->at(0).intData[0];
-
-        if(robots.find(robotHandle) == robots.end())
         {
-            simSetLastError(LUA_SET_COLLISION_OBJECTS_COMMAND, "Invalid robot handle.");
-            break;
+            simInt stateSpaceHandle = inData->at(1).intData[i];
+            robot->stateSpaces.push_back(stateSpaceHandle);
+            switch(statespaces.find(stateSpaceHandle)->second->type)
+            {
+                case sim_ompl_statespacetype_position2d:
+                    dimensions+=2;
+                    break;
+                case sim_ompl_statespacetype_pose2d:
+                    dimensions+=3;
+                    break;
+                case sim_ompl_statespacetype_position3d:
+                    dimensions+=3;
+                    break;
+                case sim_ompl_statespacetype_pose3d:
+                    dimensions+=7;
+                    break;
+                case sim_ompl_statespacetype_joint_position:
+                    dimensions+=1;
+                    break;
+            }
         }
-
-        RobotDef *robot = robots[robotHandle];
-        robot->collisionHandles.clear();
-        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-            robot->collisionHandles.push_back(inData->at(1).intData[i]);
+        // TODO: set dimension of state space and check argument length of simExtOMPL_setStartState and simExtOMPL_setGoalState
         returnResult = 1;
     }
     while(0);
@@ -1255,6 +1251,7 @@ void LUA_SET_COLLISION_OBJECTS_CALLBACK(SLuaCallBack* p)
     D.pushOutData(CLuaFunctionDataItem(returnResult));
     D.writeDataToLua(p);
 }
+
 
 #define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
     "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)</li>" \
@@ -1425,10 +1422,6 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         s << prefix << "task name: " << task->header.name << std::endl;
         s << prefix << "robot: " << task->robotHandle << std::endl;
         s << prefix << "    name: " << robot->header.name << std::endl;
-        s << prefix << "    collidables: {";
-        for(size_t i = 0; i < robot->collisionHandles.size(); i++)
-            s << (i ? ", " : "") << robot->collisionHandles[i];
-        s << "}" << std::endl;
         s << prefix << "    state spaces:" << std::endl;
         for(size_t i = 0; i < robot->stateSpaces.size(); i++)
         {
@@ -1448,9 +1441,9 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << prefix << "            default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
             s << prefix << "            weight: " << stateSpace->weight << std::endl;
         }
-        s << prefix << "obstacles: {";
-        for(size_t i = 0; i < task->obstacleHandles.size(); i++)
-            s << (i ? ", " : "") << task->obstacleHandles[i];
+        s << prefix << "collision pairs: {";
+        for(size_t i = 0; i < task->collisionPairHandles.size(); i++)
+            s << (i ? ", " : "") << task->collisionPairHandles[i];
         s << "}" << std::endl;
         s << prefix << "start state: {";
         for(size_t i = 0; i < task->startState.size(); i++)
@@ -1618,16 +1611,17 @@ void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_ENVIRONMENT_DESCR "Set the environment specification for the specified task object."
-#define LUA_SET_ENVIRONMENT_PARAMS \
+#define LUA_SET_COLLISION_PAIRS_DESCR "Set the collision pairs for the specified task object."
+#define LUA_SET_COLLISION_PAIRS_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("obstacleHandles", "a table of handles to V-REP shapes or collections")
-#define LUA_SET_ENVIRONMENT_RET ""
-#define LUA_SET_ENVIRONMENT_COMMAND "simExtOMPL_setEnvironment"
-#define LUA_SET_ENVIRONMENT_APIHELP "number result=" LUA_SET_ENVIRONMENT_COMMAND "(number taskHandle, table obstacleHandles)"
-const int inArgs_SET_ENVIRONMENT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
+    PARAM("collisionPairHandles", "a table containing 2 entity handles for each collision pair. A collision pair is represented by a collider and a collidee, that will be tested against each other. The first pair could be used for robot self-collision testing, and a second pair could be used for robot-environment collision testing. The collider can be an object or a collection handle. The collidee can be an object or collection handle, or sim_handle_all, in which case the collider will be checked agains all other collidable objects in the scene.")
+#define LUA_SET_COLLISION_PAIRS_RET \
+    PARAM("result", "0 if the operation failed.")
+#define LUA_SET_COLLISION_PAIRS_COMMAND "simExtOMPL_setCollisionPairs"
+#define LUA_SET_COLLISION_PAIRS_APIHELP "number result=" LUA_SET_COLLISION_PAIRS_COMMAND "(number taskHandle, table collisionPairHandles)"
+const int inArgs_SET_COLLISION_PAIRS[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
 
-void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
+void LUA_SET_COLLISION_PAIRS_CALLBACK(SLuaCallBack* p)
 {
     p->outputArgCount = 0;
     CLuaFunctionData D;
@@ -1635,24 +1629,24 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_SET_ENVIRONMENT, inArgs_SET_ENVIRONMENT[0], LUA_SET_ENVIRONMENT_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_SET_COLLISION_PAIRS, inArgs_SET_COLLISION_PAIRS[0], LUA_SET_COLLISION_PAIRS_COMMAND))
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         simInt taskHandle = inData->at(0).intData[0];
-        int numHandles = inData->at(1).intData.size();
-        std::vector<simInt>& obstacleHandles = inData->at(1).intData;
+        int numHandles = (inData->at(1).intData.size()/2)*2;
+        std::vector<simInt>& pairHandles = inData->at(1).intData;
 
         if(tasks.find(taskHandle) == tasks.end())
         {
-            simSetLastError(LUA_SET_ENVIRONMENT_COMMAND, "Invalid task handle.");
+            simSetLastError(LUA_SET_COLLISION_PAIRS_COMMAND, "Invalid task handle.");
             break;
         }
 
         TaskDef *task = tasks[taskHandle];
-        task->obstacleHandles.clear();
+        task->collisionPairHandles.clear();
         for(int i = 0; i < numHandles; i++)
-            task->obstacleHandles.push_back(obstacleHandles[i]);
+            task->collisionPairHandles.push_back(pairHandles[i]);
         returnResult = 1;
     }
     while(0);
@@ -1669,7 +1663,7 @@ void LUA_SET_ENVIRONMENT_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_START_STATE_RET ""
 #define LUA_SET_START_STATE_COMMAND "simExtOMPL_setStartState"
 #define LUA_SET_START_STATE_APIHELP "number result=" LUA_SET_START_STATE_COMMAND "(number taskHandle, table state)"
-const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
+const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 1};
 
 void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 {
@@ -1690,6 +1684,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
             break;
         }
+        // TODO: check table size and state space dimension (task->dim)
 
         TaskDef *task = tasks[taskHandle];
         task->startState.clear();
@@ -1710,7 +1705,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_GOAL_STATE_RET ""
 #define LUA_SET_GOAL_STATE_COMMAND "simExtOMPL_setGoalState"
 #define LUA_SET_GOAL_STATE_APIHELP "number result=" LUA_SET_GOAL_STATE_COMMAND "(number taskHandle, table state)"
-const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
+const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 1};
 
 void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 {
@@ -1731,6 +1726,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
             break;
         }
+        // TODO: check table size and state space dimension (task->dim)
 
         TaskDef *task = tasks[taskHandle];
         task->goal.type = TaskDef::Goal::STATE;
@@ -1819,12 +1815,14 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
 #define LUA_COMPUTE_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("maxTime", "maximum time to use in seconds")
+    PARAM("maxTime", "maximum time used for the path searching procedure, in seconds.") \
+    PARAM("maxSimplificationTime", "(optional) maximum time used for the path simplification procedure, in seconds. 0 for a default simplification procedure.") \
+    PARAM("stateCnt", "(optional) minimum number of states to be returned. 0 for a default behaviour.") \
 #define LUA_COMPUTE_RET \
     PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
-#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime)"
-const int inArgs_COMPUTE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
+#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime, number maxSimplificationTime, number stateCnt)"
+const int inArgs_COMPUTE[]={4, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
 
 void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 {
@@ -1835,12 +1833,19 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_COMPUTE, inArgs_COMPUTE[0], LUA_COMPUTE_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_COMPUTE, inArgs_COMPUTE[0]-2, LUA_COMPUTE_COMMAND)) // two last arguments are optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         simInt taskHandle = inData->at(0).intData[0];
         simFloat maxTime = inData->at(1).floatData[0];
+        simFloat simplificationMaxTime = 0.0;
+        simInt minStates = 0;
+
+        if (inData->size()>=3)
+    		simplificationMaxTime=inData->at(2).floatData[0];
+        if (inData->size()>=4)
+    		minStates=inData->at(3).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1982,13 +1987,13 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             if(solved)
             {
                 //simAddStatusbarMessage("OMPL: found solution:");
-                setup.simplifySolution();
+                setup.simplifySolution(simplificationMaxTime);
                 //std::stringstream s;
                 og::PathGeometric& path = setup.getSolutionPath();
                 //path.print(s);
                 //simAddStatusbarMessage(s.str().c_str());
                 //simAddStatusbarMessage("OMPL: interpolated:");
-                path.interpolate();
+                path.interpolate(minStates);
                 //path.print(s);
                 //simAddStatusbarMessage(s.str().c_str());
                 for(size_t i = 0; i < path.getStateCount(); i++)
@@ -2324,12 +2329,11 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(CREATE_ROBOT);
     REGISTER_LUA_COMMAND(DESTROY_ROBOT);
     REGISTER_LUA_COMMAND(SET_STATE_SPACE);
-    REGISTER_LUA_COMMAND(SET_COLLISION_OBJECTS);
     REGISTER_LUA_COMMAND(CREATE_TASK);
     REGISTER_LUA_COMMAND(DESTROY_TASK);
     REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
     REGISTER_LUA_COMMAND(SET_ROBOT);
-    REGISTER_LUA_COMMAND(SET_ENVIRONMENT);
+    REGISTER_LUA_COMMAND(SET_COLLISION_PAIRS);
     REGISTER_LUA_COMMAND(SET_START_STATE);
     REGISTER_LUA_COMMAND(SET_GOAL_STATE);
     REGISTER_LUA_COMMAND(SET_GOAL);
