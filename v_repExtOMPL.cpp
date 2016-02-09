@@ -255,6 +255,8 @@ struct TaskDef
     Algorithm algorithm;
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
+    // state space dimension:
+    int dim; // TODO
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -1217,8 +1219,31 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
 
         RobotDef *robot = robots[robotHandle];
         robot->stateSpaces.clear();
+        int dimensions=0;
         for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-            robot->stateSpaces.push_back(inData->at(1).intData[i]);
+        {
+            simInt stateSpaceHandle = inData->at(1).intData[i];
+            robot->stateSpaces.push_back(stateSpaceHandle);
+            switch(statespaces.find(stateSpaceHandle)->second->type)
+            {
+                case sim_ompl_statespacetype_position2d:
+                    dimensions+=2;
+                    break;
+                case sim_ompl_statespacetype_pose2d:
+                    dimensions+=3;
+                    break;
+                case sim_ompl_statespacetype_position3d:
+                    dimensions+=3;
+                    break;
+                case sim_ompl_statespacetype_pose3d:
+                    dimensions+=7;
+                    break;
+                case sim_ompl_statespacetype_joint_position:
+                    dimensions+=1;
+                    break;
+            }
+        }
+        // TODO: set dimension of state space and check argument length of simExtOMPL_setStartState and simExtOMPL_setGoalState
         returnResult = 1;
     }
     while(0);
@@ -1638,7 +1663,7 @@ void LUA_SET_COLLISION_PAIRS_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_START_STATE_RET ""
 #define LUA_SET_START_STATE_COMMAND "simExtOMPL_setStartState"
 #define LUA_SET_START_STATE_APIHELP "number result=" LUA_SET_START_STATE_COMMAND "(number taskHandle, table state)"
-const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
+const int inArgs_SET_START_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 1};
 
 void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 {
@@ -1659,6 +1684,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
             break;
         }
+        // TODO: check table size and state space dimension (task->dim)
 
         TaskDef *task = tasks[taskHandle];
         task->startState.clear();
@@ -1679,7 +1705,7 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_GOAL_STATE_RET ""
 #define LUA_SET_GOAL_STATE_COMMAND "simExtOMPL_setGoalState"
 #define LUA_SET_GOAL_STATE_APIHELP "number result=" LUA_SET_GOAL_STATE_COMMAND "(number taskHandle, table state)"
-const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 3};
+const int inArgs_SET_GOAL_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 1};
 
 void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
 {
@@ -1700,6 +1726,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
             break;
         }
+        // TODO: check table size and state space dimension (task->dim)
 
         TaskDef *task = tasks[taskHandle];
         task->goal.type = TaskDef::Goal::STATE;
@@ -1788,12 +1815,14 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
 #define LUA_COMPUTE_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("maxTime", "maximum time to use in seconds")
+    PARAM("maxTime", "maximum time used for the path searching procedure, in seconds.") \
+    PARAM("maxSimplificationTime", "(optional) maximum time used for the path simplification procedure, in seconds. 0 for a default simplification procedure.") \
+    PARAM("stateCnt", "(optional) minimum number of states to be returned. 0 for a default behaviour.") \
 #define LUA_COMPUTE_RET \
     PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
-#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime)"
-const int inArgs_COMPUTE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
+#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime, number maxSimplificationTime, number stateCnt)"
+const int inArgs_COMPUTE[]={4, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
 
 void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 {
@@ -1804,12 +1833,19 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
     do
     {
-        if(!D.readDataFromLua(p, inArgs_COMPUTE, inArgs_COMPUTE[0], LUA_COMPUTE_COMMAND))
+        if(!D.readDataFromLua(p, inArgs_COMPUTE, inArgs_COMPUTE[0]-2, LUA_COMPUTE_COMMAND)) // two last arguments are optional
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
         simInt taskHandle = inData->at(0).intData[0];
         simFloat maxTime = inData->at(1).floatData[0];
+        simFloat simplificationMaxTime = 0.0;
+        simInt minStates = 0;
+
+        if (inData->size()>=3)
+    		simplificationMaxTime=inData->at(2).floatData[0];
+        if (inData->size()>=4)
+    		minStates=inData->at(3).intData[0];
 
         if(tasks.find(taskHandle) == tasks.end())
         {
@@ -1951,13 +1987,13 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             if(solved)
             {
                 //simAddStatusbarMessage("OMPL: found solution:");
-                setup.simplifySolution();
+                setup.simplifySolution(simplificationMaxTime);
                 //std::stringstream s;
                 og::PathGeometric& path = setup.getSolutionPath();
                 //path.print(s);
                 //simAddStatusbarMessage(s.str().c_str());
                 //simAddStatusbarMessage("OMPL: interpolated:");
-                path.interpolate();
+                path.interpolate(minStates);
                 //path.print(s);
                 //simAddStatusbarMessage(s.str().c_str());
                 for(size_t i = 0; i < path.getStateCount(); i++)
