@@ -531,12 +531,12 @@ protected:
             }
             else
             {
-                throw ompl::Exception("Projection evaliator callback " + task->projectionEvaluation.callback.function + " return value size and/or type is incorrect");
+                throw ompl::Exception("Projection evaluator callback " + task->projectionEvaluation.callback.function + " return value size and/or type is incorrect");
             }
         }
         else
         {
-            throw ompl::Exception("Projection evaliator callback " + task->projectionEvaluation.callback.function + " returned an error");
+            throw ompl::Exception("Projection evaluator callback " + task->projectionEvaluation.callback.function + " returned an error");
         }
 
         // Release the data:
