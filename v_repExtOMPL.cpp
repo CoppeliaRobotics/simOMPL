@@ -1930,7 +1930,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             std::cout << s << std::endl;
             simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
             if(task->verboseLevel >= 1)
-                simAddStatusbarMessage(s);
+                simAddStatusbarMessage(s.c_str());
         }
         task->stateSpacePtr.reset();
     }
