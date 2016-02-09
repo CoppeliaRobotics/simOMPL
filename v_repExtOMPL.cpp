@@ -1817,7 +1817,7 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("maxTime", "maximum time used for the path searching procedure, in seconds.") \
     PARAM("maxSimplificationTime", "(optional) maximum time used for the path simplification procedure, in seconds. 0 for a default simplification procedure.") \
-    PARAM("stateCnt", "(optional) minimum number of states to be returned. 0 for a default behaviour.") \
+    PARAM("stateCnt", "(optional) minimum number of states to be returned. 0 for a default behaviour.")
 #define LUA_COMPUTE_RET \
     PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
