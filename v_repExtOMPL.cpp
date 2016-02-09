@@ -2018,6 +2018,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             std::cout << s << std::endl;
             simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
         }
+        task->stateSpacePtr.reset();
     }
     while(0);
 
