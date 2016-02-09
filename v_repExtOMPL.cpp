@@ -250,6 +250,8 @@ struct TaskDef
     ob::StateSpacePtr stateSpacePtr;
     // state space dimension:
     int dim;
+    // how many things we should say in the V-REP console? (0 = stay silent)
+    int verboseLevel;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -1101,6 +1103,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         task->algorithm = sim_ompl_algorithm_KPIECE1;
+        task->verboseLevel = 0;
         tasks[task->header.handle] = task;
         returnResult = task->header.handle;
     }
@@ -1326,6 +1329,47 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         simAddStatusbarMessage(s.str().c_str());
         std::cout << s.str();
 
+        returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
+#define LUA_SET_VERBOSE_LEVEL_DESCR "Set the verbosity level for messages printed to application console."
+#define LUA_SET_VERBOSE_LEVEL_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("verboseLevel", "level of verbosity (positive integer), 0 to suppress any message")
+#define LUA_SET_VERBOSE_LEVEL_RET ""
+#define LUA_SET_VERBOSE_LEVEL_COMMAND "simExtOMPL_setVerboseLevel"
+#define LUA_SET_VERBOSE_LEVEL_APIHELP "number result=" LUA_SET_VERBOSE_LEVEL_COMMAND "(number taskHandle, number verboseLevel)"
+const int inArgs_SET_VERBOSE_LEVEL[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+
+void LUA_SET_VERBOSE_LEVEL_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_VERBOSE_LEVEL, inArgs_SET_VERBOSE_LEVEL[0], LUA_SET_VERBOSE_LEVEL_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        simInt verboseLevel = inData->at(1).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_SET_VERBOSE_LEVEL_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+        task->verboseLevel = verboseLevel;
+        
         returnResult = 1;
     }
     while(0);
@@ -1838,16 +1882,31 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             ob::PlannerStatus solved = setup.solve(maxTime);
             if(solved)
             {
-                //simAddStatusbarMessage("OMPL: found solution:");
+                if(task->verboseLevel >= 2)
+                    simAddStatusbarMessage("OMPL: simplifying solution...");
                 setup.simplifySolution(simplificationMaxTime);
-                //std::stringstream s;
+
                 og::PathGeometric& path = setup.getSolutionPath();
-                //path.print(s);
-                //simAddStatusbarMessage(s.str().c_str());
-                //simAddStatusbarMessage("OMPL: interpolated:");
+                if(task->verboseLevel >= 1)
+                {
+                    simAddStatusbarMessage("OMPL: found solution:");
+                    std::stringstream s;
+                    path.print(s);
+                    simAddStatusbarMessage(s.str().c_str());
+                }
+
+                if(task->verboseLevel >= 2)
+                    simAddStatusbarMessage("OMPL: interpolating solution...");
+
                 path.interpolate(minStates);
-                //path.print(s);
-                //simAddStatusbarMessage(s.str().c_str());
+                if(task->verboseLevel >= 2)
+                {
+                    simAddStatusbarMessage("OMPL: interpolated:");
+                    std::stringstream s;
+                    path.print(s);
+                    simAddStatusbarMessage(s.str().c_str());
+                }
+
                 for(size_t i = 0; i < path.getStateCount(); i++)
                 {
                     const ob::StateSpace::StateType *s = path.getState(i);
@@ -1860,15 +1919,18 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             }
             else
             {
-                //simAddStatusbarMessage("OMPL: could not find solution.");
+                if(task->verboseLevel >= 1)
+                    simAddStatusbarMessage("OMPL: could not find solution.");
             }
         }
         catch(ompl::Exception& ex)
         {
-            std::string s = "OMPL exception: ";
+            std::string s = "OMPL: exception: ";
             s += ex.what();
             std::cout << s << std::endl;
             simSetLastError(LUA_COMPUTE_COMMAND, s.c_str());
+            if(task->verboseLevel >= 1)
+                simAddStatusbarMessage(s);
         }
         task->stateSpacePtr.reset();
     }
@@ -2172,6 +2234,7 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(CREATE_TASK);
     REGISTER_LUA_COMMAND(DESTROY_TASK);
     REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
+    REGISTER_LUA_COMMAND(SET_VERBOSE_LEVEL);
     REGISTER_LUA_COMMAND(SET_STATE_SPACE);
     REGISTER_LUA_COMMAND(SET_COLLISION_PAIRS);
     REGISTER_LUA_COMMAND(SET_START_STATE);
