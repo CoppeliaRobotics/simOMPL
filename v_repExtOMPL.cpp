@@ -204,18 +204,11 @@ struct StateSpaceDef
     bool defaultProjection;
 };
 
-struct RobotDef
+struct TaskDef
 {
     ObjectDefHeader header;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<simInt> stateSpaces;
-};
-
-struct TaskDef
-{
-    ObjectDefHeader header;
-    // internal handle of the robot object associated with the task:
-    simInt robotHandle;
     // handle of the collision pairs:
     std::vector<simInt> collisionPairHandles;
     // start state:
@@ -256,11 +249,10 @@ struct TaskDef
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
     // state space dimension:
-    int dim; // TODO
+    int dim;
 };
 
 std::map<simInt, TaskDef *> tasks;
-std::map<simInt, RobotDef *> robots;
 std::map<simInt, StateSpaceDef *> statespaces;
 simInt nextTaskHandle = 1000;
 simInt nextRobotHandle = 4000;
@@ -291,7 +283,6 @@ void destroyTransientObjects(std::map<simInt, T *>& c)
 void destroyTransientObjects()
 {
     destroyTransientObjects(tasks);
-    destroyTransientObjects(robots);
     destroyTransientObjects(statespaces);
 }
 
@@ -304,8 +295,6 @@ public:
         this->task = task;
 
         dim = 0;
-
-        RobotDef *robot = robots[task->robotHandle];
 
         switch(task->projectionEvaluation.type)
         {
@@ -355,8 +344,6 @@ public:
 
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-        RobotDef *robot = robots[task->robotHandle];
-
         switch(task->projectionEvaluation.type)
         {
             case TaskDef::ProjectionEvaluation::DEFAULT:
@@ -380,11 +367,9 @@ public:
 protected:
     virtual int defaultProjectionSize() const
     {
-        RobotDef *robot = robots[task->robotHandle];
-
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -406,12 +391,11 @@ protected:
 
     virtual void defaultProjection(const ob::State *state, ob::EuclideanProjection& projection) const
     {
-        RobotDef *robot = robots[task->robotHandle];
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -497,7 +481,6 @@ protected:
         std::vector<double> stateVec;
         statespace->copyToReals(stateVec, state);
 
-        RobotDef *robot = robots[task->robotHandle];
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
         // The expected return arguments (2):
@@ -557,11 +540,9 @@ public:
         setName("VREPCompoundStateSpace");
         type_ = ompl::base::STATE_SPACE_TYPE_COUNT + 1;
 
-        RobotDef *robot = robots[task->robotHandle];
-
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
 
             ob::StateSpacePtr subSpace;
 
@@ -623,14 +604,12 @@ public:
     // writes state s to V-REP:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        RobotDef *robot = robots[task->robotHandle];
-
         int j = 0;
         simFloat pos[3], orient[4], value;
 
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
 
             switch(stateSpace->type)
             {
@@ -677,13 +656,11 @@ public:
     // reads state s from V-REP:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        RobotDef *robot = robots[task->robotHandle];
-
         simFloat pos[3], orient[4], value;
 
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
 
             switch(stateSpace->type)
             {
@@ -752,8 +729,6 @@ public:
 protected:
     virtual bool checkDefault(const ob::State *state) const
     {
-        RobotDef *robot = robots[task->robotHandle];
-
         //ob::CompoundStateSpace *ss = statespace->as<ob::CompoundStateSpace>();
         ob::ScopedState<ob::CompoundStateSpace> s(statespace);
         s = state;
@@ -769,10 +744,10 @@ protected:
         bool inCollision = false;
         for(size_t i = 0; i < task->collisionPairHandles.size()/2; i++)
         {
-            if (task->collisionPairHandles[2*i+0]>=0)
+            if(task->collisionPairHandles[2*i+0] >= 0)
             {
                 int r = simCheckCollision(task->collisionPairHandles[2*i+0],task->collisionPairHandles[2*i+1]);
-                if(r >0)
+                if(r > 0)
                 {
                     inCollision = true;
                     break;
@@ -1090,172 +1065,9 @@ void LUA_DESTROY_STATE_SPACE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_CREATE_ROBOT_DESCR "Create a robot object. A robot object contains informations about: <ul>" \
-    "<li> the state space components (created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND) ")</li>" \
-    "<li> the collision objects of the robot</li>" \
-    "</ul>"
-#define LUA_CREATE_ROBOT_PARAMS \
-    PARAM("name", "a name for this robot object")
-#define LUA_CREATE_ROBOT_RET \
-    PARAM("robotHandle", "a handle to the created robot object")
-#define LUA_CREATE_ROBOT_COMMAND "simExtOMPL_createRobot"
-#define LUA_CREATE_ROBOT_APIHELP "number robotHandle=" LUA_CREATE_ROBOT_COMMAND "(string name)"
-const int inArgs_CREATE_ROBOT[]={1, sim_lua_arg_string, 0};
-
-void LUA_CREATE_ROBOT_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_CREATE_ROBOT, inArgs_CREATE_ROBOT[0], LUA_CREATE_ROBOT_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        std::string name = inData->at(0).stringData[0];
-        RobotDef *robot = new RobotDef();
-        robot->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        robot->header.handle = nextRobotHandle++;
-        robot->header.name = name;
-        robots[robot->header.handle] = robot;
-        returnResult = robot->header.handle;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
-#define LUA_DESTROY_ROBOT_DESCR "Destroy the specified robot object.<br /><br />" \
-    "Note: robot objects created during simulation are automatically destroyed when simulation ends."
-#define LUA_DESTROY_ROBOT_PARAMS \
-    PARAM("robotHandle", "handle to the robot object to destroy")
-#define LUA_DESTROY_ROBOT_RET ""
-#define LUA_DESTROY_ROBOT_COMMAND "simExtOMPL_destroyRobot"
-#define LUA_DESTROY_ROBOT_APIHELP "number result=" LUA_DESTROY_ROBOT_COMMAND "(number robotHandle)"
-const int inArgs_DESTROY_ROBOT[]={1, sim_lua_arg_int, 0};
-
-void LUA_DESTROY_ROBOT_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_DESTROY_ROBOT, inArgs_DESTROY_ROBOT[0], LUA_DESTROY_ROBOT_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        simInt robotHandle = inData->at(0).intData[0];
-
-        if(robots.find(robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_DESTROY_ROBOT_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        RobotDef *robot = robots[robotHandle];
-        robots.erase(robotHandle);
-        delete robot;
-        returnResult = 1;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
-#define LUA_PARAM_ROBOT_HANDLE "handle to a robot object created with " HYPERLINK(LUA_CREATE_ROBOT_COMMAND)
-#define LUA_SET_STATE_SPACE_DESCR "Set the state space of this robot object."
-#define LUA_SET_STATE_SPACE_PARAMS \
-    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE) \
-    PARAM("stateSpaceHandles", "a table of handles to state space components, created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND))
-#define LUA_SET_STATE_SPACE_RET ""
-#define LUA_SET_STATE_SPACE_COMMAND "simExtOMPL_setStateSpace"
-#define LUA_SET_STATE_SPACE_APIHELP "number result=" LUA_SET_STATE_SPACE_COMMAND "(number robotHandle, table stateSpaceHandles)"
-const int inArgs_SET_STATE_SPACE[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
-
-void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_SET_STATE_SPACE, inArgs_SET_STATE_SPACE[0], LUA_SET_STATE_SPACE_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        simInt robotHandle = inData->at(0).intData[0];
-
-        if(robots.find(robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        bool valid_statespace_handles = true;
-
-        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-        {
-            simInt stateSpaceHandle = inData->at(1).intData[i];
-
-            if(statespaces.find(stateSpaceHandle) == statespaces.end())
-            {
-                valid_statespace_handles = false;
-                break;
-            }
-        }
-
-        if(!valid_statespace_handles)
-        {
-            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid state space handle.");
-            break;
-        }
-
-        RobotDef *robot = robots[robotHandle];
-        robot->stateSpaces.clear();
-        int dimensions=0;
-        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
-        {
-            simInt stateSpaceHandle = inData->at(1).intData[i];
-            robot->stateSpaces.push_back(stateSpaceHandle);
-            switch(statespaces.find(stateSpaceHandle)->second->type)
-            {
-                case sim_ompl_statespacetype_position2d:
-                    dimensions+=2;
-                    break;
-                case sim_ompl_statespacetype_pose2d:
-                    dimensions+=3;
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    dimensions+=3;
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    dimensions+=7;
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    dimensions+=1;
-                    break;
-            }
-        }
-        // TODO: set dimension of state space and check argument length of simExtOMPL_setStartState and simExtOMPL_setGoalState
-        returnResult = 1;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
-
 #define LUA_CREATE_TASK_DESCR "Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>" \
-    "<li>environment (i.e. which shapes are to be considered obstacles by the default state validity checker)</li>" \
-    "<li>robot object (created with " HYPERLINK(LUA_CREATE_ROBOT_COMMAND) ")</li>" \
+    "<li>collision pairs (used by the default state validity checker)</li>" \
+    "<li>state spaces</li>" \
     "<li>start state</li>" \
     "<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>" \
     "<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>" \
@@ -1386,7 +1198,7 @@ const char * algorithm_string(Algorithm alg)
     }
 };
 
-#define LUA_PRINT_TASK_INFO_DESCR "Print a summary of the specified task object, including information about robot and its state spaces."
+#define LUA_PRINT_TASK_INFO_DESCR "Print a summary of the specified task object. Useful for debugging and submitting bug reports."
 #define LUA_PRINT_TASK_INFO_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
 #define LUA_PRINT_TASK_INFO_RET ""
@@ -1415,31 +1227,28 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-        RobotDef *robot = robots[task->robotHandle];
 
         std::stringstream s;
         std::string prefix = "OMPL: ";
         s << prefix << "task name: " << task->header.name << std::endl;
-        s << prefix << "robot: " << task->robotHandle << std::endl;
-        s << prefix << "    name: " << robot->header.name << std::endl;
-        s << prefix << "    state spaces:" << std::endl;
-        for(size_t i = 0; i < robot->stateSpaces.size(); i++)
+        s << prefix << "state spaces:" << std::endl;
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[robot->stateSpaces[i]];
-            s << prefix << "        state space: " << stateSpace->header.handle << std::endl;
-            s << prefix << "            name: " << stateSpace->header.name << std::endl;
-            s << prefix << "            type: " << state_space_type_string(stateSpace->type) << std::endl;
-            s << prefix << "            object handle: " << stateSpace->objectHandle << std::endl;
-            s << prefix << "            bounds low: {";
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            s << prefix << "    state space: " << stateSpace->header.handle << std::endl;
+            s << prefix << "        name: " << stateSpace->header.name << std::endl;
+            s << prefix << "        type: " << state_space_type_string(stateSpace->type) << std::endl;
+            s << prefix << "        object handle: " << stateSpace->objectHandle << std::endl;
+            s << prefix << "        bounds low: {";
             for(size_t j = 0; j < stateSpace->boundsLow.size(); j++)
                 s << (j ? ", " : "") << stateSpace->boundsLow[j];
             s << "}" << std::endl;
-            s << prefix << "            bounds high: {";
+            s << prefix << "        bounds high: {";
             for(size_t j = 0; j < stateSpace->boundsHigh.size(); j++)
                 s << (j ? ", " : "") << stateSpace->boundsHigh[j];
             s << "}" << std::endl;
-            s << prefix << "            default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
-            s << prefix << "            weight: " << stateSpace->weight << std::endl;
+            s << prefix << "        default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
+            s << prefix << "        weight: " << stateSpace->weight << std::endl;
         }
         s << prefix << "collision pairs: {";
         for(size_t i = 0; i < task->collisionPairHandles.size(); i++)
@@ -1525,6 +1334,89 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+#define LUA_SET_STATE_SPACE_DESCR "Set the state space of this task object."
+#define LUA_SET_STATE_SPACE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("stateSpaceHandles", "a table of handles to state space components, created with " HYPERLINK(LUA_CREATE_STATE_SPACE_COMMAND))
+#define LUA_SET_STATE_SPACE_RET ""
+#define LUA_SET_STATE_SPACE_COMMAND "simExtOMPL_setStateSpace"
+#define LUA_SET_STATE_SPACE_APIHELP "number result=" LUA_SET_STATE_SPACE_COMMAND "(number taskHandle, table stateSpaceHandles)"
+const int inArgs_SET_STATE_SPACE[]={2, sim_lua_arg_int, 0, sim_lua_arg_int|sim_lua_arg_table, 0};
+
+void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_STATE_SPACE, inArgs_SET_STATE_SPACE[0], LUA_SET_STATE_SPACE_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        bool valid_statespace_handles = true;
+
+        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
+        {
+            simInt stateSpaceHandle = inData->at(1).intData[i];
+
+            if(statespaces.find(stateSpaceHandle) == statespaces.end())
+            {
+                valid_statespace_handles = false;
+                break;
+            }
+        }
+
+        if(!valid_statespace_handles)
+        {
+            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid state space handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+        task->stateSpaces.clear();
+        task->dim = 0;
+        for(size_t i = 0; i < inData->at(1).intData.size(); i++)
+        {
+            simInt stateSpaceHandle = inData->at(1).intData[i];
+            task->stateSpaces.push_back(stateSpaceHandle);
+            switch(statespaces.find(stateSpaceHandle)->second->type)
+            {
+                case sim_ompl_statespacetype_position2d:
+                    task->dim += 2;
+                    break;
+                case sim_ompl_statespacetype_pose2d:
+                    task->dim += 3;
+                    break;
+                case sim_ompl_statespacetype_position3d:
+                    task->dim += 3;
+                    break;
+                case sim_ompl_statespacetype_pose3d:
+                    task->dim += 7;
+                    break;
+                case sim_ompl_statespacetype_joint_position:
+                    task->dim += 1;
+                    break;
+            }
+        }
+        
+        returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
 #define LUA_SET_ALGORITHM_DESCR "Set the search algorithm for the specified task. Default algorithm used is KPIECE1."
 #define LUA_SET_ALGORITHM_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
@@ -1557,52 +1449,6 @@ void LUA_SET_ALGORITHM_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
         task->algorithm = algorithm;
-        returnResult = 1;
-    }
-    while(0);
-
-    D.pushOutData(CLuaFunctionDataItem(returnResult));
-    D.writeDataToLua(p);
-}
-
-#define LUA_SET_ROBOT_DESCR "Set the robot object for the specified task."
-#define LUA_SET_ROBOT_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("robotHandle", LUA_PARAM_ROBOT_HANDLE)
-#define LUA_SET_ROBOT_RET ""
-#define LUA_SET_ROBOT_COMMAND "simExtOMPL_setRobot"
-#define LUA_SET_ROBOT_APIHELP "number result=" LUA_SET_ROBOT_COMMAND "(number taskHandle, number robotHandle)"
-const int inArgs_SET_ROBOT[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
-
-void LUA_SET_ROBOT_CALLBACK(SLuaCallBack* p)
-{
-    p->outputArgCount = 0;
-    CLuaFunctionData D;
-    simInt returnResult = 0;
-
-    do
-    {
-        if(!D.readDataFromLua(p, inArgs_SET_ROBOT, inArgs_SET_ROBOT[0], LUA_SET_ROBOT_COMMAND))
-            break;
-
-        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-        simInt taskHandle = inData->at(0).intData[0];
-        simInt robotHandle = inData->at(1).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        if(robots.find(robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_SET_ROBOT_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
-        task->robotHandle = robotHandle;
         returnResult = 1;
     }
     while(0);
@@ -1684,12 +1530,19 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
             break;
         }
-        // TODO: check table size and state space dimension (task->dim)
 
         TaskDef *task = tasks[taskHandle];
+
+        if(inData->at(1).floatData.size() != task->dim)
+        {
+            simSetLastError(LUA_SET_START_STATE_COMMAND, "Incorrect state size.");
+            break;
+        }
+
         task->startState.clear();
         for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
             task->startState.push_back(inData->at(1).floatData[i]);
+
         returnResult = 1;
     }
     while(0);
@@ -1726,13 +1579,20 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
             simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
             break;
         }
-        // TODO: check table size and state space dimension (task->dim)
-
+        
         TaskDef *task = tasks[taskHandle];
+
+        if(inData->at(1).floatData.size() != task->dim)
+        {
+            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Incorrect state size.");
+            break;
+        }
+
         task->goal.type = TaskDef::Goal::STATE;
         task->goal.state.clear();
         for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
             task->goal.state.push_back(inData->at(1).floatData[i]);
+
         returnResult = 1;
     }
     while(0);
@@ -1854,14 +1714,6 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
-
-        if(robots.find(task->robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_COMPUTE_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        RobotDef *robot = robots[task->robotHandle];
 
         try
         {
@@ -2057,16 +1909,8 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(robots.find(task->robotHandle) == robots.end())
-        {
-            simSetLastError(LUA_READ_STATE_COMMAND, "Invalid robot handle.");
-            break;
-        }
-
-        RobotDef *robot = robots[task->robotHandle];
-
         simSetLastError(LUA_READ_STATE_COMMAND, "Method not implemented.");
-        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+        // TODO: read state if the stateSpacePtr is valid
 
         returnResult = 1;
     }
@@ -2106,16 +1950,14 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(robots.find(task->robotHandle) == robots.end())
+        if(inData->at(1).floatData.size() != task->dim)
         {
-            simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid robot handle.");
+            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Incorrect state size.");
             break;
         }
-
-        RobotDef *robot = robots[task->robotHandle];
-
+        
         simSetLastError(LUA_WRITE_STATE_COMMAND, "Method not implemented.");
-        // this would need a pointer to the OMPL state space, which is not yet available at this point.
+        // TODO: write state if the stateSpacePtr is valid
 
         returnResult = 1;
     }
@@ -2327,13 +2169,10 @@ void registerLuaCommands()
 {
     REGISTER_LUA_COMMAND(CREATE_STATE_SPACE);
     REGISTER_LUA_COMMAND(DESTROY_STATE_SPACE);
-    REGISTER_LUA_COMMAND(CREATE_ROBOT);
-    REGISTER_LUA_COMMAND(DESTROY_ROBOT);
-    REGISTER_LUA_COMMAND(SET_STATE_SPACE);
     REGISTER_LUA_COMMAND(CREATE_TASK);
     REGISTER_LUA_COMMAND(DESTROY_TASK);
     REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
-    REGISTER_LUA_COMMAND(SET_ROBOT);
+    REGISTER_LUA_COMMAND(SET_STATE_SPACE);
     REGISTER_LUA_COMMAND(SET_COLLISION_PAIRS);
     REGISTER_LUA_COMMAND(SET_START_STATE);
     REGISTER_LUA_COMMAND(SET_GOAL_STATE);
