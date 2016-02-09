@@ -2004,12 +2004,12 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                     for(size_t j = 0; j < v.size(); j++)
                         pathOut.push_back((float)v[j]);
                 }
+                returnResult = 1;
             }
             else
             {
                 //simAddStatusbarMessage("OMPL: could not find solution.");
             }
-            returnResult = 1;
         }
         catch(ompl::Exception& ex)
         {
