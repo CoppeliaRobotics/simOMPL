@@ -60,6 +60,7 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 #include <ompl/base/ProjectionEvaluator.h>
 #include <ompl/base/StateSpace.h>
 #include <ompl/geometric/PathSimplifier.h>
+#include <ompl/base/samplers/UniformValidStateSampler.h>
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
@@ -247,6 +248,8 @@ struct TaskDef
         enum {DEFAULT, CLLBACK} type;
         // state sampling callback:
         struct {std::string function; simInt scriptId;} callback;
+        // "near" state sampling callback:
+        struct {std::string function; simInt scriptId;} callbackNear;
     } stateSampling;
     // projection evaluation:
     struct ProjectionEvaluation
@@ -952,6 +955,145 @@ protected:
     TaskDef *task;
     double tolerance;
 };
+
+class StateSampler : public ob::UniformValidStateSampler
+{
+public:
+    StateSampler(const ob::SpaceInformation *si, TaskDef *task)
+        : ob::UniformValidStateSampler(si), task(task)
+    {
+        name_ = "VREPStateSampler";
+    }
+
+    bool sample(ob::State *state)
+    {
+        if(task->stateSampling.type == TaskDef::StateSampling::CLLBACK)
+        {
+            if(task->stateSampling.callback.function == "")
+            {
+                throw ompl::Exception("Specified empty callback for state sampling");
+            }
+
+            bool ret = false;
+
+            // The expected return arguments (1):
+            const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+
+            SLuaCallBack c;
+            CLuaFunctionData D;
+
+            // no input arguments
+
+            // Call the function in the calling script:
+            if(simCallScriptFunction(task->goal.callback.scriptId, task->stateSampling.callback.function.c_str(), &c, NULL) != -1)
+            {
+                // the call succeeded
+
+                // Now check the return arguments:
+                if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateSampling.callback.function.c_str()))
+                {
+                    std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
+                    std::vector<double> stateVec;
+                    for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
+                        stateVec.push_back((double)outData->at(0).floatData[i]);
+                    task->stateSpacePtr->copyFromReals(state, stateVec);
+                    ret = true;
+                }
+                else
+                {
+                    throw ompl::Exception("State sampling callback " + task->stateSampling.callback.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
+                }
+            }
+            else
+            {
+                throw ompl::Exception("State sampling callback " + task->stateSampling.callback.function + " returned an error");
+            }
+
+            // Release the data:
+            D.releaseBuffers_luaFunctionCall(&c);
+
+            return ret;
+        }
+        else
+        {
+            return ob::UniformValidStateSampler::sample(state);
+        }
+    }
+
+    bool sampleNear(ob::State *state, const ob::State *near, const double distance)
+    {
+        if(task->stateSampling.type == TaskDef::StateSampling::CLLBACK)
+        {
+            if(task->stateSampling.callbackNear.function == "")
+            {
+                throw ompl::Exception("Specified empty callback for \"near\" state sampling");
+            }
+
+            std::vector<double> nearStateVec;
+            task->stateSpacePtr->copyToReals(nearStateVec, near);
+
+            bool ret = false;
+
+            // The expected return arguments (1):
+            const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+
+            SLuaCallBack c;
+            CLuaFunctionData D;
+
+            // Prepare the input arguments:
+            std::vector<float> nearStateVecf;
+            for(size_t i = 0; i < nearStateVec.size(); i++)
+                nearStateVecf.push_back((float)nearStateVec[i]);
+            D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(nearStateVecf));
+            D.pushOutData_luaFunctionCall(CLuaFunctionDataItem((float)distance));
+            D.writeDataToLua_luaFunctionCall(&c, outArgs);
+
+            // Call the function in the calling script:
+            if(simCallScriptFunction(task->goal.callback.scriptId, task->stateSampling.callbackNear.function.c_str(), &c, NULL) != -1)
+            {
+                // the call succeeded
+
+                // Now check the return arguments:
+                if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateSampling.callbackNear.function.c_str()))
+                {
+                    std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
+                    std::vector<double> stateVec;
+                    for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
+                        stateVec.push_back((double)outData->at(0).floatData[i]);
+                    task->stateSpacePtr->copyFromReals(state, stateVec);
+                    ret = true;
+                }
+                else
+                {
+                    throw ompl::Exception("Near state sampling callback " + task->stateSampling.callbackNear.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
+                }
+            }
+            else
+            {
+                throw ompl::Exception("Near state sampling callback " + task->stateSampling.callbackNear.function + " returned an error");
+            }
+
+            // Release the data:
+            D.releaseBuffers_luaFunctionCall(&c);
+
+            return ret;
+        }
+        else
+        {
+            return ob::UniformValidStateSampler::sampleNear(state, near, distance);
+        }
+    }
+
+protected:
+    TaskDef *task;
+};
+
+typedef boost::shared_ptr<StateSampler> StateSamplerPtr;
+
+StateSamplerPtr allocStateSampler(const ob::SpaceInformation *si, TaskDef *task)
+{
+    return StateSamplerPtr(new StateSampler(si, task));
+}
 
 #define HYPERLINK(function) "<a href=\"#" function "\">" function "</a>"
 #define PARAM(name,description) "<param name=\"" name "\">" description "</param>"
@@ -1783,6 +1925,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
             si->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(si, task)));
 
+            si->setValidStateSamplerAllocator(boost::bind(allocStateSampler, _1, task));
+
             ob::ScopedState<> startState(space);
             // TODO: check if task->startState is set and valid
             for(size_t i = 0; i < task->startState.size(); i++)
@@ -2221,6 +2365,62 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+#define LUA_SET_STATE_SAMPLER_CB_DESCR "The state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the state sampling callback:<br /><br />table sampledState=sample()</li><li>the near state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul>"
+#define LUA_SET_STATE_SAMPLER_CB_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("callback", "the name of the Lua callback for sampling a state") \
+    PARAM("callbackNear", "the name of the Lua callback for sampling near a given state within the given distance")
+#define LUA_SET_STATE_SAMPLER_CB_RET ""
+#define LUA_SET_STATE_SAMPLER_CB_COMMAND "simExtOMPL_setStateSamplerCallback"
+#define LUA_SET_STATE_SAMPLER_CB_APIHELP "number result=" LUA_SET_STATE_SAMPLER_CB_COMMAND "(number taskHandle, string callback, string nearCallback)"
+const int inArgs_SET_STATE_SAMPLER_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_string, 0};
+
+void LUA_SET_STATE_SAMPLER_CB_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_STATE_SAMPLER_CB, inArgs_SET_STATE_SAMPLER_CB[0], LUA_SET_STATE_SAMPLER_CB_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        std::string callback = inData->at(1).stringData[0];
+        std::string callbackNear = inData->at(2).stringData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_SET_STATE_SAMPLER_CB_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(callback == "" || callbackNear == "")
+        {
+            simSetLastError(LUA_SET_STATE_SAMPLER_CB_COMMAND, "Invalid callback name.");
+            break;
+        }
+        else
+        {
+            task->stateSampling.type = TaskDef::StateSampling::CLLBACK;
+            task->stateSampling.callback.scriptId = p->scriptID;
+            task->stateSampling.callback.function = callback;
+            task->stateSampling.callbackNear.scriptId = p->scriptID;
+            task->stateSampling.callbackNear.function = callbackNear;
+        }
+
+        returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
 #ifdef GENERATE_DOC
 #define REGISTER_LUA_COMMAND(NAME) \
     std::cout << "    <command name=\"" LUA_##NAME##_COMMAND "\">" << std::endl \
@@ -2268,6 +2468,7 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
     REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
+    REGISTER_LUA_COMMAND(SET_STATE_SAMPLER_CB);
     REGISTER_LUA_COMMAND(SET_ALGORITHM);
 
     REGISTER_LUA_VARIABLE(sim_ompl_statespacetype_position2d);
