@@ -262,6 +262,8 @@ struct TaskDef
     Algorithm algorithm;
     // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
     ob::StateSpacePtr stateSpacePtr;
+    // pointer to OMPL space information. will be valid only during planning (i.e. only valid for Lua callbacks)
+    ob::SpaceInformationPtr spaceInformationPtr;
     // state space dimension:
     int dim;
     // how many things we should say in the V-REP console? (0 = stay silent)
@@ -1960,6 +1962,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             ob::StateSpacePtr space(new StateSpace(task));
             task->stateSpacePtr = space;
             ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
+            task->spaceInformationPtr = si;
             ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
             space->registerDefaultProjection(projectionEval);
             ob::ProblemDefinitionPtr problemDef(new ob::ProblemDefinition(si));
@@ -2142,6 +2145,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 simAddStatusbarMessage(s.c_str());
         }
         task->stateSpacePtr.reset();
+        task->spaceInformationPtr.reset();
     }
     while(0);
 
@@ -2150,9 +2154,12 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_READ_STATE_DESCR ""
-#define LUA_READ_STATE_PARAMS ""
-#define LUA_READ_STATE_RET ""
+#define LUA_READ_STATE_DESCR "Read a state vector from current simulator state."
+#define LUA_READ_STATE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
+#define LUA_READ_STATE_RET \
+    PARAM("result", "") \
+    PARAM("state", "state (vector)")
 #define LUA_READ_STATE_COMMAND "simExtOMPL_readState"
 #define LUA_READ_STATE_APIHELP "number result, table state=" LUA_READ_STATE_COMMAND "(number taskHandle)"
 const int inArgs_READ_STATE[]={1, sim_lua_arg_int, 0};
@@ -2180,8 +2187,11 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        simSetLastError(LUA_READ_STATE_COMMAND, "Method not implemented.");
-        // TODO: read state if the stateSpacePtr is valid
+        ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+        task->stateSpacePtr->as<StateSpace>()->readState(state);
+        std::vector<double> stateVec = state.reals();
+        for(int i = 0; i < stateVec.size(); i++)
+            stateOut[i] = (double)stateVec[i];
 
         returnResult = 1;
     }
@@ -2192,9 +2202,12 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_WRITE_STATE_DESCR ""
-#define LUA_WRITE_STATE_PARAMS ""
-#define LUA_WRITE_STATE_RET ""
+#define LUA_WRITE_STATE_DESCR "Write the specified state to simulator"
+#define LUA_WRITE_STATE_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("state", "state (vector)")
+#define LUA_WRITE_STATE_RET \
+    PARAM("result", "")
 #define LUA_WRITE_STATE_COMMAND "simExtOMPL_writeState"
 #define LUA_WRITE_STATE_APIHELP "number result=" LUA_WRITE_STATE_COMMAND "(number taskHandle, table state)"
 const int inArgs_WRITE_STATE[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 0};
@@ -2227,10 +2240,64 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
             break;
         }
         
-        simSetLastError(LUA_WRITE_STATE_COMMAND, "Method not implemented.");
-        // TODO: write state if the stateSpacePtr is valid
+        ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+        for(int i = 0; i < task->dim; i++)
+            state[i] = (double)inData->at(1).floatData[i];
+        task->stateSpacePtr->as<StateSpace>()->writeState(state);
 
         returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
+#define LUA_IS_STATE_VALID_DESCR "Check if the specified state is valid. If a state validation callback has been specified, that will be used to determine the validity of the state, otherwise the default state validation method will be used."
+#define LUA_IS_STATE_VALID_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("state", LUA_PARAM_ROBOT_STATE)
+#define LUA_IS_STATE_VALID_RET ""
+#define LUA_IS_STATE_VALID_COMMAND "simExtOMPL_isStateValid"
+#define LUA_IS_STATE_VALID_APIHELP "number result=" LUA_IS_STATE_VALID_COMMAND "(number taskHandle, table state)"
+const int inArgs_IS_STATE_VALID[]={2, sim_lua_arg_int, 0, sim_lua_arg_float|sim_lua_arg_table, 1};
+
+void LUA_IS_STATE_VALID_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_IS_STATE_VALID, inArgs_IS_STATE_VALID[0], LUA_IS_STATE_VALID_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_IS_STATE_VALID_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+
+        if(inData->at(1).floatData.size() != task->dim)
+        {
+            simSetLastError(LUA_IS_STATE_VALID_COMMAND, "Incorrect state size.");
+            break;
+        }
+
+        std::vector<double> stateVec;
+        for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
+            stateVec.push_back((double)inData->at(1).floatData[i]);
+        ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+        ob::State *s = &(*state);
+        task->stateSpacePtr->copyFromReals(s, stateVec);
+
+        returnResult = task->spaceInformationPtr->isValid(s) ? 1 : 0;
     }
     while(0);
 
@@ -2509,6 +2576,7 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(COMPUTE);
     REGISTER_LUA_COMMAND(READ_STATE);
     REGISTER_LUA_COMMAND(WRITE_STATE);
+    REGISTER_LUA_COMMAND(IS_STATE_VALID);
     REGISTER_LUA_COMMAND(SET_PROJ_EVAL_CB);
     REGISTER_LUA_COMMAND(SET_STATE_VAL_CB);
     REGISTER_LUA_COMMAND(SET_GOAL_CB);
