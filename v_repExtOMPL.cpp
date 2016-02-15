@@ -2408,7 +2408,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_STATE_SAMPLER_CB_DESCR "The state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the state sampling callback:<br /><br />table sampledState=sample()</li><li>the near state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul>"
+#define LUA_SET_STATE_SAMPLER_CB_DESCR "The state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the state sampling callback:<br /><br />table sampledState=sample()<br /><br /></li><li>the near state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul>"
 #define LUA_SET_STATE_SAMPLER_CB_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("callback", "the name of the Lua callback for sampling a state") \
