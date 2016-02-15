@@ -1853,7 +1853,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
     PARAM("refDummy", "an optional reference dummy, relative to which the metric will be used")
 #define LUA_SET_GOAL_RET ""
 #define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
-#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy, table_4 metric=nil, number refDummy=nil)"
+#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy, number tolerance=0.001, table_4 metric=nil, number refDummy=nil)"
 const int inArgs_SET_GOAL[]={6, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float|sim_lua_arg_table, 4, sim_lua_arg_int, 0};
 
 void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
@@ -2187,6 +2187,12 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
+        if(!task->stateSpacePtr)
+        {
+            simSetLastError(LUA_READ_STATE_COMMAND, "This method can only be used inside callbacks.");
+            break;
+        }
+
         ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
         task->stateSpacePtr->as<StateSpace>()->readState(state);
         std::vector<double> stateVec = state.reals();
@@ -2233,6 +2239,12 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
+
+        if(!task->stateSpacePtr)
+        {
+            simSetLastError(LUA_WRITE_STATE_COMMAND, "This method can only be used inside callbacks.");
+            break;
+        }
 
         if(inData->at(1).floatData.size() != task->dim)
         {
@@ -2283,6 +2295,12 @@ void LUA_IS_STATE_VALID_CALLBACK(SLuaCallBack* p)
         }
 
         TaskDef *task = tasks[taskHandle];
+
+        if(!task->stateSpacePtr)
+        {
+            simSetLastError(LUA_IS_STATE_VALID_COMMAND, "This method can only be used inside callbacks.");
+            break;
+        }
 
         if(inData->at(1).floatData.size() != task->dim)
         {
