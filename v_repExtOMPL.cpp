@@ -237,6 +237,10 @@ struct TaskDef
         // state validation callback:
         struct {std::string function; simInt scriptId;} callback;
     } stateValidation;
+    // resolution at which state validity needs to be verified in order for a
+    // motion between two states to be considered valid (specified as a
+    // fraction of the space's extent)
+    float stateValidityCheckingResolution;
     // state sampling:
     struct StateSampling
     {
@@ -1108,6 +1112,8 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->header.name = name;
         task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
+        task->stateValidityCheckingResolution = 0.01; // 1% of state space's extent
+        task->stateSampling.type = TaskDef::StateSampling::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         task->algorithm = sim_ompl_algorithm_KPIECE1;
         task->verboseLevel = 0;
