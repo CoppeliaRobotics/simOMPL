@@ -56,14 +56,14 @@
 LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
 #include <ompl/base/Goal.h>
+#include <ompl/base/goals/GoalState.h>
 #include <ompl/base/ProjectionEvaluator.h>
 #include <ompl/base/StateSpace.h>
+#include <ompl/geometric/PathSimplifier.h>
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
-
-#include <ompl/geometric/SimpleSetup.h>
 
 #include <ompl/geometric/planners/rrt/BiTRRT.h>
 #include <ompl/geometric/planners/bitstar/BITstar.h>
@@ -237,6 +237,13 @@ struct TaskDef
         // state validation callback:
         struct {std::string function; simInt scriptId;} callback;
     } stateValidation;
+    // state sampling:
+    struct StateSampling
+    {
+        enum {DEFAULT, CLLBACK} type;
+        // state sampling callback:
+        struct {std::string function; simInt scriptId;} callback;
+    } stateSampling;
     // projection evaluation:
     struct ProjectionEvaluation
     {
@@ -1763,32 +1770,34 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         {
             ob::StateSpacePtr space(new StateSpace(task));
             task->stateSpacePtr = space;
+            ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
             ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
             space->registerDefaultProjection(projectionEval);
-            og::SimpleSetup setup(space);
-            setup.setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(setup.getSpaceInformation(), task)));
+            ob::ProblemDefinitionPtr problemDef(new ob::ProblemDefinition(si));
 
-            ob::ScopedState<> start(space);
+            si->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(si, task)));
+
+            ob::ScopedState<> startState(space);
             // TODO: check if task->startState is set and valid
             for(size_t i = 0; i < task->startState.size(); i++)
-                start[i] = task->startState[i];
-            setup.setStartState(start);
+                startState[i] = task->startState[i];
+            problemDef->addStartState(startState);
 
+            ob::GoalPtr goal;
             if(task->goal.type == TaskDef::Goal::STATE)
             {
-                ob::ScopedState<> goal(space);
+                ob::ScopedState<> goalState(space);
                 // TODO: check if task->goal.state is set and valid
                 for(size_t i = 0; i < task->goal.state.size(); i++)
-                    goal[i] = task->goal.state[i];
-                setup.setGoalState(goal);
+                    goalState[i] = task->goal.state[i];
+                goal = ob::GoalPtr(new ob::GoalState(si));
             }
             else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
             {
-                ob::GoalPtr goal(new Goal(setup.getSpaceInformation(), task, (double)task->goal.tolerance));
-                setup.setGoal(goal);
+                goal = ob::GoalPtr(new Goal(si, task, (double)task->goal.tolerance));
             }
+            problemDef->setGoal(goal);
 
-            ob::SpaceInformationPtr si = setup.getSpaceInformation();
             ob::PlannerPtr planner;
             bool validAlgorithm = true;
             switch(task->algorithm)
@@ -1878,15 +1887,22 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             }
             if(!validAlgorithm)
                 break;
-            setup.setPlanner(planner);
-            ob::PlannerStatus solved = setup.solve(maxTime);
+            planner->setProblemDefinition(problemDef);
+            ob::PlannerStatus solved = planner->solve(maxTime);
             if(solved)
             {
                 if(task->verboseLevel >= 2)
                     simAddStatusbarMessage("OMPL: simplifying solution...");
-                setup.simplifySolution(simplificationMaxTime);
 
-                og::PathGeometric& path = setup.getSolutionPath();
+                const ob::PathPtr &path_ = problemDef->getSolutionPath();
+                og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+                if(simplificationMaxTime > 0.0)
+                {
+                    og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(si, goal));
+                    pathSimplifier->simplify(path, simplificationMaxTime);
+                }
+
                 if(task->verboseLevel >= 1)
                 {
                     simAddStatusbarMessage("OMPL: found solution:");
