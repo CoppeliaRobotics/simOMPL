@@ -1535,7 +1535,7 @@ void LUA_SET_VERBOSE_LEVEL_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_DESCR "Set the resolution of state validity checking, expressed as fraction of state space's extent."
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_DESCR "Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% fs the state space's extent."
 #define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("resolution", "resolution of state validity checking, expressed as fraction of state space's extent")
