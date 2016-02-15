@@ -1925,6 +1925,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 
             si->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(si, task)));
 
+            si->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
+
             si->setValidStateSamplerAllocator(boost::bind(allocStateSampler, _1, task));
 
             ob::ScopedState<> startState(space);
