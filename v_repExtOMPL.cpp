@@ -1533,6 +1533,47 @@ void LUA_SET_VERBOSE_LEVEL_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_DESCR "Set the resolution of state validity checking, expressed as fraction of state space's extent."
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_PARAMS \
+    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
+    PARAM("resolution", "resolution of state validity checking, expressed as fraction of state space's extent")
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_RET ""
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND "simExtOMPL_setStateValidityCheckingResolution"
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_APIHELP "number result=" LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND "(number taskHandle, number resolution)"
+const int inArgs_SET_STATE_VALIDITY_CHECKING_RESOLUTION[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+
+void LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_CALLBACK(SLuaCallBack* p)
+{
+    p->outputArgCount = 0;
+    CLuaFunctionData D;
+    simInt returnResult = 0;
+
+    do
+    {
+        if(!D.readDataFromLua(p, inArgs_SET_STATE_VALIDITY_CHECKING_RESOLUTION, inArgs_SET_STATE_VALIDITY_CHECKING_RESOLUTION[0], LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND))
+            break;
+
+        std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+        simInt taskHandle = inData->at(0).intData[0];
+        simInt stateValidityCheckingResolution = inData->at(1).intData[0];
+
+        if(tasks.find(taskHandle) == tasks.end())
+        {
+            simSetLastError(LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND, "Invalid task handle.");
+            break;
+        }
+
+        TaskDef *task = tasks[taskHandle];
+        task->stateValidityCheckingResolution = stateValidityCheckingResolution;
+        
+        returnResult = 1;
+    }
+    while(0);
+
+    D.pushOutData(CLuaFunctionDataItem(returnResult));
+    D.writeDataToLua(p);
+}
+
 #define LUA_SET_STATE_SPACE_DESCR "Set the state space of this task object."
 #define LUA_SET_STATE_SPACE_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
@@ -2459,6 +2500,7 @@ void registerLuaCommands()
     REGISTER_LUA_COMMAND(DESTROY_TASK);
     REGISTER_LUA_COMMAND(PRINT_TASK_INFO);
     REGISTER_LUA_COMMAND(SET_VERBOSE_LEVEL);
+    REGISTER_LUA_COMMAND(SET_STATE_VALIDITY_CHECKING_RESOLUTION);
     REGISTER_LUA_COMMAND(SET_STATE_SPACE);
     REGISTER_LUA_COMMAND(SET_COLLISION_PAIRS);
     REGISTER_LUA_COMMAND(SET_START_STATE);
