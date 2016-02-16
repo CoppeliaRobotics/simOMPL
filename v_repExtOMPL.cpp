@@ -1465,6 +1465,23 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             s << " ???" << std::endl;
             break;
         }
+        s << prefix << "state validity checking resolution: " << task->stateValidityCheckingResolution << std::endl;
+        s << prefix << "valid state sampling:";
+        switch(task->validStateSampling.type)
+        {
+        case TaskDef::ValidStateSampling::DEFAULT:
+            s << " default" << std::endl;
+            break;
+        case TaskDef::ValidStateSampling::CLLBACK:
+            s << std::endl;
+            s << prefix << "    callback:" << std::endl;
+            s << prefix << "        scriptId: " << task->validStateSampling.callback.scriptId << std::endl;
+            s << prefix << "        function: " << task->validStateSampling.callback.function << std::endl;
+            s << prefix << "    callbackNear:" << std::endl;
+            s << prefix << "        scriptId: " << task->validStateSampling.callbackNear.scriptId << std::endl;
+            s << prefix << "        function: " << task->validStateSampling.callbackNear.function << std::endl;
+            break;
+        }
         s << prefix << "projection evaluation:";
         switch(task->projectionEvaluation.type)
         {
