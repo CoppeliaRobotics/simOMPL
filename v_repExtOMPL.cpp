@@ -2296,8 +2296,6 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        // TODO: validate scriptId argument
-
         if(callback == "")
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
