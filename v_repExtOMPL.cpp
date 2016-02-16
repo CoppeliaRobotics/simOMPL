@@ -1391,7 +1391,7 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
         std::stringstream s;
         std::string prefix = "OMPL: ";
         s << prefix << "task name: " << task->header.name << std::endl;
-        s << prefix << "state spaces:" << std::endl;
+        s << prefix << "state spaces: (dimension: " << task->dim << ")" << std::endl;
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
