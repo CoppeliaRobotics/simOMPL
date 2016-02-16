@@ -175,6 +175,14 @@ enum Algorithm
     sim_ompl_algorithm_TRRT
 };
 
+struct LuaCallbackFunction
+{
+    // name of the Lua function
+    std::string function;
+    // id of the V-REP script where the function is defined in
+    simInt scriptId;
+};
+
 struct ObjectDefHeader
 {
     // internal handle of this object (used by the plugin):
@@ -229,14 +237,14 @@ struct TaskDef
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
         // goal callback:
-        struct {std::string function; simInt scriptId;} callback;
+        LuaCallbackFunction callback;
     } goal;
     // state validation:
     struct StateValidation
     {
         enum {DEFAULT, CLLBACK} type;
         // state validation callback:
-        struct {std::string function; simInt scriptId;} callback;
+        LuaCallbackFunction callback;
     } stateValidation;
     // resolution at which state validity needs to be verified in order for a
     // motion between two states to be considered valid (specified as a
@@ -247,16 +255,18 @@ struct TaskDef
     {
         enum {DEFAULT, CLLBACK} type;
         // state sampling callback:
-        struct {std::string function; simInt scriptId;} callback;
+        LuaCallbackFunction callback;
         // "near" state sampling callback:
-        struct {std::string function; simInt scriptId;} callbackNear;
+        LuaCallbackFunction callbackNear;
     } validStateSampling;
     // projection evaluation:
     struct ProjectionEvaluation
     {
         enum {DEFAULT, CLLBACK} type;
         // projection evaluation callback:
-        struct {std::string function; simInt scriptId; int dim;} callback;
+        LuaCallbackFunction callback;
+        // size of the projection (for callback)
+        int dim;
     } projectionEvaluation;
     // search algorithm to use:
     Algorithm algorithm;
@@ -491,7 +501,7 @@ protected:
 
     virtual int luaProjectCallbackSize() const
     {
-        return task->projectionEvaluation.callback.dim;
+        return task->projectionEvaluation.dim;
     }
 
     virtual void luaProjectCallback(const ob::State *state, ob::EuclideanProjection& projection) const
@@ -2385,14 +2395,14 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
         if(callback == "")
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
-            task->projectionEvaluation.callback.dim = 0;
+            task->projectionEvaluation.dim = 0;
             task->projectionEvaluation.callback.scriptId = 0;
             task->projectionEvaluation.callback.function = "";
         }
         else
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CLLBACK;
-            task->projectionEvaluation.callback.dim = projectionSize;
+            task->projectionEvaluation.dim = projectionSize;
             task->projectionEvaluation.callback.scriptId = p->scriptID;
             task->projectionEvaluation.callback.function = callback;
         }
