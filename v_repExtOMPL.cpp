@@ -1941,6 +1941,43 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
+{
+    ob::PlannerPtr planner;
+#define PLANNER(x) case sim_ompl_algorithm_##x: planner = ob::PlannerPtr(new og::x(si)); break
+    switch(algorithm)
+    {
+        PLANNER(BiTRRT);
+        PLANNER(BITstar);
+        PLANNER(BKPIECE1);
+        PLANNER(CForest);
+        PLANNER(EST); // needs projection
+        PLANNER(FMT);
+        PLANNER(KPIECE1); // needs projection
+        PLANNER(LazyPRM);
+        PLANNER(LazyPRMstar);
+        PLANNER(LazyRRT);
+        PLANNER(LBKPIECE1);
+        PLANNER(LBTRRT);
+        //PLANNER(LightningRetrieveRepair);
+        PLANNER(PDST); // needs projection
+        PLANNER(PRM);
+        PLANNER(PRMstar);
+        PLANNER(pRRT);
+        PLANNER(pSBL);
+        PLANNER(RRT);
+        PLANNER(RRTConnect);
+        PLANNER(RRTstar);
+        PLANNER(SBL); // needs projection
+        PLANNER(SPARS);
+        PLANNER(SPARStwo);
+        PLANNER(STRIDE);
+        PLANNER(TRRT);
+    }
+#undef PLANNER
+    return planner;
+}
+
 #define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
 #define LUA_COMPUTE_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
@@ -2021,95 +2058,12 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             }
             problemDef->setGoal(goal);
 
-            ob::PlannerPtr planner;
-            bool validAlgorithm = true;
-            switch(task->algorithm)
+            ob::PlannerPtr planner = plannerFactory(task->algorithm, si);
+            if(!planner)
             {
-                case sim_ompl_algorithm_BiTRRT:
-                    planner = ob::PlannerPtr(new og::BiTRRT(si));
-                    break;
-                case sim_ompl_algorithm_BITstar:
-                    planner = ob::PlannerPtr(new og::BITstar(si));
-                    break;
-                case sim_ompl_algorithm_BKPIECE1:
-                    planner = ob::PlannerPtr(new og::BKPIECE1(si));
-                    break;
-                case sim_ompl_algorithm_CForest:
-                    planner = ob::PlannerPtr(new og::CForest(si));
-                    break;
-                case sim_ompl_algorithm_EST:
-                    planner = ob::PlannerPtr(new og::EST(si)); // needs projection
-                    break;
-                case sim_ompl_algorithm_FMT:
-                    planner = ob::PlannerPtr(new og::FMT(si));
-                    break;
-                case sim_ompl_algorithm_KPIECE1:
-                    planner = ob::PlannerPtr(new og::KPIECE1(si)); // needs projection
-                    break;
-                case sim_ompl_algorithm_LazyPRM:
-                    planner = ob::PlannerPtr(new og::LazyPRM(si));
-                    break;
-                case sim_ompl_algorithm_LazyPRMstar:
-                    planner = ob::PlannerPtr(new og::LazyPRMstar(si));
-                    break;
-                case sim_ompl_algorithm_LazyRRT:
-                    planner = ob::PlannerPtr(new og::LazyRRT(si));
-                    break;
-                case sim_ompl_algorithm_LBKPIECE1:
-                    planner = ob::PlannerPtr(new og::LBKPIECE1(si));
-                    break;
-                case sim_ompl_algorithm_LBTRRT:
-                    planner = ob::PlannerPtr(new og::LBTRRT(si));
-                    break;
-                //case sim_ompl_algorithm_LightningRetrieveRepair:
-                    //planner = ob::PlannerPtr(new og::LightningRetrieveRepair(si));
-                    //break;
-                case sim_ompl_algorithm_PDST:
-                    planner = ob::PlannerPtr(new og::PDST(si)); // needs projection
-                    break;
-                case sim_ompl_algorithm_PRM:
-                    planner = ob::PlannerPtr(new og::PRM(si));
-                    break;
-                case sim_ompl_algorithm_PRMstar:
-                    planner = ob::PlannerPtr(new og::PRMstar(si));
-                    break;
-                case sim_ompl_algorithm_pRRT:
-                    planner = ob::PlannerPtr(new og::pRRT(si));
-                    break;
-                case sim_ompl_algorithm_pSBL:
-                    planner = ob::PlannerPtr(new og::pSBL(si));
-                    break;
-                case sim_ompl_algorithm_RRT:
-                    planner = ob::PlannerPtr(new og::RRT(si));
-                    break;
-                case sim_ompl_algorithm_RRTConnect:
-                    planner = ob::PlannerPtr(new og::RRTConnect(si));
-                    break;
-                case sim_ompl_algorithm_RRTstar:
-                    planner = ob::PlannerPtr(new og::RRTstar(si));
-                    break;
-                case sim_ompl_algorithm_SBL:
-                    planner = ob::PlannerPtr(new og::SBL(si)); // needs projection
-                    break;
-                case sim_ompl_algorithm_SPARS:
-                    planner = ob::PlannerPtr(new og::SPARS(si));
-                    break;
-                case sim_ompl_algorithm_SPARStwo:
-                    planner = ob::PlannerPtr(new og::SPARStwo(si));
-                    break;
-                case sim_ompl_algorithm_STRIDE:
-                    planner = ob::PlannerPtr(new og::STRIDE(si));
-                    break;
-                case sim_ompl_algorithm_TRRT:
-                    planner = ob::PlannerPtr(new og::TRRT(si));
-                    break;
-                default:
-                    simSetLastError(LUA_COMPUTE_COMMAND, "Invalid motion planning algorithm.");
-                    validAlgorithm = false;
-                    break;
-            }
-            if(!validAlgorithm)
+                simSetLastError(LUA_COMPUTE_COMMAND, "Invalid motion planning algorithm.");
                 break;
+            }
             planner->setProblemDefinition(problemDef);
             ob::PlannerStatus solved = planner->solve(maxTime);
             if(solved)
