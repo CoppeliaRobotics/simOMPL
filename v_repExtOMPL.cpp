@@ -1774,12 +1774,12 @@ bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<floa
 {
     if(s.size() == 0)
     {
-        simSetLastError(CMD, descr + " is empty.");
+        simSetLastError(CMD, (descr + " is empty.").c_str());
         return false;
     }
     if(s.size() != task->dim)
     {
-        simSetLastError(CMD, descr + " is of incorrect size.");
+        simSetLastError(CMD, (descr + " is of incorrect size.").c_str());
         return false;
     }
     return true;
