@@ -1280,6 +1280,17 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+TaskDef * getTaskOrSetError(const char *CMD, simInt taskHandle)
+{
+    if(tasks.find(taskHandle) == tasks.end())
+    {
+        simSetLastError(CMD, "Invalid task handle.");
+        return NULL;
+    }
+
+    return tasks[taskHandle];
+}
+
 #define LUA_PARAM_TASK_HANDLE "a handle to a task object created with " HYPERLINK(LUA_CREATE_TASK_COMMAND)
 #define LUA_DESTROY_TASK_DESCR "Destroy the specified task object.<br /><br />" \
     "Note: task objects created during simulation are automatically destroyed when simulation ends."
@@ -1302,17 +1313,14 @@ void LUA_DESTROY_TASK_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_DESTROY_TASK_COMMAND, taskHandle);
+        if(!task) break;
 
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_DESTROY_TASK_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         tasks.erase(taskHandle);
         delete task;
+
         returnResult = 1;
     }
     while(0);
@@ -1388,15 +1396,10 @@ void LUA_PRINT_TASK_INFO_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_PRINT_TASK_INFO_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        TaskDef *task = getTaskOrSetError(LUA_PRINT_TASK_INFO_COMMAND, taskHandle);
+        if(!task) break;
 
         std::stringstream s;
         std::string prefix = "OMPL: ";
@@ -1542,16 +1545,12 @@ void LUA_SET_VERBOSE_LEVEL_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_VERBOSE_LEVEL_COMMAND, taskHandle);
+        if(!task) break;
+
         simInt verboseLevel = inData->at(1).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_VERBOSE_LEVEL_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         task->verboseLevel = verboseLevel;
         
         returnResult = 1;
@@ -1583,16 +1582,12 @@ void LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND, taskHandle);
+        if(!task) break;
+
         simInt stateValidityCheckingResolution = inData->at(1).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         task->stateValidityCheckingResolution = stateValidityCheckingResolution;
         
         returnResult = 1;
@@ -1624,13 +1619,10 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData = D.getInDataPtr();
-        simInt taskHandle = inData->at(0).intData[0];
 
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_STATE_SPACE_COMMAND, "Invalid task handle.");
-            break;
-        }
+        simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_STATE_SPACE_COMMAND, taskHandle);
+        if(!task) break;
 
         bool valid_statespace_handles = true;
 
@@ -1651,7 +1643,6 @@ void LUA_SET_STATE_SPACE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        TaskDef *task = tasks[taskHandle];
         task->stateSpaces.clear();
         task->dim = 0;
         for(size_t i = 0; i < inData->at(1).intData.size(); i++)
@@ -1707,17 +1698,14 @@ void LUA_SET_ALGORITHM_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_ALGORITHM_COMMAND, taskHandle);
+        if(!task) break;
+
         Algorithm algorithm = static_cast<Algorithm>(inData->at(1).intData[0]);
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_ALGORITHM_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         task->algorithm = algorithm;
+
         returnResult = 1;
     }
     while(0);
@@ -1748,17 +1736,13 @@ void LUA_SET_COLLISION_PAIRS_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_COLLISION_PAIRS_COMMAND, taskHandle);
+        if(!task) break;
+
         int numHandles = (inData->at(1).intData.size()/2)*2;
         std::vector<simInt>& pairHandles = inData->at(1).intData;
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_COLLISION_PAIRS_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         task->collisionPairHandles.clear();
         for(int i = 0; i < numHandles; i++)
             task->collisionPairHandles.push_back(pairHandles[i]);
@@ -1807,15 +1791,10 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_START_STATE_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        TaskDef *task = getTaskOrSetError(LUA_SET_START_STATE_COMMAND, taskHandle);
+        if(!task) break;
 
         if(!checkStateSize(LUA_SET_START_STATE_COMMAND, task, inData->at(1).floatData))
             break;
@@ -1853,15 +1832,10 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
-        simInt taskHandle = inData->at(0).intData[0];
 
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Invalid task handle.");
-            break;
-        }
-        
-        TaskDef *task = tasks[taskHandle];
+        simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_GOAL_STATE_COMMAND, taskHandle);
+        if(!task) break;
 
         if(!checkStateSize(LUA_SET_GOAL_STATE_COMMAND, task, inData->at(1).floatData))
             break;
@@ -1904,15 +1878,11 @@ void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_GOAL_COMMAND, taskHandle);
+        if(!task) break;
 
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_GOAL_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
         task->goal.type = TaskDef::Goal::DUMMY_PAIR;
         task->goal.dummyPair.goalDummy = inData->at(1).intData[0];
         task->goal.dummyPair.robotDummy = inData->at(2).intData[0];
@@ -2012,23 +1982,19 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_COMPUTE_COMMAND, taskHandle);
+        if(!task) break;
+
         simFloat maxTime = inData->at(1).floatData[0];
         simFloat simplificationMaxTime = 0.0;
         simInt minStates = 0;
 
-        if (inData->size()>=3)
-    		simplificationMaxTime=inData->at(2).floatData[0];
-        if (inData->size()>=4)
-    		minStates=inData->at(3).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_COMPUTE_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        if(inData->size() >= 3)
+    		simplificationMaxTime = inData->at(2).floatData[0];
+        if(inData->size() >= 4)
+    		minStates = inData->at(3).intData[0];
 
         try
         {
@@ -2169,15 +2135,10 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_READ_STATE_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        TaskDef *task = getTaskOrSetError(LUA_READ_STATE_COMMAND, taskHandle);
+        if(!task) break;
 
         if(!task->stateSpacePtr)
         {
@@ -2222,15 +2183,10 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_WRITE_STATE_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        TaskDef *task = getTaskOrSetError(LUA_WRITE_STATE_COMMAND, taskHandle);
+        if(!task) break;
 
         if(!task->stateSpacePtr)
         {
@@ -2275,15 +2231,10 @@ void LUA_IS_STATE_VALID_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_IS_STATE_VALID_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
+        TaskDef *task = getTaskOrSetError(LUA_IS_STATE_VALID_COMMAND, taskHandle);
+        if(!task) break;
 
         if(!task->stateSpacePtr)
         {
@@ -2331,17 +2282,13 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_PROJ_EVAL_CB_COMMAND, taskHandle);
+        if(!task) break;
+
         std::string callback = inData->at(1).stringData[0];
         simInt projectionSize = inData->at(2).intData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_PROJ_EVAL_CB_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
 
         if(projectionSize < 1)
         {
@@ -2395,16 +2342,12 @@ void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_STATE_VAL_CB_COMMAND, taskHandle);
+        if(!task) break;
+
         std::string callback = inData->at(1).stringData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_STATE_VAL_CB_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
 
         if(callback == "")
         {
@@ -2448,16 +2391,12 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_GOAL_CB_COMMAND, taskHandle);
+        if(!task) break;
+
         std::string callback = inData->at(1).stringData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_GOAL_CB_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
 
         if(callback == "")
         {
@@ -2501,17 +2440,13 @@ void LUA_SET_VALID_STATE_SAMPLER_CB_CALLBACK(SLuaCallBack* p)
             break;
 
         std::vector<CLuaFunctionDataItem>* inData=D.getInDataPtr();
+
         simInt taskHandle = inData->at(0).intData[0];
+        TaskDef *task = getTaskOrSetError(LUA_SET_VALID_STATE_SAMPLER_CB_COMMAND, taskHandle);
+        if(!task) break;
+
         std::string callback = inData->at(1).stringData[0];
         std::string callbackNear = inData->at(2).stringData[0];
-
-        if(tasks.find(taskHandle) == tasks.end())
-        {
-            simSetLastError(LUA_SET_VALID_STATE_SAMPLER_CB_COMMAND, "Invalid task handle.");
-            break;
-        }
-
-        TaskDef *task = tasks[taskHandle];
 
         if(callback == "" || callbackNear == "")
         {
