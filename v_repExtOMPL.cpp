@@ -1770,6 +1770,21 @@ void LUA_SET_COLLISION_PAIRS_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
+bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<float>& s, std::string descr = "State")
+{
+    if(s.size() == 0)
+    {
+        simSetLastError(CMD, descr + " is empty.");
+        return false;
+    }
+    if(s.size() != task->dim)
+    {
+        simSetLastError(CMD, descr + " is of incorrect size.");
+        return false;
+    }
+    return true;
+}
+
 #define LUA_PARAM_ROBOT_STATE "a table of numbers, whose size must be consistent with the robot's state space specified in this task object"
 #define LUA_SET_START_STATE_DESCR "Set the start state for the specified task object."
 #define LUA_SET_START_STATE_PARAMS \
@@ -1802,11 +1817,8 @@ void LUA_SET_START_STATE_CALLBACK(SLuaCallBack* p)
 
         TaskDef *task = tasks[taskHandle];
 
-        if(inData->at(1).floatData.size() != task->dim)
-        {
-            simSetLastError(LUA_SET_START_STATE_COMMAND, "Incorrect state size.");
+        if(!checkStateSize(LUA_SET_START_STATE_COMMAND, task, inData->at(1).floatData))
             break;
-        }
 
         task->startState.clear();
         for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
@@ -1851,11 +1863,8 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
         
         TaskDef *task = tasks[taskHandle];
 
-        if(inData->at(1).floatData.size() != task->dim)
-        {
-            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Incorrect state size.");
+        if(!checkStateSize(LUA_SET_GOAL_STATE_COMMAND, task, inData->at(1).floatData))
             break;
-        }
 
         task->goal.type = TaskDef::Goal::STATE;
         task->goal.state.clear();
@@ -2038,7 +2047,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             si->setValidStateSamplerAllocator(boost::bind(allocValidStateSampler, _1, task));
 
             ob::ScopedState<> startState(space);
-            // TODO: check if task->startState is set and valid
+            if(!checkStateSize(LUA_COMPUTE_COMMAND, task, task->startState, "Start state"))
+                break;
             for(size_t i = 0; i < task->startState.size(); i++)
                 startState[i] = task->startState[i];
             problemDef->addStartState(startState);
@@ -2046,8 +2056,9 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
             ob::GoalPtr goal;
             if(task->goal.type == TaskDef::Goal::STATE)
             {
+                if(!checkStateSize(LUA_COMPUTE_COMMAND, task, task->goal.state, "Goal state"))
+                    break;
                 ob::ScopedState<> goalState(space);
-                // TODO: check if task->goal.state is set and valid
                 for(size_t i = 0; i < task->goal.state.size(); i++)
                     goalState[i] = task->goal.state[i];
                 goal = ob::GoalPtr(new ob::GoalState(si));
@@ -2227,11 +2238,8 @@ void LUA_WRITE_STATE_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        if(inData->at(1).floatData.size() != task->dim)
-        {
-            simSetLastError(LUA_SET_GOAL_STATE_COMMAND, "Incorrect state size.");
+        if(!checkStateSize(LUA_WRITE_STATE_COMMAND, task, inData->at(1).floatData))
             break;
-        }
         
         ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
         for(int i = 0; i < task->dim; i++)
@@ -2283,11 +2291,8 @@ void LUA_IS_STATE_VALID_CALLBACK(SLuaCallBack* p)
             break;
         }
 
-        if(inData->at(1).floatData.size() != task->dim)
-        {
-            simSetLastError(LUA_IS_STATE_VALID_COMMAND, "Incorrect state size.");
+        if(!checkStateSize(LUA_IS_STATE_VALID_COMMAND, task, inData->at(1).floatData))
             break;
-        }
 
         std::vector<double> stateVec;
         for(size_t i = 0; i < inData->at(1).floatData.size(); i++)
