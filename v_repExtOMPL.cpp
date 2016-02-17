@@ -51,7 +51,7 @@
 #define CONCAT(x, y, z) x y z
 #define strConCat(x, y, z)    CONCAT(x, y, z)
 
-#define PLUGIN_VERSION 2 // 2 since version 3.2.1
+#define PLUGIN_VERSION 3 // 3 since V3.3.0, 2 since V3.3.0Beta.
 
 LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
@@ -283,7 +283,6 @@ struct TaskDef
 std::map<simInt, TaskDef *> tasks;
 std::map<simInt, StateSpaceDef *> statespaces;
 simInt nextTaskHandle = 1000;
-simInt nextRobotHandle = 4000;
 simInt nextStateSpaceHandle = 9000;
 
 // this function will be called at simulation end to destroy objects that
@@ -1032,7 +1031,7 @@ public:
         }
     }
 
-    bool sampleNear(ob::State *state, const ob::State *near, const double distance)
+    bool sampleNear(ob::State *state, const ob::State *nearState, const double distance)
     {
         if(task->validStateSampling.type == TaskDef::ValidStateSampling::CLLBACK)
         {
@@ -1042,7 +1041,7 @@ public:
             }
 
             std::vector<double> nearStateVec;
-            task->stateSpacePtr->copyToReals(nearStateVec, near);
+            task->stateSpacePtr->copyToReals(nearStateVec, nearState);
 
             bool ret = false;
 
@@ -1092,7 +1091,7 @@ public:
         }
         else
         {
-            return ob::UniformValidStateSampler::sampleNear(state, near, distance);
+            return ob::UniformValidStateSampler::sampleNear(state, nearState, distance);
         }
     }
 
@@ -1266,7 +1265,7 @@ void LUA_CREATE_TASK_CALLBACK(SLuaCallBack* p)
         task->header.name = name;
         task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
-        task->stateValidityCheckingResolution = 0.01; // 1% of state space's extent
+        task->stateValidityCheckingResolution = 0.01f; // 1% of state space's extent
         task->validStateSampling.type = TaskDef::ValidStateSampling::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         task->algorithm = sim_ompl_algorithm_KPIECE1;
@@ -1561,14 +1560,14 @@ void LUA_SET_VERBOSE_LEVEL_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_DESCR "Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% fs the state space's extent."
+#define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_DESCR "Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% of the state space's extent."
 #define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("resolution", "resolution of state validity checking, expressed as fraction of state space's extent")
 #define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_RET ""
 #define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND "simExtOMPL_setStateValidityCheckingResolution"
 #define LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_APIHELP "number result=" LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND "(number taskHandle, number resolution)"
-const int inArgs_SET_STATE_VALIDITY_CHECKING_RESOLUTION[]={2, sim_lua_arg_int, 0, sim_lua_arg_int, 0};
+const int inArgs_SET_STATE_VALIDITY_CHECKING_RESOLUTION[]={2, sim_lua_arg_int, 0, sim_lua_arg_float, 0};
 
 void LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_CALLBACK(SLuaCallBack* p)
 {
@@ -1587,7 +1586,7 @@ void LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_CALLBACK(SLuaCallBack* p)
         TaskDef *task = getTaskOrSetError(LUA_SET_STATE_VALIDITY_CHECKING_RESOLUTION_COMMAND, taskHandle);
         if(!task) break;
 
-        simInt stateValidityCheckingResolution = inData->at(1).intData[0];
+        float stateValidityCheckingResolution = inData->at(1).floatData[0];
         task->stateValidityCheckingResolution = stateValidityCheckingResolution;
         
         returnResult = 1;
@@ -2052,11 +2051,8 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 const ob::PathPtr &path_ = problemDef->getSolutionPath();
                 og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
 
-                if(simplificationMaxTime > 0.0)
-                {
-                    og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(si, goal));
-                    pathSimplifier->simplify(path, simplificationMaxTime);
-                }
+                og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(si, goal));
+                pathSimplifier->simplify(path, simplificationMaxTime); // always simplify the path, since the first version of the plugin had this
 
                 if(task->verboseLevel >= 1)
                 {
@@ -2069,7 +2065,10 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 if(task->verboseLevel >= 2)
                     simAddStatusbarMessage("OMPL: interpolating solution...");
 
-                path.interpolate(minStates);
+                if (minStates==0)
+                    path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
+                else
+                    path.interpolate(minStates);
                 if(task->verboseLevel >= 2)
                 {
                     simAddStatusbarMessage("OMPL: interpolated:");
@@ -2150,8 +2149,8 @@ void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
         ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
         task->stateSpacePtr->as<StateSpace>()->readState(state);
         std::vector<double> stateVec = state.reals();
-        for(int i = 0; i < stateVec.size(); i++)
-            stateOut.push_back((double)stateVec[i]);
+        for(size_t i = 0; i < stateVec.size(); i++)
+            stateOut.push_back((float)stateVec[i]);
 
         returnResult = 1;
     }
