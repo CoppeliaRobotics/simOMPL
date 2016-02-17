@@ -1857,7 +1857,7 @@ void LUA_SET_GOAL_STATE_CALLBACK(SLuaCallBack* p)
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("robotDummy", "a dummy attached to the robot") \
     PARAM("goalDummy", "a dummy fixed in the environment, representing the goal pose/position") \
-    PARAM("tolerance", "the tolerated dummy-dummy distance") \
+    PARAM("tolerance", "an optional tolerated dummy-dummy distance. Defaults to 0.001") \
     PARAM("metric", "an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance") \
     PARAM("refDummy", "an optional reference dummy, relative to which the metric will be used")
 #define LUA_SET_GOAL_RET ""
@@ -1965,7 +1965,7 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
 #define LUA_COMPUTE_RET \
     PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
 #define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
-#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime, number maxSimplificationTime, number stateCnt)"
+#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime, number maxSimplificationTime=-1, number stateCnt=0)"
 const int inArgs_COMPUTE[]={4, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
 
 void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
@@ -2119,7 +2119,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
 #define LUA_READ_STATE_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
 #define LUA_READ_STATE_RET \
-    PARAM("result", "") \
+    PARAM("result", "1 in case of success") \
     PARAM("state", "state (vector)")
 #define LUA_READ_STATE_COMMAND "simExtOMPL_readState"
 #define LUA_READ_STATE_APIHELP "number result, table state=" LUA_READ_STATE_COMMAND "(number taskHandle)"
@@ -2325,7 +2325,7 @@ void LUA_SET_PROJ_EVAL_CB_CALLBACK(SLuaCallBack* p)
 #define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)"
 #define LUA_SET_STATE_VAL_CB_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("callback", "name of the Lua calback")
+    PARAM("callback", "name of the Lua callback")
 #define LUA_SET_STATE_VAL_CB_RET ""
 #define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
 #define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
@@ -2419,7 +2419,7 @@ void LUA_SET_GOAL_CB_CALLBACK(SLuaCallBack* p)
     D.writeDataToLua(p);
 }
 
-#define LUA_SET_VALID_STATE_SAMPLER_CB_DESCR "The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback:<br /><br />table sampledState=sample()<br /><br /></li><li>the near valid state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul>"
+#define LUA_SET_VALID_STATE_SAMPLER_CB_DESCR "The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback: table sampledState=sample()</li><li>the near valid state sampling callback: table sampledState=sampleNear(table state, number distance)</li></ul>"
 #define LUA_SET_VALID_STATE_SAMPLER_CB_PARAMS \
     PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
     PARAM("callback", "the name of the Lua callback for sampling a state") \
