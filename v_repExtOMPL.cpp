@@ -2028,6 +2028,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 for(size_t i = 0; i < task->goal.state.size(); i++)
                     goalState[i] = task->goal.state[i];
                 goal = ob::GoalPtr(new ob::GoalState(si));
+                goal->as<ob::GoalState>()->setState(goalState);
             }
             else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
             {
