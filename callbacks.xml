@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<?xml-stylesheet type="text/xsl" href="callbacks.xsl"?>
+
+<plugin name="OMPL" author="federico.ferri.it@gmail.com">
+    <command name="createStateSpace">
+        <description>Create a component of the state space for the motion planning problem.</description>
+        <params>
+            <param name="name" type="string">
+                <description>a name for this state space</description>
+            </param>
+            <param name="type" type="int">
+                <description> type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position)</description>
+            </param>
+            <param name="objectHandle" type="int">
+                <description>the object handle (a joint object if type is sim_ompl_statespacetype_joint_position, otherwise a shape)</description>
+            </param>
+            <param name="boundsLow" type="table" item-type="float">
+                <description>lower bounds (if type is pose, specify only the 3 position components)</description>
+            </param>
+            <param name="boundsHigh" type="table" item-type="float">
+                <description>upper bounds (if type is pose, specify only the 3 position components)</description>
+            </param>
+            <param name="useForProjection" type="int">
+                <description>if true, this object position or joint value will be used for computing a default projection</description>
+            </param>
+            <param name="weight" type="float" default="1.0">
+                <description>(optional) the weight of this state space component, used for computing distance between states. Default value is 1.0</description>
+            </param>
+            <param name="refObjectHandle" type="int" default="-1">
+                <description>(optional) an object handle relative to which reference frame position/orientations will be evaluated. Default value is -1, for the absolute reference frame</description>
+            </param>
+        </params>
+        <return>
+            <param name="stateSpaceHandle" type="int">
+                <description>a handle to the created state space component</description>
+            </param>
+        </return>
+    </command>
+    <command name="destroyStateSpace">
+        <description>Destroy the spacified state space component.<br /><br />Note: state space components created during simulation are automatically destroyed when simulation ends.</description>
+        <params>
+            <param name="stateSpaceHandle" type="int">
+                <description>handle to state space component</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="createTask">
+        <description>Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>
+<li>collision pairs (used by the default state validity checker)</li>
+<li>state spaces</li>
+<li>start state</li>
+<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>
+<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>
+</ul></description>
+        <params>
+            <param name="name" type="string">
+                <description>a name for this task object</description>
+            </param>
+        </params>
+        <return>
+            <param name="taskHandle" type="int">
+                <description>a handle to the created task object</description>
+            </param>
+        </return>
+    </command>
+    <command name="destroyTask">
+        <description>Destroy the specified task object.<br /><br />Note: task objects created during simulation are automatically destroyed when simulation ends.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="printTaskInfo">
+        <description>Print a summary of the specified task object. Useful for debugging and submitting bug reports.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setVerboseLevel">
+        <description>Set the verbosity level for messages printed to application console.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="verboseLevel" type="int">
+                <description>level of verbosity (positive integer), 0 to suppress any message</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setStateValidityCheckingResolution">
+        <description>Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% fs the state space's extent.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="resolution" type="float">
+                <description>resolution of state validity checking, expressed as fraction of state space's extent</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setStateSpace">
+        <description>Set the state space of this task object.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="stateSpaceHandles" type="table" item-type="int">
+                <description>a table of handles to state space components, created with simExtOMPL_createStateSpace</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setAlgorithm">
+        <description>Set the search algorithm for the specified task. Default algorithm used is KPIECE1.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="algorithm" type="int">
+                <description>one of sim_ompl_algorithm_BiTRRT, sim_ompl_algorithm_BITstar, sim_ompl_algorithm_BKPIECE1, sim_ompl_algorithm_CForest, sim_ompl_algorithm_EST, sim_ompl_algorithm_FMT, sim_ompl_algorithm_KPIECE1, sim_ompl_algorithm_LazyPRM, sim_ompl_algorithm_LazyPRMstar, sim_ompl_algorithm_LazyRRT, sim_ompl_algorithm_LBKPIECE1, sim_ompl_algorithm_LBTRRT, sim_ompl_algorithm_PDST, sim_ompl_algorithm_PRM, sim_ompl_algorithm_PRMstar, sim_ompl_algorithm_pRRT, sim_ompl_algorithm_pSBL, sim_ompl_algorithm_RRT, sim_ompl_algorithm_RRTConnect, sim_ompl_algorithm_RRTstar, sim_ompl_algorithm_SBL, sim_ompl_algorithm_SPARS, sim_ompl_algorithm_SPARStwo, sim_ompl_algorithm_STRIDE, sim_ompl_algorithm_TRRT</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setCollisionPairs">
+        <description>Set the collision pairs for the specified task object.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="collisionPairHandles" type="table" item-type="int">
+                <description>a table containing 2 entity handles for each collision pair. A collision pair is represented by a collider and a collidee, that will be tested against each other. The first pair could be used for robot self-collision testing, and a second pair could be used for robot-environment collision testing. The collider can be an object or a collection handle. The collidee can be an object or collection handle, or sim_handle_all, in which case the collider will be checked agains all other collidable objects in the scene.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setStartState">
+        <description>Set the start state for the specified task object.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setGoalState">
+        <description>Set the goal state for the specified task object.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setGoal">
+        <description>Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="robotDummy" type="int">
+                <description>a dummy attached to the robot</description>
+            </param>
+            <param name="goalDummy" type="int">
+                <description>a dummy fixed in the environment, representing the goal pose/position</description>
+            </param>
+            <param name="tolerance" type="float" default="0.001f">
+                <description>the tolerated dummy-dummy distance</description>
+            </param>
+            <param name="metric" type="table" item-type="float" default="{1.0, 1.0, 1.0, 0.1}">
+                <description>an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance</description>
+            </param>
+            <param name="refDummy" type="int" default="-1">
+                <description>an optional reference dummy, relative to which the metric will be used</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="compute">
+        <description>Use OMPL to find a solution for this motion planning task.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="maxTime" type="float">
+                <description>maximum time used for the path searching procedure, in seconds.</description>
+            </param>
+            <param name="maxSimplificationTime" type="float" default="-1.0">
+                <description>(optional) maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
+            </param>
+            <param name="stateCnt" type="int" default="0">
+                <description>(optional) minimum number of states to be returned. 0 for a default behaviour.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+            <param name="states" type="table" item-type="int">
+                <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
+            </param>
+        </return>
+    </command>
+    <command name="readState">
+        <description>Read a state vector from current simulator state.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </return>
+    </command>
+    <command name="writeState">
+        <description>Write the specified state to simulator</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="isStateValid">
+        <description>Check if the specified state is valid. If a state validation callback has been specified, that will be used to determine the validity of the state, otherwise the default state validation method will be used.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </params>
+        <return>
+            <param name="valid" type="int">
+                <description>1 if valid, 0 otherwise</description>
+            </param>
+        </return>
+    </command>
+    <command name="setProjectionEvaluationCallback">
+        <description>Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.<br /><br />table projection=evaluateProjection(table state)</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="callback" type="string">
+                <description>name of the Lua callback</description>
+            </param>
+            <param name="projectionSize" type="int">
+                <description>size of the projection (usually 2 or 3)</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setStateValidationCallback">
+        <description>Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="callback" type="string">
+                <description>name of the Lua callback</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setGoalCallback">
+        <description>Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:<br /><br />boolean satisfied, number distance=goalSatisfied(table state)<br /><br />If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="callback" type="string">
+                <description>name of the Lua callback</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="setValidStateSamplerCallback">
+        <description>The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback:<br /><br />table sampledState=sample()<br /><br /></li><li>the near valid state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul></description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="callback" type="string">
+                <description>the name of the Lua callback for sampling a state</description>
+            </param>
+            <param name="callbackNear" type="string">
+                <description>the name of the Lua callback for sampling near a given state within the given distance</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <enum name="Algorithm" item-prefix="sim_ompl_algorithm_" base="30001">
+        <item name="BiTRRT">
+        </item>
+        <item name="BITstar">
+        </item>
+        <item name="BKPIECE1">
+        </item>
+        <item name="CForest">
+        </item>
+        <item name="EST">
+        </item>
+        <item name="FMT">
+        </item>
+        <item name="KPIECE1">
+        </item>
+        <item name="LazyPRM">
+        </item>
+        <item name="LazyPRMstar">
+        </item>
+        <item name="LazyRRT">
+        </item>
+        <item name="LBKPIECE1">
+        </item>
+        <item name="LBTRRT">
+        </item>
+        <item name="PDST">
+        </item>
+        <item name="PRM">
+        </item>
+        <item name="PRMstar">
+        </item>
+        <item name="pRRT">
+        </item>
+        <item name="pSBL">
+        </item>
+        <item name="RRT">
+        </item>
+        <item name="RRTConnect">
+        </item>
+        <item name="RRTstar">
+        </item>
+        <item name="SBL">
+        </item>
+        <item name="SPARS">
+        </item>
+        <item name="SPARStwo">
+        </item>
+        <item name="STRIDE">
+        </item>
+        <item name="TRRT">
+        </item>
+    </enum>
+    <enum name="StateSpaceType" item-prefix="sim_ompl_statespacetype_" base="50001">
+        <item name="position2d">
+        </item>
+        <item name="pose2d">
+        </item>
+        <item name="position3d">
+        </item>
+        <item name="pose3d">
+        </item>
+        <item name="joint_position">
+        </item>
+    </enum>
+</plugin>
