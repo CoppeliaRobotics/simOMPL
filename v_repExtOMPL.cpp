@@ -1987,7 +1987,7 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
         if(!task) break;
 
         simFloat maxTime = inData->at(1).floatData[0];
-        simFloat simplificationMaxTime = 0.0;
+        simFloat simplificationMaxTime = -1.0; // -1 -> default behavior (call simplifyMax)
         simInt minStates = 0;
 
         if(inData->size() >= 3)
@@ -2052,7 +2052,10 @@ void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
                 og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
 
                 og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(si, goal));
-                pathSimplifier->simplify(path, simplificationMaxTime); // always simplify the path, since the first version of the plugin had this
+                if(simplificationMaxTime < -std::numeric_limits<double>::epsilon())
+                    pathSimplifier->simplifyMax(path);
+                else
+                    pathSimplifier->simplify(path, simplificationMaxTime);
 
                 if(task->verboseLevel >= 1)
                 {
