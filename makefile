@@ -49,7 +49,7 @@ libv_repExtOMPL.$(EXT): v_repExtOMPL.o stubs.o ../common/v_repLib.o ../common/lu
 clean:
 	rm -f libv_repExtOMPL.$(EXT)
 	rm -f *.o
-	rm -f stubs.*
+	rm -f stubs.cpp stubs.cpp.tmp stubs.h stubs.h.tmp
 	rm -f reference.html
 
 install: all
