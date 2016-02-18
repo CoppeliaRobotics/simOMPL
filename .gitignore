@@ -8,7 +8,5 @@
 .AppleDouble
 .LSOverride
 reference.html
-reference.xml
-generate_reference_xml
-generate_reference_xml.dSYM
-generate_reference_xml.cpp
+stubs.cpp
+stubs.h

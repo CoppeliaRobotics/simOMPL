@@ -28,31 +28,29 @@ all: libv_repExtOMPL.$(EXT) doc
 
 doc: reference.html
 
-generate_reference_xml.cpp: v_repExtOMPL.cpp
-	cp v_repExtOMPL.cpp $@
+reference.html: callbacks.xml callbacks.xsl
+	saxon -s:callbacks.xml -a:on -o:$@
 
-generate_reference_xml.o: CXXFLAGS+=-DGENERATE_DOC
+v_repExtOMPL.o: stubs.h
 
-generate_reference_xml: generate_reference_xml.o ../common/v_repLib.o ../common/luaFunctionData.o ../common/luaFunctionDataItem.o
-	$(CXX) $^ $(LDLIBS) -o $@
+stubs.o: stubs.h stubs.cpp
 
-reference.xml: generate_reference_xml v_repExtOMPL.cpp
-	./generate_reference_xml > $@.tmp
-	mv $@.tmp $@
+stubs.h: callbacks.xml generate_stubs.py
+	python generate_stubs.py -h callbacks.xml > stubs.h.tmp
+	mv stubs.h.tmp stubs.h
 
-reference.html: reference.xml reference.xsl
-	saxon -s:reference.xml -a:on -o:$@
+stubs.cpp: callbacks.xml generate_stubs.py
+	python generate_stubs.py -c callbacks.xml > stubs.cpp.tmp
+	mv stubs.cpp.tmp stubs.cpp
 
-libv_repExtOMPL.$(EXT): v_repExtOMPL.o ../common/v_repLib.o ../common/luaFunctionData.o ../common/luaFunctionDataItem.o
+libv_repExtOMPL.$(EXT): v_repExtOMPL.o stubs.o ../common/v_repLib.o ../common/luaFunctionData.o ../common/luaFunctionDataItem.o
 	$(CXX) $^ $(LDLIBS) -shared -o $@
 
 clean:
 	rm -f libv_repExtOMPL.$(EXT)
 	rm -f *.o
-	rm -f generate_reference_xml.cpp generate_reference_xml
-	rm -rf generate_reference_xml.dSYM
+	rm -f stubs.cpp stubs.cpp.tmp stubs.h stubs.h.tmp
 	rm -f reference.html
-	rm -f reference.xml reference.xml.tmp
 
 install: all
 	cp libv_repExtOMPL.$(EXT) $(INSTALL_DIR)
