@@ -441,4 +441,72 @@
         <item name="joint_position">
         </item>
     </enum>
+    <script-function name="goalCallback">
+        <description>Callback for checking if the goal is satisfied.</description>
+        <params>
+            <param name="state" type="table" item-type="float">
+                <description>the state to test for goal satisfaction</description>
+            </param>
+        </params>
+        <return>
+            <param name="satisfied" type="bool">
+                <description>true if satisfied, false otherwise</description>
+            </param>
+            <param name="distance" type="float">
+                <description>distance to goal, if it is known. A constant value can be returned otherwise, but the performance of the algorithm will be worse.</description>
+            </param>
+        </return>
+    </script-function>
+    <script-function name="projectionEvaluationCallback">
+        <description>Callback for computing a (euclidean) projection of states.</description>
+        <params>
+            <param name="state" type="table" item-type="float">
+                <description>the state to compute the projection for</description>
+            </param>
+        </params>
+        <return>
+            <param name="projection" type="table" item-type="float">
+                <description>projected state, usualy of size 2 or 3, representing a point in plane or space.</description>
+            </param>
+        </return>
+    </script-function>
+    <script-function name="stateValidationCallback">
+        <description>Callback for checking the validity of states.</description>
+        <params>
+            <param name="state" type="table" item-type="float">
+                <description>the state to compute the projection for</description>
+            </param>
+        </params>
+        <return>
+            <param name="valid" type="bool">
+                <description>true if valid, false otherwise</description>
+            </param>
+        </return>
+    </script-function>
+    <script-function name="validStateSamplerCallback">
+        <description>Callback for sampling valid states from the state space.</description>
+        <params>
+        </params>
+        <return>
+            <param name="sampledState" type="table" item-type="float">
+                <description>a valid state</description>
+            </param>
+        </return>
+    </script-function>
+    <script-function name="validStateSamplerCallbackNear">
+        <description>Callback for sampling valid states in the proximity of a given state, within a certain distance.</description>
+        <params>
+            <param name="state" type="table" item-type="float">
+                <description>the center state</description>
+            </param>
+            <param name="distance" type="float">
+                <description>distance bound</description>
+            </param>
+        </params>
+        <return>
+            <param name="sampledState" type="table" item-type="float">
+                <description>a valid state</description>
+            </param>
+        </return>
+    </script-function>
 </plugin>

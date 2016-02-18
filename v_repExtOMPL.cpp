@@ -473,47 +473,25 @@ protected:
 
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
-        // The expected return arguments (2):
-        const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, luaProjectCallbackSize()};
+        projectionEvaluationCallback_in in_args;
+        projectionEvaluationCallback_out out_args;
 
-        SLuaCallBack c;
-        CLuaFunctionData D;
-
-        // Prepare the input arguments:
-        std::vector<float> stateVecf;
         for(size_t i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back((float)stateVec[i]);
-        D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
-        D.writeDataToLua_luaFunctionCall(&c, outArgs);
+            in_args.state.push_back((float)stateVec[i]);
 
-        // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->projectionEvaluation.callback.scriptId, task->projectionEvaluation.callback.function.c_str(), &c, NULL) != -1)
+        if(projectionEvaluationCallback(task->projectionEvaluation.callback.scriptId, task->projectionEvaluation.callback.function.c_str(), &in_args, &out_args))
         {
-            // the call succeeded
-
-            // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->projectionEvaluation.callback.function.c_str()))
+            for(size_t i = 0; i < out_args.projection.size(); i++)
             {
-                std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
-                {
-                    projection(i) = outData->at(0).floatData[i];
-                    std::cout << (i ? ", " : "") << outData->at(0).floatData[i];
-                }
-                std::cout << std::endl;
+                projection(i) = out_args.projection[i];
+                std::cout << (i ? ", " : "") << out_args.projection[i];
             }
-            else
-            {
-                throw ompl::Exception("Projection evaluator callback " + task->projectionEvaluation.callback.function + " return value size and/or type is incorrect");
-            }
+            std::cout << std::endl;
         }
         else
         {
-            throw ompl::Exception("Projection evaluator callback " + task->projectionEvaluation.callback.function + " returned an error");
+            throw ompl::Exception("Projection evaluation callback " + task->projectionEvaluation.callback.function + " returned an error");
         }
-
-        // Release the data:
-        D.releaseBuffers_luaFunctionCall(&c);
     }
 
     TaskDef *task;
@@ -759,42 +737,20 @@ protected:
 
         bool ret = false;
 
-        // The expected return arguments (2):
-        const int outArgs[]={1, sim_lua_arg_bool, 0};
+        stateValidationCallback_in in_args;
+        stateValidationCallback_out out_args;
 
-        SLuaCallBack c;
-        CLuaFunctionData D;
-
-        // Prepare the input arguments:
-        std::vector<float> stateVecf;
         for(size_t i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back((float)stateVec[i]);
-        D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
-        D.writeDataToLua_luaFunctionCall(&c, outArgs);
+            in_args.state.push_back((float)stateVec[i]);
 
-        // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->stateValidation.callback.scriptId, task->stateValidation.callback.function.c_str(), &c, NULL) != -1)
+        if(stateValidationCallback(task->stateValidation.callback.scriptId, task->stateValidation.callback.function.c_str(), &in_args, &out_args))
         {
-            // the call succeeded
-
-            // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->stateValidation.callback.function.c_str()))
-            {
-                std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                ret = outData->at(0).boolData[0];
-            }
-            else
-            {
-                throw ompl::Exception("State validation callback " + task->stateValidation.callback.function + " return value size and/or type is incorrect");
-            }
+            ret = out_args.valid;
         }
         else
         {
             throw ompl::Exception("State validation callback " + task->stateValidation.callback.function + " returned an error");
         }
-
-        // Release the data:
-        D.releaseBuffers_luaFunctionCall(&c);
 
         return ret;
     }
@@ -880,48 +836,24 @@ protected:
         std::vector<double> stateVec;
         statespace->copyToReals(stateVec, state);
 
-        double dist = std::numeric_limits<double>::infinity();
         bool ret = false;
 
-        // The expected return arguments (2):
-        const int outArgs[]={2, sim_lua_arg_bool, 0, sim_lua_arg_float, 0};
+        goalCallback_in in_args;
+        goalCallback_out out_args;
 
-        SLuaCallBack c;
-        CLuaFunctionData D;
-
-        // Prepare the input arguments:
-        std::vector<float> stateVecf;
         for(size_t i = 0; i < stateVec.size(); i++)
-            stateVecf.push_back((float)stateVec[i]);
-        D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(stateVecf));
-        D.writeDataToLua_luaFunctionCall(&c, outArgs);
+            in_args.state.push_back((float)stateVec[i]);
 
-        // Call the function "test" in the calling script:
-        if(simCallScriptFunction(task->goal.callback.scriptId, task->goal.callback.function.c_str(), &c, NULL) != -1)
+        if(goalCallback(task->goal.callback.scriptId, task->goal.callback.function.c_str(), &in_args, &out_args))
         {
-            // the call succeeded
-
-            // Now check the return arguments:
-            if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->goal.callback.function.c_str()))
-            {
-                std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                ret = outData->at(0).boolData[0];
-                dist = outData->at(1).floatData[0];
-            }
-            else
-            {
-                throw ompl::Exception("Goal callback " + task->goal.callback.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
-            }
+            ret = out_args.satisfied;
+            *distance = out_args.distance;
         }
         else
         {
             throw ompl::Exception("Goal callback " + task->goal.callback.function + " returned an error");
         }
 
-        // Release the data:
-        D.releaseBuffers_luaFunctionCall(&c);
-
-        *distance = dist;
         return ret;
     }
 
@@ -950,41 +882,21 @@ public:
 
             bool ret = false;
 
-            // The expected return arguments (1):
-            const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+            validStateSamplerCallback_in in_args;
+            validStateSamplerCallback_out out_args;
 
-            SLuaCallBack c;
-            CLuaFunctionData D;
-
-            // no input arguments
-
-            // Call the function in the calling script:
-            if(simCallScriptFunction(task->goal.callback.scriptId, task->validStateSampling.callback.function.c_str(), &c, NULL) != -1)
+            if(validStateSamplerCallback(task->validStateSampling.callback.scriptId, task->validStateSampling.callback.function.c_str(), &in_args, &out_args))
             {
-                // the call succeeded
-
-                // Now check the return arguments:
-                if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->validStateSampling.callback.function.c_str()))
-                {
-                    std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                    std::vector<double> stateVec;
-                    for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
-                        stateVec.push_back((double)outData->at(0).floatData[i]);
-                    task->stateSpacePtr->copyFromReals(state, stateVec);
-                    ret = true;
-                }
-                else
-                {
-                    throw ompl::Exception("Valid state sampling callback " + task->validStateSampling.callback.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
-                }
+                std::vector<double> stateVec;
+                for(size_t i = 0; i < out_args.sampledState.size(); i++)
+                    stateVec.push_back((double)out_args.sampledState[i]);
+                task->stateSpacePtr->copyFromReals(state, stateVec);
+                ret = true;
             }
             else
             {
                 throw ompl::Exception("Valid state sampling callback " + task->validStateSampling.callback.function + " returned an error");
             }
-
-            // Release the data:
-            D.releaseBuffers_luaFunctionCall(&c);
 
             return ret;
         }
@@ -1008,47 +920,25 @@ public:
 
             bool ret = false;
 
-            // The expected return arguments (1):
-            const int outArgs[]={1, sim_lua_arg_float|sim_lua_arg_table, 0};
+            validStateSamplerCallbackNear_in in_args;
+            validStateSamplerCallbackNear_out out_args;
 
-            SLuaCallBack c;
-            CLuaFunctionData D;
-
-            // Prepare the input arguments:
-            std::vector<float> nearStateVecf;
             for(size_t i = 0; i < nearStateVec.size(); i++)
-                nearStateVecf.push_back((float)nearStateVec[i]);
-            D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(nearStateVecf));
-            D.pushOutData_luaFunctionCall(CLuaFunctionDataItem((float)distance));
-            D.writeDataToLua_luaFunctionCall(&c, outArgs);
+                in_args.state.push_back((float)nearStateVec[i]);
+            in_args.distance = distance;
 
-            // Call the function in the calling script:
-            if(simCallScriptFunction(task->goal.callback.scriptId, task->validStateSampling.callbackNear.function.c_str(), &c, NULL) != -1)
+            if(validStateSamplerCallbackNear(task->validStateSampling.callbackNear.scriptId, task->validStateSampling.callbackNear.function.c_str(), &in_args, &out_args))
             {
-                // the call succeeded
-
-                // Now check the return arguments:
-                if(D.readDataFromLua_luaFunctionCall(&c, outArgs, outArgs[0], task->validStateSampling.callbackNear.function.c_str()))
-                {
-                    std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
-                    std::vector<double> stateVec;
-                    for(size_t i = 0; i < outData->at(0).floatData.size(); i++)
-                        stateVec.push_back((double)outData->at(0).floatData[i]);
-                    task->stateSpacePtr->copyFromReals(state, stateVec);
-                    ret = true;
-                }
-                else
-                {
-                    throw ompl::Exception("Near valid state sampling callback " + task->validStateSampling.callbackNear.function + " return value size and/or type is incorrect (callback: " + luaCallbackToString(&c) + ")");
-                }
+                std::vector<double> stateVec;
+                for(size_t i = 0; i < out_args.sampledState.size(); i++)
+                    stateVec.push_back((double)out_args.sampledState[i]);
+                task->stateSpacePtr->copyFromReals(state, stateVec);
+                ret = true;
             }
             else
             {
                 throw ompl::Exception("Near valid state sampling callback " + task->validStateSampling.callbackNear.function + " returned an error");
             }
-
-            // Release the data:
-            D.releaseBuffers_luaFunctionCall(&c);
 
             return ret;
         }

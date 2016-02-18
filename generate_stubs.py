@@ -56,9 +56,13 @@ def c_type(param, subtype=False):
     if t == 'int': return 'int'
     if t == 'float': return 'float'
     if t == 'string': return 'std::string'
+    if t == 'bool': return 'bool'
 
 def c_field(param):
     return '%s %s' % (c_type(param), param.attrib['name'])
+
+def c_struct(name, params):
+    return 'struct %s\n{\n    %s;\n};\n' %  (name, ';\n    '.join(c_field(p) for p in params))
 
 def vrep_type(param, subtype=False):
     t = param.attrib['item-type'] if subtype else param.attrib['type'] 
@@ -66,6 +70,7 @@ def vrep_type(param, subtype=False):
     if t == 'int': return 'sim_lua_arg_int'
     if t == 'float': return 'sim_lua_arg_float'
     if t == 'string': return 'sim_lua_arg_string'
+    if t == 'bool': return 'sim_lua_arg_bool'
 
 def vrep_help_type(param):
     t = param.attrib['type'] 
@@ -73,6 +78,7 @@ def vrep_help_type(param):
     if t == 'int': return 'number'
     if t == 'float': return 'number'
     if t == 'string': return 'string'
+    if t == 'bool': return 'bool'
 
 def lfda(param, subtype=False):
     t = param.attrib['item-type'] if subtype else param.attrib['type'] 
@@ -81,6 +87,7 @@ def lfda(param, subtype=False):
     if t == 'int': return 'intData' + suffix
     if t == 'float': return 'floatData' + suffix
     if t == 'string': return 'stringData' + suffix
+    if t == 'bool': return 'boolData' + suffix
 
 def c_defval(param):
     d = param.attrib['default']
@@ -100,7 +107,7 @@ for enum in root.findall('enum'):
         itemName = item.attrib['name']
         hpp += '    %s%s%s,\n' % (prefix, itemName, ' = %d' % base if base else '')
         base = None
-        cppreg += '''simRegisterCustomLuaVariable("{prefix}{itemName}", (boost::lexical_cast<std::string>({prefix}{itemName})).c_str());
+        cppreg += '''    simRegisterCustomLuaVariable("{prefix}{itemName}", (boost::lexical_cast<std::string>({prefix}{itemName})).c_str());
 '''.format(**locals())
     hpp += '};\n\n'
         
@@ -110,8 +117,8 @@ for cmd in root.findall('command'):
     mandatory_params = [p for p in params if 'default' not in p.attrib]
     optional_params = [p for p in params if 'default' in p.attrib]
     returns = cmd.findall('return/param')
-    in_fields = ';\n    '.join(c_field(p) for p in params)
-    out_fields = ';\n    '.join(c_field(p) for p in returns)
+    in_struct = c_struct('%s_in' % cmdName, params)
+    out_struct = c_struct('%s_out' % cmdName, returns)
     n = len(params)
     nm = len(mandatory_params)
     in_args = ',\n    '.join('%s, %d' % (vrep_type(p), p.attrib.get('minsize', 0)) for p in params)
@@ -121,15 +128,9 @@ for cmd in root.findall('command'):
     )
     set_out_args = '\n        '.join('D.pushOutData(CLuaFunctionDataItem(out_args.%s));' % p.attrib['name'] for p in returns)
     hpp += '''
-struct {cmdName}_in
-{{
-    {in_fields};
-}};
+{in_struct}
 
-struct {cmdName}_out
-{{
-    {out_fields};
-}};
+{out_struct}
 
 void {cmdName}(SLuaCallBack *p, const char *cmd, {cmdName}_in *in, {cmdName}_out *out);
 '''.format(**locals())
@@ -160,6 +161,63 @@ void LUA_{cmdName}_CALLBACK(SLuaCallBack *p)
     cppreg += '''
     CLuaFunctionData::getInputDataForFunctionRegistration(inArgs_{cmdName}, inArgs);
     simRegisterCustomLuaFunction("{commandPrefix}{cmdName}", "{help_out_args}={commandPrefix}{cmdName}({help_in_args})", &inArgs[0], LUA_{cmdName}_CALLBACK);
+'''.format(**locals())
+
+for fn in root.findall('script-function'):
+    fnName = fn.attrib['name']
+    params = fn.findall('params/param')
+    returns = fn.findall('return/param')
+    in_struct = c_struct('%s_in' % fnName, params)
+    out_struct = c_struct('%s_out' % fnName, returns)
+    n = len(returns)
+    out_args = ',\n    '.join('%s, %d' % (vrep_type(p), p.attrib.get('minsize', 0)) for p in returns)
+    set_in_args = '\n    '.join('D.pushOutData_luaFunctionCall(CLuaFunctionDataItem(in->%s));' % p.attrib['name'] for p in params)
+
+    get_out_args = '\n            '.join('out->%s = outData->at(%d).%s;' % (p.attrib['name'], i, lfda(p)) for i, p in enumerate(returns))
+    hpp += '''
+{in_struct}
+
+{out_struct}
+
+bool {fnName}(simInt scriptId, const char *func, {fnName}_in *in, {fnName}_out *out);
+'''.format(**locals())
+    cpp += '''
+const int outArgs_{fnName}[] = {{
+    {n},
+    {out_args}
+}};
+
+bool {fnName}(simInt scriptId, const char *func, {fnName}_in *in, {fnName}_out *out)
+{{
+    SLuaCallBack c;
+    CLuaFunctionData D;
+    bool ret = false;
+
+    {set_in_args}
+    D.writeDataToLua_luaFunctionCall(&c, outArgs_{fnName});
+
+    if(simCallScriptFunction(scriptId, func, &c, NULL) != -1)
+    {{
+        if(D.readDataFromLua_luaFunctionCall(&c, outArgs_{fnName}, outArgs_{fnName}[0], func))
+        {{
+            std::vector<CLuaFunctionDataItem> *outData = D.getOutDataPtr_luaFunctionCall();
+            {get_out_args}
+            ret = true;
+        }}
+        else
+        {{
+            simSetLastError(func, "return value size and/or type is incorrect");
+        }}
+    }}
+    else
+    {{
+        simSetLastError(func, "callback returned an error");
+    }}
+
+    D.releaseBuffers_luaFunctionCall(&c);
+    return ret;
+}}
+
 '''.format(**locals())
 
 cppreg += '''
