@@ -1359,24 +1359,7 @@ void setGoalState(SLuaCallBack *p, const char *cmd, setGoalState_in *in, setGoal
     out->result = 1;
 }
 
-<<<<<<< HEAD
-#define LUA_SET_GOAL_DESCR "Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric"
-#define LUA_SET_GOAL_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("robotDummy", "a dummy attached to the robot") \
-    PARAM("goalDummy", "a dummy fixed in the environment, representing the goal pose/position") \
-    PARAM("tolerance", "an optional tolerated dummy-dummy distance. Defaults to 0.001") \
-    PARAM("metric", "an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance") \
-    PARAM("refDummy", "an optional reference dummy, relative to which the metric will be used")
-#define LUA_SET_GOAL_RET ""
-#define LUA_SET_GOAL_COMMAND "simExtOMPL_setGoal"
-#define LUA_SET_GOAL_APIHELP "number result=" LUA_SET_GOAL_COMMAND "(number taskHandle, number robotDummy, number goalDummy, number tolerance=0.001, table_4 metric=nil, number refDummy=nil)"
-const int inArgs_SET_GOAL[]={6, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float|sim_lua_arg_table, 4, sim_lua_arg_int, 0};
-
-void LUA_SET_GOAL_CALLBACK(SLuaCallBack* p)
-=======
 void setGoal(SLuaCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *out)
->>>>>>> generated_stubs
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1434,23 +1417,7 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
     return planner;
 }
 
-<<<<<<< HEAD
-#define LUA_COMPUTE_DESCR "Use OMPL to find a solution for this motion planning task."
-#define LUA_COMPUTE_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("maxTime", "maximum time used for the path searching procedure, in seconds.") \
-    PARAM("maxSimplificationTime", "(optional) maximum time used for the path simplification procedure, in seconds. 0 for a default simplification procedure.") \
-    PARAM("stateCnt", "(optional) minimum number of states to be returned. 0 for a default behaviour.")
-#define LUA_COMPUTE_RET \
-    PARAM("states", "a table of states, representing the solution, from start to goal. States are specified linearly.")
-#define LUA_COMPUTE_COMMAND "simExtOMPL_compute"
-#define LUA_COMPUTE_APIHELP "number result, table states=" LUA_COMPUTE_COMMAND "(number taskHandle, number maxTime, number maxSimplificationTime=-1, number stateCnt=0)"
-const int inArgs_COMPUTE[]={4, sim_lua_arg_int, 0, sim_lua_arg_float, 0, sim_lua_arg_float, 0, sim_lua_arg_int, 0};
-
-void LUA_COMPUTE_CALLBACK(SLuaCallBack* p)
-=======
 void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
->>>>>>> generated_stubs
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1569,21 +1536,7 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
     task->spaceInformationPtr.reset();
 }
 
-<<<<<<< HEAD
-#define LUA_READ_STATE_DESCR "Read a state vector from current simulator state."
-#define LUA_READ_STATE_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE)
-#define LUA_READ_STATE_RET \
-    PARAM("result", "1 in case of success") \
-    PARAM("state", "state (vector)")
-#define LUA_READ_STATE_COMMAND "simExtOMPL_readState"
-#define LUA_READ_STATE_APIHELP "number result, table state=" LUA_READ_STATE_COMMAND "(number taskHandle)"
-const int inArgs_READ_STATE[]={1, sim_lua_arg_int, 0};
-
-void LUA_READ_STATE_CALLBACK(SLuaCallBack* p)
-=======
 void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out *out)
->>>>>>> generated_stubs
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1678,20 +1631,7 @@ void setProjectionEvaluationCallback(SLuaCallBack *p, const char *cmd, setProjec
     out->result = 1;
 }
 
-<<<<<<< HEAD
-#define LUA_SET_STATE_VAL_CB_DESCR "Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)"
-#define LUA_SET_STATE_VAL_CB_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("callback", "name of the Lua callback")
-#define LUA_SET_STATE_VAL_CB_RET ""
-#define LUA_SET_STATE_VAL_CB_COMMAND "simExtOMPL_setStateValidationCallback"
-#define LUA_SET_STATE_VAL_CB_APIHELP "number result=" LUA_SET_STATE_VAL_CB_COMMAND "(number taskHandle, string callback)"
-const int inArgs_SET_STATE_VAL_CB[]={2, sim_lua_arg_int, 0, sim_lua_arg_string, 0};
-
-void LUA_SET_STATE_VAL_CB_CALLBACK(SLuaCallBack* p)
-=======
 void setStateValidationCallback(SLuaCallBack *p, const char *cmd, setStateValidationCallback_in *in, setStateValidationCallback_out *out)
->>>>>>> generated_stubs
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1732,21 +1672,7 @@ void setGoalCallback(SLuaCallBack *p, const char *cmd, setGoalCallback_in *in, s
     out->result = 1;
 }
 
-<<<<<<< HEAD
-#define LUA_SET_VALID_STATE_SAMPLER_CB_DESCR "The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback: table sampledState=sample()</li><li>the near valid state sampling callback: table sampledState=sampleNear(table state, number distance)</li></ul>"
-#define LUA_SET_VALID_STATE_SAMPLER_CB_PARAMS \
-    PARAM("taskHandle", LUA_PARAM_TASK_HANDLE) \
-    PARAM("callback", "the name of the Lua callback for sampling a state") \
-    PARAM("callbackNear", "the name of the Lua callback for sampling near a given state within the given distance")
-#define LUA_SET_VALID_STATE_SAMPLER_CB_RET ""
-#define LUA_SET_VALID_STATE_SAMPLER_CB_COMMAND "simExtOMPL_setValidStateSamplerCallback"
-#define LUA_SET_VALID_STATE_SAMPLER_CB_APIHELP "number result=" LUA_SET_VALID_STATE_SAMPLER_CB_COMMAND "(number taskHandle, string callback, string nearCallback)"
-const int inArgs_SET_VALID_STATE_SAMPLER_CB[]={3, sim_lua_arg_int, 0, sim_lua_arg_string, 0, sim_lua_arg_string, 0};
-
-void LUA_SET_VALID_STATE_SAMPLER_CB_CALLBACK(SLuaCallBack* p)
-=======
 void setValidStateSamplerCallback(SLuaCallBack *p, const char *cmd, setValidStateSamplerCallback_in *in, setValidStateSamplerCallback_out *out)
->>>>>>> generated_stubs
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
