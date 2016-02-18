@@ -1051,53 +1051,6 @@ void destroyTask(SLuaCallBack *p, const char *cmd, destroyTask_in *in, destroyTa
     out->result = 1;
 }
 
-const char * state_space_type_string(StateSpaceType type)
-{
-    switch(type)
-    {
-        case sim_ompl_statespacetype_position2d: return "sim_ompl_statespacetype_position2d";
-        case sim_ompl_statespacetype_pose2d: return "sim_ompl_statespacetype_pose2d";
-        case sim_ompl_statespacetype_position3d: return "sim_ompl_statespacetype_position3d";
-        case sim_ompl_statespacetype_pose3d: return "sim_ompl_statespacetype_pose3d";
-        case sim_ompl_statespacetype_joint_position: return "sim_ompl_statespacetype_joint_position";
-        default: return "???";
-    }
-};
-
-const char * algorithm_string(Algorithm alg)
-{
-    switch(alg)
-    {
-        case sim_ompl_algorithm_BiTRRT: return "sim_ompl_algorithm_BiTRRT";
-        case sim_ompl_algorithm_BITstar: return "sim_ompl_algorithm_BITstar";
-        case sim_ompl_algorithm_BKPIECE1: return "sim_ompl_algorithm_BKPIECE1";
-        case sim_ompl_algorithm_CForest: return "sim_ompl_algorithm_CForest";
-        case sim_ompl_algorithm_EST: return "sim_ompl_algorithm_EST";
-        case sim_ompl_algorithm_FMT: return "sim_ompl_algorithm_FMT";
-        case sim_ompl_algorithm_KPIECE1: return "sim_ompl_algorithm_KPIECE1";
-        case sim_ompl_algorithm_LazyPRM: return "sim_ompl_algorithm_LazyPRM";
-        case sim_ompl_algorithm_LazyPRMstar: return "sim_ompl_algorithm_LazyPRMstar";
-        case sim_ompl_algorithm_LazyRRT: return "sim_ompl_algorithm_LazyRRT";
-        case sim_ompl_algorithm_LBKPIECE1: return "sim_ompl_algorithm_LBKPIECE1";
-        case sim_ompl_algorithm_LBTRRT: return "sim_ompl_algorithm_LBTRRT";
-        //case sim_ompl_algorithm_LightningRetrieveRepair: return "sim_ompl_algorithm_LightningRetrieveRepair";
-        case sim_ompl_algorithm_PDST: return "sim_ompl_algorithm_PDST";
-        case sim_ompl_algorithm_PRM: return "sim_ompl_algorithm_PRM";
-        case sim_ompl_algorithm_PRMstar: return "sim_ompl_algorithm_PRMstar";
-        case sim_ompl_algorithm_pRRT: return "sim_ompl_algorithm_pRRT";
-        case sim_ompl_algorithm_pSBL: return "sim_ompl_algorithm_pSBL";
-        case sim_ompl_algorithm_RRT: return "sim_ompl_algorithm_RRT";
-        case sim_ompl_algorithm_RRTConnect: return "sim_ompl_algorithm_RRTConnect";
-        case sim_ompl_algorithm_RRTstar: return "sim_ompl_algorithm_RRTstar";
-        case sim_ompl_algorithm_SBL: return "sim_ompl_algorithm_SBL";
-        case sim_ompl_algorithm_SPARS: return "sim_ompl_algorithm_SPARS";
-        case sim_ompl_algorithm_SPARStwo: return "sim_ompl_algorithm_SPARStwo";
-        case sim_ompl_algorithm_STRIDE: return "sim_ompl_algorithm_STRIDE";
-        case sim_ompl_algorithm_TRRT: return "sim_ompl_algorithm_TRRT";
-        default: return "???";
-    }
-};
-
 void printTaskInfo(SLuaCallBack *p, const char *cmd, printTaskInfo_in *in, printTaskInfo_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
@@ -1112,7 +1065,7 @@ void printTaskInfo(SLuaCallBack *p, const char *cmd, printTaskInfo_in *in, print
         StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
         s << prefix << "    state space: " << stateSpace->header.handle << std::endl;
         s << prefix << "        name: " << stateSpace->header.name << std::endl;
-        s << prefix << "        type: " << state_space_type_string(stateSpace->type) << std::endl;
+        s << prefix << "        type: " << statespacetype_string(stateSpace->type) << std::endl;
         s << prefix << "        object handle: " << stateSpace->objectHandle << std::endl;
         s << prefix << "        bounds low: {";
         for(size_t j = 0; j < stateSpace->boundsLow.size(); j++)

@@ -103,13 +103,26 @@ for enum in root.findall('enum'):
     prefix = enum.attrib['item-prefix'] if 'item-prefix' in enum.attrib else ''
     base = int(enum.attrib['base']) if 'base' in enum.attrib else None
     hpp += 'enum %s\n{\n' % enumName
+    enum2str_cases = []
     for item in enum.findall('item'):
-        itemName = item.attrib['name']
-        hpp += '    %s%s%s,\n' % (prefix, itemName, ' = %d' % base if base else '')
+        itemName = prefix + item.attrib['name']
+        hpp += '    %s%s,\n' % (itemName, ' = %d' % base if base else '')
         base = None
-        cppreg += '''    simRegisterCustomLuaVariable("{prefix}{itemName}", (boost::lexical_cast<std::string>({prefix}{itemName})).c_str());
+        cppreg += '''    simRegisterCustomLuaVariable("{itemName}", (boost::lexical_cast<std::string>({itemName})).c_str());
 '''.format(**locals())
+        enum2str_cases.append('case {itemName}: return "{itemName}";'.format(**locals()))
+    enum2str_cases.append('default: return "???";')
     hpp += '};\n\n'
+    hpp += 'const char * %s_string(%s x);\n\n' % (enumName.lower(), enumName)
+    cpp += '''
+const char * %s_string(%s x)
+{
+    switch(x)
+    {
+        %s
+    }
+}
+''' % (enumName.lower(), enumName, '\n        '.join(enum2str_cases))
         
 for cmd in root.findall('command'):
     cmdName = cmd.attrib['name']
