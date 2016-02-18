@@ -41,7 +41,7 @@
                                             </tr>
                                             <tr class="apiTableTr">
                                                 <td class="apiTableLeftLSyn">Lua synopsis</td>
-                                                <td class="apiTableRightLSyn"><xsl:value-of select="synopsis"/><br/></td>
+                                                <td class="apiTableRightLSyn">simExt<xsl:value-of select="/plugin/@name"/>_<xsl:value-of select="@name"/>(<xsl:for-each select="params/param"><xsl:value-of select="@type"/><xsl:text> </xsl:text><xsl:value-of select="@name"/><xsl:if test="@default"> = <xsl:value-of select="@default"/></xsl:if><xsl:if test="not(position() = last())">, </xsl:if></xsl:for-each>)<br/></td>
                                             </tr>
                                             <tr class="apiTableTr">
                                                 <td class="apiTableLeftLParam">Lua parameters</td>
