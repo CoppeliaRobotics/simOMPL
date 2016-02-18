@@ -219,7 +219,7 @@
                 <description>a dummy fixed in the environment, representing the goal pose/position</description>
             </param>
             <param name="tolerance" type="float" default="0.001f">
-                <description>the tolerated dummy-dummy distance</description>
+                <description>an optional tolerated dummy-dummy distance. Defaults to 0.001</description>
             </param>
             <param name="metric" type="table" item-type="float" default="{1.0, 1.0, 1.0, 0.1}">
                 <description>an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance</description>
@@ -254,7 +254,7 @@
             <param name="result" type="int">
                 <description>0 for failure</description>
             </param>
-            <param name="states" type="table" item-type="int">
+            <param name="states" type="table" item-type="float">
                 <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
             </param>
         </return>
@@ -268,7 +268,7 @@
         </params>
         <return>
             <param name="result" type="int">
-                <description>0 for failure</description>
+                <description>1 in case of success</description>
             </param>
             <param name="state" type="table" item-type="float">
                 <description>state vector</description>
@@ -359,7 +359,7 @@
         </return>
     </command>
     <command name="setValidStateSamplerCallback">
-        <description>The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback:<br /><br />table sampledState=sample()<br /><br /></li><li>the near valid state sampling callback:<br /><br />table sampledState=sampleNear(table state, number distance)</li></ul></description>
+        <description>The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback: table sampledState=sample()</li><li>the near valid state sampling callback: table sampledState=sampleNear(table state, number distance)</li></ul></description>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with simExtOMPL_createTask</description>
