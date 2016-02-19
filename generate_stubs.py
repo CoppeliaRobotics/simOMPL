@@ -145,6 +145,7 @@ for cmd in root.findall('command'):
 
 {out_struct}
 
+void {cmdName}(SLuaCallBack *p, {cmdName}_in *in, {cmdName}_out *out);
 void {cmdName}(SLuaCallBack *p, const char *cmd, {cmdName}_in *in, {cmdName}_out *out);
 '''.format(**locals())
     cpp += '''
@@ -152,6 +153,11 @@ const int inArgs_{cmdName}[] = {{
     {n},
     {in_args}
 }};
+
+void {cmdName}(SLuaCallBack *p, {cmdName}_in *in, {cmdName}_out *out)
+{{
+    {cmdName}(p, "{commandPrefix}{cmdName}", in, out);
+}}
 
 void LUA_{cmdName}_CALLBACK(SLuaCallBack *p)
 {{
