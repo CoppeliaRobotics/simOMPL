@@ -1298,6 +1298,19 @@ void setStartState(SLuaCallBack *p, const char *cmd, setStartState_in *in, setSt
     if(!task) return;
     if(!checkStateSize(cmd, task, in->state)) return;
 
+    // for multi-query PRM, if the OMPL's ProblemDefinition has already been set,
+    // we want only to clear the query and add the new start state:
+    if(task->problemDefinitionPtr && task->planner && task->algorithm == sim_ompl_algorithm_PRM)
+    {
+        task->planner->as<og::PRM>()->clearQuery();
+        ob::ScopedState<> startState(task->stateSpacePtr);
+        for(size_t i = 0; i < task->startState.size(); i++)
+            startState[i] = task->startState[i];
+        task->problemDefinitionPtr->addStartState(startState);
+        out->result = 1;
+        return;
+    }
+
     task->startState.clear();
     for(size_t i = 0; i < in->state.size(); i++)
         task->startState.push_back(in->state[i]);
