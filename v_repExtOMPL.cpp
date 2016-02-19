@@ -1596,10 +1596,11 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
 
     if(!setup(p, in->taskHandle)) return;
     if(!solve(p, in->taskHandle, in->maxTime)) return;
-    simplifyPath(p, in->taskHandle, in->maxSimplificationTime);
-    interpolatePath(p, in->taskHandle, in->stateCnt);
+    if(!simplifyPath(p, in->taskHandle, in->maxSimplificationTime)) return;
+    if(!interpolatePath(p, in->taskHandle, in->stateCnt)) return;
     getPath_out path;
     getPath(p, &path, in->taskHandle);
+    if(!path.result) return;
     out->states = path.states;
 }
 

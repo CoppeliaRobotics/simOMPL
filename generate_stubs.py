@@ -62,8 +62,9 @@ def c_type(param, subtype=False):
 def c_field(param):
     return '%s %s' % (c_type(param), param.attrib['name'])
 
-def c_struct(name, params):
-    return 'struct %s\n{\n    %s;\n};' %  (name, ';\n    '.join(c_field(p) for p in params))
+def c_struct(name, params, constructor=False):
+    cons = '\n    %s();' % name if constructor else ''
+    return 'struct %s\n{\n    %s;%s\n};' %  (name, ';\n    '.join(c_field(p) for p in params), cons)
 
 def vrep_type(param, subtype=False):
     t = param.attrib['item-type'] if subtype else param.attrib['type'] 
@@ -131,14 +132,25 @@ for cmd in root.findall('command'):
     mandatory_params = [p for p in params if 'default' not in p.attrib]
     optional_params = [p for p in params if 'default' in p.attrib]
     returns = cmd.findall('return/param')
-    in_struct = c_struct('%s_in' % cmdName, params)
-    out_struct = c_struct('%s_out' % cmdName, returns)
+    in_struct = c_struct('%s_in' % cmdName, params, constructor=True)
+    out_struct = c_struct('%s_out' % cmdName, returns, constructor=True)
+    set_in_defaults = ''.join('\n    %s = %s;' % (p.attrib['name'], c_defval(p)) for p in params if 'default' in p.attrib)
+    set_out_defaults = ''.join('\n    %s = %s;' % (p.attrib['name'], c_defval(p)) for p in returns if 'default' in p.attrib)
+    cpp += '''
+{cmdName}_in::{cmdName}_in()
+{{{set_in_defaults}
+}}
+
+{cmdName}_out::{cmdName}_out()
+{{{set_out_defaults}
+}}
+'''.format(**locals())
     n = len(params)
     nm = len(mandatory_params)
     in_args = ',\n    '.join('%s, %d' % (vrep_type(p), p.attrib.get('minsize', 0)) for p in params)
     get_in_args = '\n        '.join(
         ['in_args.%s = inData->at(%d).%s;' % (p.attrib['name'], i, lfda(p)) for i, p in enumerate(mandatory_params)]
-        + ['''if(inData->size()>{j}) in_args.{name} = inData->at({j}).{lfda}; else in_args.{name} = {default};'''.format(j=nm+i, name=p.attrib['name'], lfda=lfda(p), default=c_defval(p)) for i, p in enumerate(optional_params)]
+        + ['''if(inData->size()>{j}) in_args.{name} = inData->at({j}).{lfda};'''.format(j=nm+i, name=p.attrib['name'], lfda=lfda(p), default=c_defval(p)) for i, p in enumerate(optional_params)]
     )
     set_out_args = '\n        '.join('D.pushOutData(CLuaFunctionDataItem(out_args.%s));' % p.attrib['name'] for p in returns)
     hpp += '''

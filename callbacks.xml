@@ -44,7 +44,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -76,7 +76,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -89,7 +89,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -105,7 +105,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -121,7 +121,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -137,7 +137,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -153,7 +153,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -169,7 +169,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -185,7 +185,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -201,7 +201,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -229,7 +229,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -242,7 +242,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -258,7 +258,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -274,7 +274,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -290,7 +290,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -303,7 +303,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
             <param name="states" type="table" item-type="float">
@@ -336,7 +336,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
             <param name="states" type="table" item-type="float">
@@ -352,7 +352,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>1 in case of success</description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -371,7 +371,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -406,7 +406,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -422,7 +422,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -438,7 +438,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
@@ -457,7 +457,7 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int">
+            <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
         </return>
