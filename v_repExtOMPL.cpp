@@ -233,14 +233,21 @@ struct TaskDef
     } projectionEvaluation;
     // search algorithm to use:
     Algorithm algorithm;
-    // pointer to OMPL state space. will be valid only during planning (i.e. only valid for Lua callbacks)
-    ob::StateSpacePtr stateSpacePtr;
-    // pointer to OMPL space information. will be valid only during planning (i.e. only valid for Lua callbacks)
-    ob::SpaceInformationPtr spaceInformationPtr;
     // state space dimension:
     int dim;
     // how many things we should say in the V-REP console? (0 = stay silent)
     int verboseLevel;
+    // OMPL classes (created with the setup() command):
+    // state space
+    ob::StateSpacePtr stateSpacePtr;
+    // space information
+    ob::SpaceInformationPtr spaceInformationPtr;
+    // projection evaluator object
+    ob::ProjectionEvaluatorPtr projectionEvaluatorPtr;
+    // problem definition
+    ob::ProblemDefinitionPtr problemDefinitionPtr;
+    // planner
+    ob::PlannerPtr planner;
 };
 
 std::map<simInt, TaskDef *> tasks;
@@ -1370,104 +1377,88 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
     return planner;
 }
 
-void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
+void setup(SLuaCallBack *p, const char *cmd, setup_in *in, setup_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
 
     try
     {
-        ob::StateSpacePtr space(new StateSpace(task));
-        task->stateSpacePtr = space;
-        ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-        task->spaceInformationPtr = si;
-        ob::ProjectionEvaluatorPtr projectionEval(new ProjectionEvaluator(space, task));
-        space->registerDefaultProjection(projectionEval);
-        ob::ProblemDefinitionPtr problemDef(new ob::ProblemDefinition(si));
+        task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(task));
+        task->spaceInformationPtr = ob::SpaceInformationPtr(new ob::SpaceInformation(task->stateSpacePtr));
+        task->projectionEvaluatorPtr = ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(task->stateSpacePtr, task));
+        task->stateSpacePtr->registerDefaultProjection(task->projectionEvaluatorPtr);
+        task->problemDefinitionPtr = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(task->spaceInformationPtr));
+        task->spaceInformationPtr->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(task->spaceInformationPtr, task)));
+        task->spaceInformationPtr->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
+        task->spaceInformationPtr->setValidStateSamplerAllocator(boost::bind(allocValidStateSampler, _1, task));
 
-        si->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(si, task)));
-
-        si->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
-
-        si->setValidStateSamplerAllocator(boost::bind(allocValidStateSampler, _1, task));
-
-        ob::ScopedState<> startState(space);
+        ob::ScopedState<> startState(task->stateSpacePtr);
         if(!checkStateSize(cmd, task, task->startState, "Start state"))
             return;
         for(size_t i = 0; i < task->startState.size(); i++)
             startState[i] = task->startState[i];
-        problemDef->addStartState(startState);
+        task->problemDefinitionPtr->addStartState(startState);
 
         ob::GoalPtr goal;
         if(task->goal.type == TaskDef::Goal::STATE)
         {
             if(!checkStateSize(cmd, task, task->goal.state, "Goal state"))
                 return;
-            ob::ScopedState<> goalState(space);
+            ob::ScopedState<> goalState(task->stateSpacePtr);
             for(size_t i = 0; i < task->goal.state.size(); i++)
                 goalState[i] = task->goal.state[i];
-            goal = ob::GoalPtr(new ob::GoalState(si));
+            goal = ob::GoalPtr(new ob::GoalState(task->spaceInformationPtr));
             goal->as<ob::GoalState>()->setState(goalState);
         }
         else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
         {
-            goal = ob::GoalPtr(new Goal(si, task, (double)task->goal.tolerance));
+            goal = ob::GoalPtr(new Goal(task->spaceInformationPtr, task, (double)task->goal.tolerance));
         }
-        problemDef->setGoal(goal);
+        task->problemDefinitionPtr->setGoal(goal);
 
-        ob::PlannerPtr planner = plannerFactory(task->algorithm, si);
-        if(!planner)
+        task->planner = plannerFactory(task->algorithm, task->spaceInformationPtr);
+        if(!task->planner)
         {
             simSetLastError(cmd, "Invalid motion planning algorithm.");
             return;
         }
-        planner->setProblemDefinition(problemDef);
-        ob::PlannerStatus solved = planner->solve(in->maxTime);
+        task->planner->setProblemDefinition(task->problemDefinitionPtr);
+
+        out->result = 1;
+    }
+    catch(ompl::Exception& ex)
+    {
+        std::string s = "OMPL: exception: ";
+        s += ex.what();
+        std::cout << s << std::endl;
+        simSetLastError(cmd, s.c_str());
+        if(task->verboseLevel >= 1)
+            simAddStatusbarMessage(s.c_str());
+    }
+}
+
+void solve(SLuaCallBack *p, const char *cmd, solve_in *in, solve_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+
+    try
+    {
+        ob::PlannerStatus solved = task->planner->solve(in->maxTime);
         if(solved)
         {
-            if(task->verboseLevel >= 2)
-                simAddStatusbarMessage("OMPL: simplifying solution...");
-
-            const ob::PathPtr &path_ = problemDef->getSolutionPath();
-            og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
-
-            og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(si, goal));
-            if(in->maxSimplificationTime < -std::numeric_limits<double>::epsilon())
-                pathSimplifier->simplifyMax(path);
-            else
-                pathSimplifier->simplify(path, in->maxSimplificationTime);
-
             if(task->verboseLevel >= 1)
             {
+                const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+                og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
                 simAddStatusbarMessage("OMPL: found solution:");
                 std::stringstream s;
                 path.print(s);
                 simAddStatusbarMessage(s.str().c_str());
             }
 
-            if(task->verboseLevel >= 2)
-                simAddStatusbarMessage("OMPL: interpolating solution...");
-
-            if (in->stateCnt == 0)
-                path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
-            else
-                path.interpolate(in->stateCnt);
-            if(task->verboseLevel >= 2)
-            {
-                simAddStatusbarMessage("OMPL: interpolated:");
-                std::stringstream s;
-                path.print(s);
-                simAddStatusbarMessage(s.str().c_str());
-            }
-
-            for(size_t i = 0; i < path.getStateCount(); i++)
-            {
-                const ob::StateSpace::StateType *s = path.getState(i);
-                std::vector<double> v;
-                space->copyToReals(v, s);
-                for(size_t j = 0; j < v.size(); j++)
-                    out->states.push_back((float)v[j]);
-            }
             out->result = 1;
         }
         else
@@ -1485,8 +1476,145 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
         if(task->verboseLevel >= 1)
             simAddStatusbarMessage(s.c_str());
     }
-    task->stateSpacePtr.reset();
-    task->spaceInformationPtr.reset();
+}
+
+void simplifyPath(SLuaCallBack *p, const char *cmd, simplifyPath_in *in, simplifyPath_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+
+    try
+    {
+        if(task->verboseLevel >= 2)
+            simAddStatusbarMessage("OMPL: simplifying solution...");
+
+        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+        og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(task->spaceInformationPtr, task->problemDefinitionPtr->getGoal()));
+        if(in->maxSimplificationTime < -std::numeric_limits<double>::epsilon())
+            pathSimplifier->simplifyMax(path);
+        else
+            pathSimplifier->simplify(path, in->maxSimplificationTime);
+
+        if(task->verboseLevel >= 1)
+        {
+            simAddStatusbarMessage("OMPL: simplified solution:");
+            std::stringstream s;
+            path.print(s);
+            simAddStatusbarMessage(s.str().c_str());
+        }
+
+        out->result = 1;
+    }
+    catch(ompl::Exception& ex)
+    {
+        std::string s = "OMPL: exception: ";
+        s += ex.what();
+        std::cout << s << std::endl;
+        simSetLastError(cmd, s.c_str());
+        if(task->verboseLevel >= 1)
+            simAddStatusbarMessage(s.c_str());
+    }
+}
+
+void interpolatePath(SLuaCallBack *p, const char *cmd, interpolatePath_in *in, interpolatePath_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+
+    try
+    {
+        if(task->verboseLevel >= 2)
+            simAddStatusbarMessage("OMPL: interpolating solution...");
+
+        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+        if (in->stateCnt == 0)
+            path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
+        else
+            path.interpolate(in->stateCnt);
+
+        if(task->verboseLevel >= 2)
+        {
+            simAddStatusbarMessage("OMPL: interpolated:");
+            std::stringstream s;
+            path.print(s);
+            simAddStatusbarMessage(s.str().c_str());
+        }
+
+        out->result = 1;
+    }
+    catch(ompl::Exception& ex)
+    {
+        std::string s = "OMPL: exception: ";
+        s += ex.what();
+        std::cout << s << std::endl;
+        simSetLastError(cmd, s.c_str());
+        if(task->verboseLevel >= 1)
+            simAddStatusbarMessage(s.c_str());
+    }
+}
+
+void getPath(SLuaCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+
+    try
+    {
+        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+        for(size_t i = 0; i < path.getStateCount(); i++)
+        {
+            const ob::StateSpace::StateType *s = path.getState(i);
+            std::vector<double> v;
+            task->stateSpacePtr->copyToReals(v, s);
+            for(size_t j = 0; j < v.size(); j++)
+                out->states.push_back((float)v[j]);
+        }
+
+        out->result = 1;
+    }
+    catch(ompl::Exception& ex)
+    {
+        std::string s = "OMPL: exception: ";
+        s += ex.what();
+        std::cout << s << std::endl;
+        simSetLastError(cmd, s.c_str());
+        if(task->verboseLevel >= 1)
+            simAddStatusbarMessage(s.c_str());
+    }
+}
+
+void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+
+    setup_in in0 = {.taskHandle = in->taskHandle};
+    setup_out out0;
+    setup(p, &in0, &out0);
+
+    solve_in in1 = {.taskHandle = in->taskHandle, .maxTime = in->maxTime};
+    solve_out out1;
+    solve(p, &in1, &out1);
+
+    simplifyPath_in in2 = {.taskHandle = in->taskHandle, .maxSimplificationTime = in->maxSimplificationTime};
+    simplifyPath_out out2;
+    simplifyPath(p, &in2, &out2);
+
+    interpolatePath_in in3 = {.taskHandle = in->taskHandle, .stateCnt = in->stateCnt};
+    interpolatePath_out out3;
+    interpolatePath(p, &in3, &out3);
+
+    getPath_in in4 = {.taskHandle = in->taskHandle};
+    getPath_out out4;
+    getPath(p, &in4, &out4);
+
+    out->states = out4.states;
 }
 
 void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out *out)

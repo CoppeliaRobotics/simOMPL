@@ -234,8 +234,93 @@
             </param>
         </return>
     </command>
-    <command name="compute">
+    <command name="setup">
+        <description>Setup the OMPL classes with the information contained in the task.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="solve">
+        <description>Run the planning algorithm to search for a solution.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="maxTime" type="float">
+                <description>maximum time used for the path searching procedure, in seconds.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="simplifyPath">
+        <description>Simplify the path found by planner.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="maxSimplificationTime" type="float" default="-1.0">
+                <description>(optional) maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="interpolatePath">
+        <description>Interpolate the path found by planner to obtain a minimum number of states.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="stateCnt" type="int" default="0">
+                <description>(optional) minimum number of states to be returned. 0 for a default behaviour.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
+    <command name="getPath">
         <description>Use OMPL to find a solution for this motion planning task.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int">
+                <description>0 for failure</description>
+            </param>
+            <param name="states" type="table" item-type="float">
+                <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
+            </param>
+        </return>
+    </command>
+    <command name="compute">
+        <description>Use OMPL to find a solution for this motion planning task. It is equivalent to executing:<br/>
+            <br/>
+            simExtOMPL_setup(task)<br/>
+            if simExtOMPL_solve(task, maxTime) then<br/>
+            simExtOMPL_simplifyPath(task, maxSimplificationTime)<br/>
+            simExtOMPL_interpolatePath(task, stateCnt)<br/>
+            path = simExtOMPL_getPath(task)<br/>
+            end
+        </description>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with simExtOMPL_createTask</description>
