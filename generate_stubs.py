@@ -63,7 +63,7 @@ def c_field(param):
     return '%s %s' % (c_type(param), param.attrib['name'])
 
 def c_struct(name, params):
-    return 'struct %s\n{\n    %s;\n};\n' %  (name, ';\n    '.join(c_field(p) for p in params))
+    return 'struct %s\n{\n    %s;\n};' %  (name, ';\n    '.join(c_field(p) for p in params))
 
 def vrep_type(param, subtype=False):
     t = param.attrib['item-type'] if subtype else param.attrib['type'] 
@@ -158,8 +158,7 @@ void {cmdName}(SLuaCallBack *p, const char *cmd, {cmdName}_in *in, {cmdName}_out
     if len(returns) == 1:
         rt = c_type(returns[0])
         rn = returns[0].attrib['name']
-        singleReturn = '''
-{rt} {cmdName}(SLuaCallBack *p{c_arglist})
+        singleReturn = '''{rt} {cmdName}(SLuaCallBack *p{c_arglist})
 {{
     {cmdName}_in in_args;
     {fill_struct};
