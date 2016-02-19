@@ -1594,27 +1594,13 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
 
-    setup_in in0 = {.taskHandle = in->taskHandle};
-    setup_out out0;
-    setup(p, &in0, &out0);
-
-    solve_in in1 = {.taskHandle = in->taskHandle, .maxTime = in->maxTime};
-    solve_out out1;
-    solve(p, &in1, &out1);
-
-    simplifyPath_in in2 = {.taskHandle = in->taskHandle, .maxSimplificationTime = in->maxSimplificationTime};
-    simplifyPath_out out2;
-    simplifyPath(p, &in2, &out2);
-
-    interpolatePath_in in3 = {.taskHandle = in->taskHandle, .stateCnt = in->stateCnt};
-    interpolatePath_out out3;
-    interpolatePath(p, &in3, &out3);
-
-    getPath_in in4 = {.taskHandle = in->taskHandle};
-    getPath_out out4;
-    getPath(p, &in4, &out4);
-
-    out->states = out4.states;
+    setup(p, in->taskHandle);
+    solve(p, in->taskHandle, in->maxTime);
+    simplifyPath(p, in->taskHandle, in->maxSimplificationTime);
+    interpolatePath(p, in->taskHandle, in->stateCnt);
+    getPath_out path;
+    getPath(p, &path, in->taskHandle);
+    out->states = path.states;
 }
 
 void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out *out)
