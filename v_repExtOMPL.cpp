@@ -1594,8 +1594,8 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
 
-    setup(p, in->taskHandle);
-    solve(p, in->taskHandle, in->maxTime);
+    if(!setup(p, in->taskHandle)) return;
+    if(!solve(p, in->taskHandle, in->maxTime)) return;
     simplifyPath(p, in->taskHandle, in->maxSimplificationTime);
     interpolatePath(p, in->taskHandle, in->stateCnt);
     getPath_out path;
