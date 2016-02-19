@@ -29,6 +29,7 @@ hpp = autogen_notice
 hpp += '''
 #include "luaFunctionData.h"
 #include "v_repLib.h"
+#include <boost/assign/list_of.hpp>
 
 void registerLuaStuff();
 
@@ -146,13 +147,49 @@ for cmd in root.findall('command'):
 {out_struct}
 
 void {cmdName}(SLuaCallBack *p, {cmdName}_in *in, {cmdName}_out *out);
+
 void {cmdName}(SLuaCallBack *p, const char *cmd, {cmdName}_in *in, {cmdName}_out *out);
+'''.format(**locals())
+    c_arglist = ', '.join(c_field(p) for p in params)
+    if c_arglist: c_arglist = ', ' + c_arglist
+    c_arglist_def = ', '.join(c_field(p) + (' = %s' % c_defval(p) if 'default' in p.attrib else '') for p in params)
+    if c_arglist_def: c_arglist_def = ', ' + c_arglist_def
+    fill_struct = ';\n    '.join('in_args.{n} = {n}'.format(n=p.attrib['name']) for p in params)
+    if len(returns) == 1:
+        rt = c_type(returns[0])
+        rn = returns[0].attrib['name']
+        singleReturn = '''
+{rt} {cmdName}(SLuaCallBack *p{c_arglist})
+{{
+    {cmdName}_in in_args;
+    {fill_struct};
+    {cmdName}_out out_args;
+    {cmdName}(p, &in_args, &out_args);
+    return out_args.{rn};
+}}
+
+'''.format(**locals())
+        hpp += '''
+{rt} {cmdName}(SLuaCallBack *p{c_arglist_def});
+'''.format(**locals())
+    else:
+        singleReturn = ''
+
+    hpp += '''
+void {cmdName}(SLuaCallBack *p, {cmdName}_out *out{c_arglist_def});
 '''.format(**locals())
     cpp += '''
 const int inArgs_{cmdName}[] = {{
     {n},
     {in_args}
 }};
+
+{singleReturn}void {cmdName}(SLuaCallBack *p, {cmdName}_out *out{c_arglist})
+{{
+    {cmdName}_in in_args;
+    {fill_struct};
+    {cmdName}(p, &in_args, out);
+}}
 
 void {cmdName}(SLuaCallBack *p, {cmdName}_in *in, {cmdName}_out *out)
 {{
