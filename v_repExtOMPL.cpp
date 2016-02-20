@@ -1287,7 +1287,9 @@ bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<floa
     if(s.size() != task->dim)
     {
         std::stringstream ss;
-        ss << descr << " is of incorrect size. Expected " << task->dim << ", got " << s.size();
+        ss << descr << " is of incorrect size. Expected " << task->dim << ", got " << s.size() << ".";
+        if(task->dim == 0)
+            ss << " Did you forget to set the state space for this task?";
         simSetLastError(CMD, ss.str().c_str());
         return false;
     }
