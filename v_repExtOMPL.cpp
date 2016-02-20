@@ -1286,7 +1286,9 @@ bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<floa
     }
     if(s.size() != task->dim)
     {
-        simSetLastError(CMD, (descr + " is of incorrect size.").c_str());
+        std::stringstream ss;
+        ss << descr << " is of incorrect size. Expected " << task->dim << ", got " << s.size();
+        simSetLastError(CMD, ss.str().c_str());
         return false;
     }
     return true;
