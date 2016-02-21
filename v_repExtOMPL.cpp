@@ -1314,6 +1314,7 @@ void setStartState(SLuaCallBack *p, const char *cmd, setStartState_in *in, setSt
         ob::ScopedState<> startState(task->stateSpacePtr);
         for(size_t i = 0; i < task->startState.size(); i++)
             startState[i] = task->startState[i];
+        task->problemDefinitionPtr->clearStartStates();
         task->problemDefinitionPtr->addStartState(startState);
     }
 
