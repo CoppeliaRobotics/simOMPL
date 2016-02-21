@@ -1617,6 +1617,7 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
     getPath(p, &path, in->taskHandle);
     if(!path.result) return;
     out->states = path.states;
+    out->result = 1;
 }
 
 void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out *out)
