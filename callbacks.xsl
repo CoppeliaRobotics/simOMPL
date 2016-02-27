@@ -25,7 +25,7 @@
                                                 <td class="apiTableLeftDescr">
                                                     Description
                                                 </td>
-                                                <td class="apiTableRightDescr"><xsl:copy-of select="description/node()"/><br/></td>
+                                                <td class="apiTableRightDescr"><xsl:copy-of select="description/node()"/><br/><xsl:if test="see-also">See also: <xsl:for-each select="see-also/command"><a href="#{@name}">simExt<xsl:value-of select="/plugin/@name"/>_<xsl:value-of select="@name" /></a><xsl:if test="not(position() = last())">, </xsl:if></xsl:for-each></xsl:if></td>
                                             </tr>
                                             <tr class="apiTableTr">
                                                 <td class="apiTableLeftCSyn">C synopsis</td>
