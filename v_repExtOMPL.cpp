@@ -95,46 +95,6 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
 #include "stubs.h"
 
-std::string luaTypeToString(simInt x)
-{
-    switch(x)
-    {
-    case sim_lua_arg_bool: return "sim_lua_arg_bool";
-    case sim_lua_arg_int: return "sim_lua_arg_int";
-    case sim_lua_arg_float: return "sim_lua_arg_float";
-    case sim_lua_arg_double: return "sim_lua_arg_double";
-    case sim_lua_arg_string: return "sim_lua_arg_string";
-    case sim_lua_arg_charbuff: return "sim_lua_arg_charbuff";
-    case sim_lua_arg_nil: return "sim_lua_arg_nil";
-    case sim_lua_arg_table: return "sim_lua_arg_table";
-    case sim_lua_arg_invalid: return "sim_lua_arg_invalid";
-    }
-    if(x & sim_lua_arg_nil)
-        return luaTypeToString(x & ~sim_lua_arg_nil) + "|" + luaTypeToString(sim_lua_arg_nil);
-    if(x & sim_lua_arg_table)
-        return luaTypeToString(x & ~sim_lua_arg_table) + "|" + luaTypeToString(sim_lua_arg_table);
-    return "???";
-}
-
-std::string luaCallbackToString(SLuaCallBack *c)
-{
-    std::stringstream ss;
-    ss << "{inputArgsTypeAndSize: [";
-    for(int i = 0; i < c->inputArgCount; i++)
-    {
-        ss << (i ? ", " : "") << luaTypeToString(c->inputArgTypeAndSize[2*i]);
-        if(c->inputArgTypeAndSize[1+2*i]) ss << "_" << c->inputArgTypeAndSize[1+2*i];
-    }
-    ss << "], outputArgsTypeAndSize: [";
-    for(int i = 0; i < c->outputArgCount; i++)
-    {
-        ss << (i ? ", " : "") << luaTypeToString(c->outputArgTypeAndSize[2*i]);
-        if(c->outputArgTypeAndSize[1+2*i]) ss << "_" << c->outputArgTypeAndSize[1+2*i];
-    }
-    ss << "]}";
-    return ss.str();
-}
-
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
