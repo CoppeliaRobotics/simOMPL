@@ -1,2 +1,2 @@
 #!/bin/sh
-grep -n -e FIXME: -e TODO: v_repExtOMPL.cpp | sed -e 's/:[[:space:]]*/:	/'
+grep -n -e FIXME: -e TODO: *.{cpp,h} | sed -e 's/:[[:space:]]*/:	/'
