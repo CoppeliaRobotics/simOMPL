@@ -1783,7 +1783,12 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
         return(0);
     }
 
-    registerLuaStuff();
+    if(!registerScriptStuff())
+    {
+        std::cout << "Initialization failed.\n";
+        unloadVrepLibrary(vrepLib);
+        return(0);
+    }
 
     return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
