@@ -28,7 +28,6 @@
 // -------------------------------------------------------------------
 
 #include "v_repExtOMPL.h"
-#include "luaFunctionData.h"
 #include "v_repLib.h"
 #include <iostream>
 #include <sstream>
@@ -926,7 +925,7 @@ ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, Task
     return ValidStateSamplerPtr(new ValidStateSampler(si, task));
 }
 
-void createStateSpace(SLuaCallBack *p, const char *cmd, createStateSpace_in *in, createStateSpace_out *out)
+void createStateSpace(SScriptCallBack *p, const char *cmd, createStateSpace_in *in, createStateSpace_out *out)
 {
     if(in->boundsLow.size() != in->boundsHigh.size())
     {
@@ -963,7 +962,7 @@ void createStateSpace(SLuaCallBack *p, const char *cmd, createStateSpace_in *in,
     out->stateSpaceHandle = statespace->header.handle;
 }
 
-void destroyStateSpace(SLuaCallBack *p, const char *cmd, destroyStateSpace_in *in, destroyStateSpace_out *out)
+void destroyStateSpace(SScriptCallBack *p, const char *cmd, destroyStateSpace_in *in, destroyStateSpace_out *out)
 {
     if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
     {
@@ -979,7 +978,7 @@ void destroyStateSpace(SLuaCallBack *p, const char *cmd, destroyStateSpace_in *i
     out->result = 1;
 }
 
-void createTask(SLuaCallBack *p, const char *cmd, createTask_in *in, createTask_out *out)
+void createTask(SScriptCallBack *p, const char *cmd, createTask_in *in, createTask_out *out)
 {
     TaskDef *task = new TaskDef();
     task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
@@ -1007,7 +1006,7 @@ TaskDef * getTaskOrSetError(const char *CMD, simInt taskHandle)
     return tasks[taskHandle];
 }
 
-void destroyTask(SLuaCallBack *p, const char *cmd, destroyTask_in *in, destroyTask_out *out)
+void destroyTask(SScriptCallBack *p, const char *cmd, destroyTask_in *in, destroyTask_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1018,7 +1017,7 @@ void destroyTask(SLuaCallBack *p, const char *cmd, destroyTask_in *in, destroyTa
     out->result = 1;
 }
 
-void printTaskInfo(SLuaCallBack *p, const char *cmd, printTaskInfo_in *in, printTaskInfo_out *out)
+void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, printTaskInfo_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1141,7 +1140,7 @@ void printTaskInfo(SLuaCallBack *p, const char *cmd, printTaskInfo_in *in, print
     out->result = 1;
 }
 
-void setVerboseLevel(SLuaCallBack *p, const char *cmd, setVerboseLevel_in *in, setVerboseLevel_out *out)
+void setVerboseLevel(SScriptCallBack *p, const char *cmd, setVerboseLevel_in *in, setVerboseLevel_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1151,7 +1150,7 @@ void setVerboseLevel(SLuaCallBack *p, const char *cmd, setVerboseLevel_in *in, s
     out->result = 1;
 }
 
-void setStateValidityCheckingResolution(SLuaCallBack *p, const char *cmd, setStateValidityCheckingResolution_in *in, setStateValidityCheckingResolution_out *out)
+void setStateValidityCheckingResolution(SScriptCallBack *p, const char *cmd, setStateValidityCheckingResolution_in *in, setStateValidityCheckingResolution_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1161,7 +1160,7 @@ void setStateValidityCheckingResolution(SLuaCallBack *p, const char *cmd, setSta
     out->result = 1;
 }
 
-void setStateSpace(SLuaCallBack *p, const char *cmd, setStateSpace_in *in, setStateSpace_out *out)
+void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, setStateSpace_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1214,7 +1213,7 @@ void setStateSpace(SLuaCallBack *p, const char *cmd, setStateSpace_in *in, setSt
     out->result = 1;
 }
 
-void setAlgorithm(SLuaCallBack *p, const char *cmd, setAlgorithm_in *in, setAlgorithm_out *out)
+void setAlgorithm(SScriptCallBack *p, const char *cmd, setAlgorithm_in *in, setAlgorithm_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1224,7 +1223,7 @@ void setAlgorithm(SLuaCallBack *p, const char *cmd, setAlgorithm_in *in, setAlgo
     out->result = 1;
 }
 
-void setCollisionPairs(SLuaCallBack *p, const char *cmd, setCollisionPairs_in *in, setCollisionPairs_out *out)
+void setCollisionPairs(SScriptCallBack *p, const char *cmd, setCollisionPairs_in *in, setCollisionPairs_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1256,7 +1255,7 @@ bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<floa
     return true;
 }
 
-void setStartState(SLuaCallBack *p, const char *cmd, setStartState_in *in, setStartState_out *out)
+void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, setStartState_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1281,7 +1280,7 @@ void setStartState(SLuaCallBack *p, const char *cmd, setStartState_in *in, setSt
     out->result = 1;
 }
 
-void setGoalState(SLuaCallBack *p, const char *cmd, setGoalState_in *in, setGoalState_out *out)
+void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setGoalState_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1295,7 +1294,7 @@ void setGoalState(SLuaCallBack *p, const char *cmd, setGoalState_in *in, setGoal
     out->result = 1;
 }
 
-void setGoal(SLuaCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *out)
+void setGoal(SScriptCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1353,7 +1352,7 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
     return planner;
 }
 
-void setup(SLuaCallBack *p, const char *cmd, setup_in *in, setup_out *out)
+void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1414,7 +1413,7 @@ void setup(SLuaCallBack *p, const char *cmd, setup_in *in, setup_out *out)
     }
 }
 
-void solve(SLuaCallBack *p, const char *cmd, solve_in *in, solve_out *out)
+void solve(SScriptCallBack *p, const char *cmd, solve_in *in, solve_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1454,7 +1453,7 @@ void solve(SLuaCallBack *p, const char *cmd, solve_in *in, solve_out *out)
     }
 }
 
-void simplifyPath(SLuaCallBack *p, const char *cmd, simplifyPath_in *in, simplifyPath_out *out)
+void simplifyPath(SScriptCallBack *p, const char *cmd, simplifyPath_in *in, simplifyPath_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1494,7 +1493,7 @@ void simplifyPath(SLuaCallBack *p, const char *cmd, simplifyPath_in *in, simplif
     }
 }
 
-void interpolatePath(SLuaCallBack *p, const char *cmd, interpolatePath_in *in, interpolatePath_out *out)
+void interpolatePath(SScriptCallBack *p, const char *cmd, interpolatePath_in *in, interpolatePath_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1533,7 +1532,7 @@ void interpolatePath(SLuaCallBack *p, const char *cmd, interpolatePath_in *in, i
     }
 }
 
-void getPath(SLuaCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
+void getPath(SScriptCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1565,7 +1564,7 @@ void getPath(SLuaCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
     }
 }
 
-void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
+void compute(SScriptCallBack *p, const char *cmd, compute_in *in, compute_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1581,7 +1580,7 @@ void compute(SLuaCallBack *p, const char *cmd, compute_in *in, compute_out *out)
     out->result = 1;
 }
 
-void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out *out)
+void readState(SScriptCallBack *p, const char *cmd, readState_in *in, readState_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1601,7 +1600,7 @@ void readState(SLuaCallBack *p, const char *cmd, readState_in *in, readState_out
     out->result = 1;
 }
 
-void writeState(SLuaCallBack *p, const char *cmd, writeState_in *in, writeState_out *out)
+void writeState(SScriptCallBack *p, const char *cmd, writeState_in *in, writeState_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1623,7 +1622,7 @@ void writeState(SLuaCallBack *p, const char *cmd, writeState_in *in, writeState_
     out->result = 1;
 }
 
-void isStateValid(SLuaCallBack *p, const char *cmd, isStateValid_in *in, isStateValid_out *out)
+void isStateValid(SScriptCallBack *p, const char *cmd, isStateValid_in *in, isStateValid_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1647,7 +1646,7 @@ void isStateValid(SLuaCallBack *p, const char *cmd, isStateValid_in *in, isState
     out->valid = task->spaceInformationPtr->isValid(s) ? 1 : 0;
 }
 
-void setProjectionEvaluationCallback(SLuaCallBack *p, const char *cmd, setProjectionEvaluationCallback_in *in, setProjectionEvaluationCallback_out *out)
+void setProjectionEvaluationCallback(SScriptCallBack *p, const char *cmd, setProjectionEvaluationCallback_in *in, setProjectionEvaluationCallback_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1676,7 +1675,7 @@ void setProjectionEvaluationCallback(SLuaCallBack *p, const char *cmd, setProjec
     out->result = 1;
 }
 
-void setStateValidationCallback(SLuaCallBack *p, const char *cmd, setStateValidationCallback_in *in, setStateValidationCallback_out *out)
+void setStateValidationCallback(SScriptCallBack *p, const char *cmd, setStateValidationCallback_in *in, setStateValidationCallback_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1697,7 +1696,7 @@ void setStateValidationCallback(SLuaCallBack *p, const char *cmd, setStateValida
     out->result = 1;
 }
 
-void setGoalCallback(SLuaCallBack *p, const char *cmd, setGoalCallback_in *in, setGoalCallback_out *out)
+void setGoalCallback(SScriptCallBack *p, const char *cmd, setGoalCallback_in *in, setGoalCallback_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
@@ -1717,7 +1716,7 @@ void setGoalCallback(SLuaCallBack *p, const char *cmd, setGoalCallback_in *in, s
     out->result = 1;
 }
 
-void setValidStateSamplerCallback(SLuaCallBack *p, const char *cmd, setValidStateSamplerCallback_in *in, setValidStateSamplerCallback_out *out)
+void setValidStateSamplerCallback(SScriptCallBack *p, const char *cmd, setValidStateSamplerCallback_in *in, setValidStateSamplerCallback_out *out)
 {
     TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
     if(!task) return;
