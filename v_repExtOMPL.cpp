@@ -56,6 +56,7 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
 #include <ompl/base/Goal.h>
 #include <ompl/base/goals/GoalState.h>
+#include <ompl/base/goals/GoalStates.h>
 #include <ompl/base/ProjectionEvaluator.h>
 #include <ompl/base/StateSpace.h>
 #include <ompl/geometric/PathSimplifier.h>
@@ -155,7 +156,7 @@ struct TaskDef
 		// goal tolerance:
 		float tolerance;
         // goal state:
-        std::vector<simFloat> state;
+        std::vector<std::vector<simFloat> > states;
         // goal dummy pair:
         struct {simInt goalDummy, robotDummy;} dummyPair;
         // goal callback:
@@ -1057,10 +1058,14 @@ void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, pr
     {
     case TaskDef::Goal::STATE:
         s << std::endl;
-        s << prefix << "    goal state: {";
-        for(size_t i = 0; i < task->goal.state.size(); i++)
-            s << (i ? ", " : "") << task->goal.state[i];
-        s << "}" << std::endl;
+        s << prefix << "    goal state(s):" << std::endl;
+        for(size_t j = 0; j < task->goal.states.size(); j++)
+        {
+            s << prefix << "        {";
+            for(size_t i = 0; i < task->goal.states[j].size(); i++)
+                s << (i ? ", " : "") << task->goal.states[j][i];
+            s << "}" << std::endl;
+        }
         break;
     case TaskDef::Goal::DUMMY_PAIR:
         s << std::endl;
@@ -1287,9 +1292,28 @@ void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setG
     if(!checkStateSize(cmd, task, in->state)) return;
 
     task->goal.type = TaskDef::Goal::STATE;
-    task->goal.state.clear();
+    task->goal.states.clear();
+    task->goal.states.push_back(std::vector<simFloat>());
+
     for(size_t i = 0; i < in->state.size(); i++)
-        task->goal.state.push_back(in->state[i]);
+        task->goal.states[0].push_back(in->state[i]);
+
+    out->result = 1;
+}
+
+void addGoalState(SScriptCallBack *p, const char *cmd, addGoalState_in *in, addGoalState_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+    if(!checkStateSize(cmd, task, in->state)) return;
+
+    task->goal.type = TaskDef::Goal::STATE;
+
+    size_t last = task->goal.states.size();
+    task->goal.states.push_back(std::vector<simFloat>());
+
+    for(size_t i = 0; i < in->state.size(); i++)
+        task->goal.states[last].push_back(in->state[i]);
 
     out->result = 1;
 }
@@ -1378,13 +1402,34 @@ void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
         ob::GoalPtr goal;
         if(task->goal.type == TaskDef::Goal::STATE)
         {
-            if(!checkStateSize(cmd, task, task->goal.state, "Goal state"))
+            for(size_t i = 0; i < task->goal.states.size(); i++)
+                if(!checkStateSize(cmd, task, task->goal.states[i], "Goal state"))
+                    return;
+
+            if(task->goal.states.size() > 1)
+            {
+                goal = ob::GoalPtr(new ob::GoalStates(task->spaceInformationPtr));
+                for(size_t j = 0; j < task->goal.states.size(); j++)
+                {
+                    ob::ScopedState<> goalState(task->stateSpacePtr);
+                    for(size_t i = 0; i < task->goal.states[j].size(); i++)
+                        goalState[i] = task->goal.states[j][i];
+                    goal->as<ob::GoalStates>()->addState(goalState);
+                }
+            }
+            else if(task->goal.states.size() == 1)
+            {
+                goal = ob::GoalPtr(new ob::GoalState(task->spaceInformationPtr));
+                ob::ScopedState<> goalState(task->stateSpacePtr);
+                for(size_t i = 0; i < task->goal.states[0].size(); i++)
+                    goalState[i] = task->goal.states[0][i];
+                goal->as<ob::GoalState>()->setState(goalState);
+            }
+            else
+            {
+                simSetLastError(cmd, "No goal state specified.");
                 return;
-            ob::ScopedState<> goalState(task->stateSpacePtr);
-            for(size_t i = 0; i < task->goal.state.size(); i++)
-                goalState[i] = task->goal.state[i];
-            goal = ob::GoalPtr(new ob::GoalState(task->spaceInformationPtr));
-            goal->as<ob::GoalState>()->setState(goalState);
+            }
         }
         else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
         {

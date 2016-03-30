@@ -206,6 +206,22 @@
             </param>
         </return>
     </command>
+    <command name="addGoalState">
+        <description>Add a goal state, without clearing previously set goal state(s), if any.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask</description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int" default="0">
+                <description>0 for failure</description>
+            </param>
+        </return>
+    </command>
     <command name="setGoal">
         <description>Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric</description>
         <params>
