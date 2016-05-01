@@ -2,6 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="callbacks.xsl"?>
 
 <plugin name="OMPL" author="federico.ferri.it@gmail.com">
+    <description>The list of API functions below allows you to define and solve a motion planning problem with OMPL.</description>
     <command name="createStateSpace">
         <description>Create a component of the state space for the motion planning problem.</description>
         <params>
