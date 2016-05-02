@@ -71,24 +71,26 @@
                                         <br/>
                                     </xsl:if>
                                 </xsl:for-each>
-                                <br/>
-                                <br/>
-                                <h1>Constants</h1>
-                                <xsl:for-each select="plugin/enum">
-                                <h3 class="subsectionBar"><a name="{@name}" id="{@name}"></a><xsl:value-of select="@name"/></h3>
-                                <table class="apiConstantsTable">
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <xsl:for-each select="item">
-                                                    <div><xsl:value-of select="../@item-prefix"/><xsl:value-of select="@name"/></div>
-                                                    <!--<div class="tab">description</div>-->
-                                                </xsl:for-each>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                </xsl:for-each>
+                                <xsl:if test="plugin/enum/*">
+                                    <br/>
+                                    <br/>
+                                    <h1>Constants</h1>
+                                    <xsl:for-each select="plugin/enum">
+                                    <h3 class="subsectionBar"><a name="{@name}" id="{@name}"></a><xsl:value-of select="@name"/></h3>
+                                    <table class="apiConstantsTable">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <xsl:for-each select="item">
+                                                        <div><xsl:value-of select="../@item-prefix"/><xsl:value-of select="@name"/></div>
+                                                        <!--<div class="tab">description</div>-->
+                                                    </xsl:for-each>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    </xsl:for-each>
+                                </xsl:if>
                             </td>
                         </tr>
                     </table>
