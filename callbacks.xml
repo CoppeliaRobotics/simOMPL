@@ -479,7 +479,7 @@
             </param>
         </return>
     </command>
-    <enum name="Algorithm" item-prefix="sim_ompl_algorithm_" base="30001">
+    <enum name="Algorithm" item-prefix="algorithm_" base="30001">
         <item name="BiTRRT">
         </item>
         <item name="BITstar">
@@ -531,7 +531,7 @@
         <item name="TRRT">
         </item>
     </enum>
-    <enum name="StateSpaceType" item-prefix="sim_ompl_statespacetype_" base="50001">
+    <enum name="StateSpaceType" item-prefix="statespacetype_" base="50001">
         <item name="position2d">
         </item>
         <item name="pose2d">
