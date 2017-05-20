@@ -32,17 +32,17 @@ all: libv_repExtOMPL.$(EXT) doc
 doc: reference.html
 
 reference.html: callbacks.xml callbacks.xsl
-	saxon -s:$< -a:on -o:$@
+	xsltproc --path "$(PWD)" -o $@ $^
 
 v_repExtOMPL.o: stubs.h
 
 stubs.o: stubs.h stubs.cpp
 
 stubs.h: callbacks.xml
-	python -m v_repStubsGen -H $@ $<
+	python external/v_repStubsGen/main.py -H $@ $<
 
 stubs.cpp: callbacks.xml
-	python -m v_repStubsGen -C $@ $<
+	python external/v_repStubsGen/main.py -C $@ $<
 
 libv_repExtOMPL.$(EXT): v_repExtOMPL.o stubs.o $(PARENT_DIR)/common/v_repLib.o
 	$(CXX) $^ $(LDLIBS) -shared -o $@
