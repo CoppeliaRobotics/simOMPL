@@ -11,7 +11,7 @@ OMPL_LDLIBS = -L$(OMPL_DIR)/lib -lompl
 # for when $PWD is a symlink:
 PARENT_DIR = $(shell sh -c 'cd $$PWD/..; pwd')
 
-CXXFLAGS = -ggdb -O0 -I$(PARENT_DIR)/include -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC $(BOOST_CFLAGS) $(OMPL_CFLAGS)
+CXXFLAGS = -ggdb -O0 -I$(PARENT_DIR)/include -Igenerated -Wall -Wno-unused -Wno-overloaded-virtual -Wno-sign-compare -fPIC $(BOOST_CFLAGS) $(OMPL_CFLAGS)
 LDLIBS = -ggdb -O0 -lpthread -ldl $(BOOST_LDLIBS) $(OMPL_LDLIBS)
 
 .PHONY: clean all install doc
@@ -27,31 +27,22 @@ else
 	INSTALL_DIR ?= $(PARENT_DIR)/../vrep.app/Contents/MacOS/
 endif
 
-all: libv_repExtOMPL.$(EXT) doc
+all: libv_repExtOMPL.$(EXT)
 
-doc: reference.html
+generated/stubs.cpp generated/stubs.h generated/reference.html: callbacks.xml
+	python external/v_repStubsGen/generate.py --xml-file callbacks.xml --gen-all "$(PWD)/generated"
 
-reference.html: callbacks.xml callbacks.xsl
-	xsltproc --path "$(PWD)" -o $@ $^
+v_repExtOMPL.o: generated/stubs.h
 
-v_repExtOMPL.o: stubs.h
+generated/stubs.o: generated/stubs.h generated/stubs.cpp
 
-stubs.o: stubs.h stubs.cpp
-
-stubs.h: callbacks.xml
-	python external/v_repStubsGen/main.py -H $@ $<
-
-stubs.cpp: callbacks.xml
-	python external/v_repStubsGen/main.py -C $@ $<
-
-libv_repExtOMPL.$(EXT): v_repExtOMPL.o stubs.o $(PARENT_DIR)/common/v_repLib.o
+libv_repExtOMPL.$(EXT): v_repExtOMPL.o generated/stubs.o $(PARENT_DIR)/common/v_repLib.o
 	$(CXX) $^ $(LDLIBS) -shared -o $@
 
 clean:
 	rm -f libv_repExtOMPL.$(EXT)
 	rm -f *.o
-	rm -f stubs.cpp stubs.h
-	rm -f reference.html
+	rm -rf generated
 
 install: all
 	cp libv_repExtOMPL.$(EXT) $(INSTALL_DIR)

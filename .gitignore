@@ -7,6 +7,4 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-reference.html
-stubs.cpp
-stubs.h
+generated
