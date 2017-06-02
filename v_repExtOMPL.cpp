@@ -35,15 +35,15 @@
 #include <map>
 
 #ifdef _WIN32
-    #ifdef QT_COMPIL
-        #include <direct.h>
-    #else
-        #include <shlwapi.h>
-        #pragma comment(lib, "Shlwapi.lib")
-    #endif
+#ifdef QT_COMPIL
+#include <direct.h>
+#else
+#include <shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
+#endif
 #endif /* _WIN32 */
 #if defined (__linux) || defined (__APPLE__)
-    #include <unistd.h>
+#include <unistd.h>
 #define _stricmp strcasecmp
 #endif /* __linux || __APPLE__ */
 
@@ -149,12 +149,12 @@ struct TaskDef
     struct Goal
     {
         enum {STATE, DUMMY_PAIR, CLLBACK} type;
-		// goal ref. dummy:
-		int refDummy;
-		// goal metric:
-		float metric[4]; // x,y,z,angle(orientation), relative to refDummy
-		// goal tolerance:
-		float tolerance;
+        // goal ref. dummy:
+        int refDummy;
+        // goal metric:
+        float metric[4]; // x,y,z,angle(orientation), relative to refDummy
+        // goal tolerance:
+        float tolerance;
         // goal state:
         std::vector<std::vector<simFloat> > states;
         // goal dummy pair:
@@ -255,29 +255,29 @@ public:
 
         switch(task->projectionEvaluation.type)
         {
-            case TaskDef::ProjectionEvaluation::DEFAULT:
-                switch(task->goal.type)
-                {
-                    case TaskDef::Goal::STATE:
-                    case TaskDef::Goal::CLLBACK:
-                        dim = defaultProjectionSize();
-                        break;
-                    case TaskDef::Goal::DUMMY_PAIR:
-                        dim = dummyPairProjectionSize();
-                        break;
-                    default:
-                        // this will never happen
-                        dim = 0;
-                        break;
-                }
+        case TaskDef::ProjectionEvaluation::DEFAULT:
+            switch(task->goal.type)
+            {
+            case TaskDef::Goal::STATE:
+            case TaskDef::Goal::CLLBACK:
+                dim = defaultProjectionSize();
                 break;
-            case TaskDef::ProjectionEvaluation::CLLBACK:
-                dim = luaProjectCallbackSize();
+            case TaskDef::Goal::DUMMY_PAIR:
+                dim = dummyPairProjectionSize();
                 break;
             default:
                 // this will never happen
                 dim = 0;
                 break;
+            }
+            break;
+        case TaskDef::ProjectionEvaluation::CLLBACK:
+            dim = luaProjectCallbackSize();
+            break;
+        default:
+            // this will never happen
+            dim = 0;
+            break;
         }
     }
 
@@ -303,21 +303,21 @@ public:
 
         switch(task->projectionEvaluation.type)
         {
-            case TaskDef::ProjectionEvaluation::DEFAULT:
-                switch(task->goal.type)
-                {
-                    case TaskDef::Goal::STATE:
-                    case TaskDef::Goal::CLLBACK:
-                        defaultProjection(state, projection);
-                        break;
-                    case TaskDef::Goal::DUMMY_PAIR:
-                        dummyPairProjection(state, projection);
-                        break;
-                }
+        case TaskDef::ProjectionEvaluation::DEFAULT:
+            switch(task->goal.type)
+            {
+            case TaskDef::Goal::STATE:
+            case TaskDef::Goal::CLLBACK:
+                defaultProjection(state, projection);
                 break;
-            case TaskDef::ProjectionEvaluation::CLLBACK:
-                luaProjectCallback(state, projection);
+            case TaskDef::Goal::DUMMY_PAIR:
+                dummyPairProjection(state, projection);
                 break;
+            }
+            break;
+        case TaskDef::ProjectionEvaluation::CLLBACK:
+            luaProjectCallback(state, projection);
+            break;
         }
     }
 
@@ -332,14 +332,14 @@ protected:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                case sim_ompl_statespacetype_position2d:
-                    return 2;
-                case sim_ompl_statespacetype_pose3d:
-                case sim_ompl_statespacetype_position3d:
-                    return 3;
-                case sim_ompl_statespacetype_joint_position:
-                    return 1;
+            case sim_ompl_statespacetype_pose2d:
+            case sim_ompl_statespacetype_position2d:
+                return 2;
+            case sim_ompl_statespacetype_pose3d:
+            case sim_ompl_statespacetype_position3d:
+                return 3;
+            case sim_ompl_statespacetype_joint_position:
+                return 1;
             }
         }
 
@@ -358,27 +358,27 @@ protected:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                    projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                    projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                    projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                    projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                    break;
-                case sim_ompl_statespacetype_position2d:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    break;
+            case sim_ompl_statespacetype_pose2d:
+                projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                break;
+            case sim_ompl_statespacetype_pose3d:
+                projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                break;
+            case sim_ompl_statespacetype_position2d:
+                projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                break;
+            case sim_ompl_statespacetype_position3d:
+                projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                break;
+            case sim_ompl_statespacetype_joint_position:
+                projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                break;
             }
 
             break;
@@ -390,15 +390,15 @@ protected:
         /*
         return 3;
         */
-        int s=0;
-        for (int i=0;i<3;i++)
+        int s = 0;
+        for(int i = 0; i < 3; i++)
         {
-            if (task->goal.metric[i]!=0.0)
+            if(task->goal.metric[i] != 0.0)
                 s++;
         }
-        if (s==0)
-            s=1; // if X/Y/Z are ignored
-        return(s);
+        if(s == 0)
+            s = 1; // if X/Y/Z are ignored
+        return s;
     }
 
     virtual void dummyPairProjection(const ob::State *state, ob::EuclideanProjection& projection) const
@@ -416,14 +416,14 @@ protected:
         // do projection, only for axis that should not be ignored:
         simFloat pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
-        int ind=0;
-        for (int i=0;i<3;i++)
+        int ind = 0;
+        for(int i = 0; i < 3; i++)
         {
-            if (task->goal.metric[i]!=0.0)
+            if(task->goal.metric[i] != 0.0)
                 projection(ind++) = pos[i];
         }
-        if (ind==0)
-            projection(0)=0.0; // if X/Y/Z are ignored 
+        if(ind == 0)
+            projection(0) = 0.0; // if X/Y/Z are ignored
 
         // TODO: restore original state, no?
     }
@@ -483,25 +483,25 @@ public:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                    subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
-                    subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
-                    break;
-                case sim_ompl_statespacetype_position2d:
-                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(3));
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
-                    break;
+            case sim_ompl_statespacetype_pose2d:
+                subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                break;
+            case sim_ompl_statespacetype_pose3d:
+                subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                break;
+            case sim_ompl_statespacetype_position2d:
+                subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
+                break;
+            case sim_ompl_statespacetype_position3d:
+                subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(3));
+                break;
+            case sim_ompl_statespacetype_joint_position:
+                subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
+                break;
             }
 
             subSpace->setName(stateSpace->header.name);
@@ -517,21 +517,21 @@ public:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                    as<ob::SE2StateSpace>(i)->setBounds(bounds);
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    as<ob::SE3StateSpace>(i)->setBounds(bounds);
-                    break;
-                case sim_ompl_statespacetype_position2d:
-                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
-                    break;
+            case sim_ompl_statespacetype_pose2d:
+                as<ob::SE2StateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_pose3d:
+                as<ob::SE3StateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_position2d:
+                as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_position3d:
+                as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_joint_position:
+                as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                break;
             }
         }
     }
@@ -548,42 +548,42 @@ public:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
-                    pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                    pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                    orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                    simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                    pos[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                    pos[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                    orient[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
-                    orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
-                    orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
-                    orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
-                    simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    break;
-                case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                    pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                    simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                    simSetJointPosition(stateSpace->objectHandle, value);
-                    break;
+            case sim_ompl_statespacetype_pose2d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                break;
+            case sim_ompl_statespacetype_pose3d:
+                pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                pos[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                pos[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                orient[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
+                orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
+                orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
+                orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
+                simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                break;
+            case sim_ompl_statespacetype_position2d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                break;
+            case sim_ompl_statespacetype_position3d:
+                pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                break;
+            case sim_ompl_statespacetype_joint_position:
+                value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                simSetJointPosition(stateSpace->objectHandle, value);
+                break;
             }
         }
     }
@@ -599,36 +599,36 @@ public:
 
             switch(stateSpace->type)
             {
-                case sim_ompl_statespacetype_pose2d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
-                    s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
-                    s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
-                    break;
-                case sim_ompl_statespacetype_pose3d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    simGetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                    s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
-                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
-                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
-                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
-                    s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
-                    break;
-                case sim_ompl_statespacetype_position2d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
-                    break;
-                case sim_ompl_statespacetype_position3d:
-                    simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
-                    break;
-                case sim_ompl_statespacetype_joint_position:
-                    simGetJointPosition(stateSpace->objectHandle, &value);
-                    s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
-                    break;
+            case sim_ompl_statespacetype_pose2d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
+                s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
+                break;
+            case sim_ompl_statespacetype_pose3d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                simGetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
+                break;
+            case sim_ompl_statespacetype_position2d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
+                break;
+            case sim_ompl_statespacetype_position3d:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
+                break;
+            case sim_ompl_statespacetype_joint_position:
+                simGetJointPosition(stateSpace->objectHandle, &value);
+                s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
+                break;
             }
         }
     }
@@ -677,11 +677,11 @@ protected:
 
         // check collisions:
         bool inCollision = false;
-        for(size_t i = 0; i < task->collisionPairHandles.size()/2; i++)
+        for(size_t i = 0; i < task->collisionPairHandles.size() / 2; i++)
         {
-            if(task->collisionPairHandles[2*i+0] >= 0)
+            if(task->collisionPairHandles[2 * i + 0] >= 0)
             {
-                int r = simCheckCollision(task->collisionPairHandles[2*i+0],task->collisionPairHandles[2*i+1]);
+                int r = simCheckCollision(task->collisionPairHandles[2 * i + 0], task->collisionPairHandles[2 * i + 1]);
                 if(r > 0)
                 {
                     inCollision = true;
@@ -770,23 +770,23 @@ protected:
         // write query state:
         statespace->as<StateSpace>()->writeState(s);
 
-        if (task->goal.metric[3]==0.0)
+        if(task->goal.metric[3] == 0.0)
         { // ignore orientation
             float goalPos[3];
             float robotPos[3];
-            simGetObjectPosition(task->goal.dummyPair.goalDummy,task->goal.refDummy, &goalPos[0]);
-            simGetObjectPosition(task->goal.dummyPair.robotDummy,task->goal.refDummy, &robotPos[0]);
+            simGetObjectPosition(task->goal.dummyPair.goalDummy, task->goal.refDummy, &goalPos[0]);
+            simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &robotPos[0]);
             *distance = sqrt(pow((goalPos[0] - robotPos[0])*task->goal.metric[0], 2) + pow((goalPos[1] - robotPos[1])*task->goal.metric[1], 2) + pow((goalPos[2] - robotPos[2])*task->goal.metric[2], 2));
         }
         else
         { // do not ignore orientation
             float goalM[12];
             float robotM[12];
-            simGetObjectMatrix(task->goal.dummyPair.goalDummy,task->goal.refDummy,goalM);
-            simGetObjectMatrix(task->goal.dummyPair.robotDummy,task->goal.refDummy,robotM);
+            simGetObjectMatrix(task->goal.dummyPair.goalDummy, task->goal.refDummy, goalM);
+            simGetObjectMatrix(task->goal.dummyPair.robotDummy, task->goal.refDummy, robotM);
             float axis[3];
             float angle;
-            simGetRotationAxis(robotM,goalM,axis,&angle);
+            simGetRotationAxis(robotM, goalM, axis, &angle);
             *distance = sqrt(pow((goalM[3] - robotM[3])*task->goal.metric[0], 2) + pow((goalM[7] - robotM[7])*task->goal.metric[1], 2) + pow((goalM[11] - robotM[11])*task->goal.metric[2], 2) + pow(angle*task->goal.metric[3], 2));
         }
 
@@ -975,7 +975,7 @@ void destroyStateSpace(SScriptCallBack *p, const char *cmd, destroyStateSpace_in
     StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
     statespaces.erase(in->stateSpaceHandle);
     delete statespace;
-    
+
     out->result = 1;
 }
 
@@ -1151,7 +1151,7 @@ void setVerboseLevel(SScriptCallBack *p, const char *cmd, setVerboseLevel_in *in
     if(!task) return;
 
     task->verboseLevel = in->verboseLevel;
-    
+
     out->result = 1;
 }
 
@@ -1161,7 +1161,7 @@ void setStateValidityCheckingResolution(SScriptCallBack *p, const char *cmd, set
     if(!task) return;
 
     task->stateValidityCheckingResolution = in->resolution;
-    
+
     out->result = 1;
 }
 
@@ -1197,24 +1197,24 @@ void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, se
         task->stateSpaces.push_back(stateSpaceHandle);
         switch(statespaces.find(stateSpaceHandle)->second->type)
         {
-            case sim_ompl_statespacetype_position2d:
-                task->dim += 2;
-                break;
-            case sim_ompl_statespacetype_pose2d:
-                task->dim += 3;
-                break;
-            case sim_ompl_statespacetype_position3d:
-                task->dim += 3;
-                break;
-            case sim_ompl_statespacetype_pose3d:
-                task->dim += 7;
-                break;
-            case sim_ompl_statespacetype_joint_position:
-                task->dim += 1;
-                break;
+        case sim_ompl_statespacetype_position2d:
+            task->dim += 2;
+            break;
+        case sim_ompl_statespacetype_pose2d:
+            task->dim += 3;
+            break;
+        case sim_ompl_statespacetype_position3d:
+            task->dim += 3;
+            break;
+        case sim_ompl_statespacetype_pose3d:
+            task->dim += 7;
+            break;
+        case sim_ompl_statespacetype_joint_position:
+            task->dim += 1;
+            break;
         }
     }
-    
+
     out->result = 1;
 }
 
@@ -1551,7 +1551,7 @@ void interpolatePath(SScriptCallBack *p, const char *cmd, interpolatePath_in *in
         const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
         og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
 
-        if (in->stateCnt == 0)
+        if(in->stateCnt == 0)
             path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
         else
             path.interpolate(in->stateCnt);
@@ -1658,7 +1658,7 @@ void writeState(SScriptCallBack *p, const char *cmd, writeState_in *in, writeSta
 
     if(!checkStateSize(cmd, task, in->state))
         return;
-    
+
     ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
     for(int i = 0; i < task->dim; i++)
         state[i] = (double)in->state[i];
@@ -1787,12 +1787,12 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
 {
     char curDirAndFile[1024];
 #ifdef _WIN32
-    #ifdef QT_COMPIL
-        _getcwd(curDirAndFile, sizeof(curDirAndFile));
-    #else
-        GetModuleFileName(NULL, curDirAndFile, 1023);
-        PathRemoveFileSpec(curDirAndFile);
-    #endif
+#ifdef QT_COMPIL
+    _getcwd(curDirAndFile, sizeof(curDirAndFile));
+#else
+    GetModuleFileName(NULL, curDirAndFile, 1023);
+    PathRemoveFileSpec(curDirAndFile);
+#endif
 #elif defined (__linux) || defined (__APPLE__)
     getcwd(curDirAndFile, sizeof(curDirAndFile));
 #endif
@@ -1800,42 +1800,42 @@ VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
     std::string currentDirAndPath(curDirAndFile);
     std::string temp(currentDirAndPath);
 #ifdef _WIN32
-    temp+="\\v_rep.dll";
+    temp += "\\v_rep.dll";
 #elif defined (__linux)
-    temp+="/libv_rep.so";
+    temp += "/libv_rep.so";
 #elif defined (__APPLE__)
-    temp+="/libv_rep.dylib";
+    temp += "/libv_rep.dylib";
 #endif /* __linux || __APPLE__ */
     vrepLib = loadVrepLibrary(temp.c_str());
-    if (vrepLib == NULL)
+    if(vrepLib == NULL)
     {
         std::cout << "Error, could not find or correctly load the V-REP library. Cannot start 'OMPL' plugin.\n";
-        return(0);
+        return 0;
     }
-    if (getVrepProcAddresses(vrepLib)==0)
+    if(getVrepProcAddresses(vrepLib) == 0)
     {
         std::cout << "Error, could not find all required functions in the V-REP library. Cannot start 'OMPL' plugin.\n";
         unloadVrepLibrary(vrepLib);
-        return(0);
+        return 0;
     }
 
     int vrepVer;
     simGetIntegerParameter(sim_intparam_program_version, &vrepVer);
-    if (vrepVer < 30203) // if V-REP version is smaller than 3.02.03
+    if(vrepVer < 30203) // if V-REP version is smaller than 3.02.03
     {
         std::cout << "Sorry, your V-REP copy is somewhat old. Cannot start 'OMPL' plugin.\n";
         unloadVrepLibrary(vrepLib);
-        return(0);
+        return 0;
     }
 
     if(!registerScriptStuff())
     {
         std::cout << "Initialization failed.\n";
         unloadVrepLibrary(vrepLib);
-        return(0);
+        return 0;
     }
 
-    return(PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
+    return PLUGIN_VERSION; // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
 
 VREP_DLLEXPORT void v_repEnd()
@@ -1852,13 +1852,13 @@ VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customD
     simSetIntegerParameter(sim_intparam_error_report_mode, sim_api_errormessage_ignore);
     void* retVal=NULL;
 
-    if (message == sim_message_eventcallback_simulationended)
+    if(message == sim_message_eventcallback_simulationended)
     { // Simulation just ended
         destroyTransientObjects();
     }
 
     // Keep following unchanged:
     simSetIntegerParameter(sim_intparam_error_report_mode, errorModeSaved); // restore previous settings
-    return(retVal);
+    return retVal;
 }
 
