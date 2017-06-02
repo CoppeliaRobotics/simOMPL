@@ -65,6 +65,7 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
+#include <ompl/base/spaces/DubinsStateSpace.h>
 
 #include <ompl/geometric/planners/rrt/BiTRRT.h>
 #include <ompl/geometric/planners/bitstar/BITstar.h>
@@ -340,6 +341,8 @@ protected:
                 return 3;
             case sim_ompl_statespacetype_joint_position:
                 return 1;
+            case sim_ompl_statespacetype_dubins:
+                return 2;
             }
         }
 
@@ -378,6 +381,10 @@ protected:
                 break;
             case sim_ompl_statespacetype_joint_position:
                 projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                break;
+            case sim_ompl_statespacetype_dubins:
+                projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                 break;
             }
 
@@ -502,6 +509,13 @@ public:
             case sim_ompl_statespacetype_joint_position:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
                 break;
+            case sim_ompl_statespacetype_dubins:
+                double turningRadius = 0.05;
+                bool isSymmetric = false;
+                subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(turningRadius, isSymmetric));
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                break;
             }
 
             subSpace->setName(stateSpace->header.name);
@@ -531,6 +545,9 @@ public:
                 break;
             case sim_ompl_statespacetype_joint_position:
                 as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_dubins:
+                as<ob::SE2StateSpace>(i)->setBounds(bounds);
                 break;
             }
         }
@@ -584,6 +601,15 @@ public:
                 value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 simSetJointPosition(stateSpace->objectHandle, value);
                 break;
+            case sim_ompl_statespacetype_dubins:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                break;
             }
         }
     }
@@ -628,6 +654,12 @@ public:
             case sim_ompl_statespacetype_joint_position:
                 simGetJointPosition(stateSpace->objectHandle, &value);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
+                break;
+            case sim_ompl_statespacetype_dubins:
+                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
+                s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                 break;
             }
         }
@@ -1212,6 +1244,9 @@ void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, se
         case sim_ompl_statespacetype_joint_position:
             task->dim += 1;
             break;
+        case sim_ompl_statespacetype_dubins:
+            task->dim += 3;
+            break;
         }
     }
 
@@ -1597,6 +1632,46 @@ void getPath(SScriptCallBack *p, const char *cmd, getPath_in *in, getPath_out *o
         }
 
         out->result = 1;
+    }
+    catch(ompl::Exception& ex)
+    {
+        std::string s = "OMPL: exception: ";
+        s += ex.what();
+        std::cout << s << std::endl;
+        simSetLastError(cmd, s.c_str());
+        if(task->verboseLevel >= 1)
+            simAddStatusbarMessage(s.c_str());
+    }
+}
+
+void getData(SScriptCallBack *p, const char *cmd, getData_in *in, getData_out *out)
+{
+    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
+    if(!task) return;
+    float min_value = 1000.0f, max_value = 0.0f;
+
+    try
+    {
+        std::vector<unsigned int> edge_list;
+        ompl::base::PlannerData data(task->spaceInformationPtr);
+        task->planner->getPlannerData(data);
+
+        for(unsigned int i = 0; i < data.numVertices(); i++)
+        {
+            ompl::base::PlannerDataVertex v(data.getVertex(i));
+            int tag = v.getTag(); // Minimum distance to the closest X_obs for AdaptiveLazyPRM*.
+            float radius;
+            memcpy(&radius, &tag, sizeof(float));
+
+            const ob::StateSpace::StateType *state = v.getState();
+            std::vector<double> config;
+            task->stateSpacePtr->copyToReals(config, state);
+            for(unsigned int j = 0; j < config.size(); j++)
+                out->states.push_back((float)config[j]);
+
+            config.clear();
+            out->states.push_back(radius);
+        }
     }
     catch(ompl::Exception& ex)
     {

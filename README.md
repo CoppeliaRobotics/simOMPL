@@ -10,3 +10,10 @@
 $ git clone --recursive https://github.com/fferri/v_repExtOMPL.git
 $ make
 ```
+
+### Notes
+
+#### Dubins state space
+
+TurningRadius and symmetricity of Dubins Curve should be hardcoded due to the lack of parameter for `simExtOMPL_createStateSpace` (Line number 513: in `v_repExtOMPL.cpp`). (will be fixed in a future release)
+

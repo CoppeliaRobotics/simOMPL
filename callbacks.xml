@@ -10,7 +10,7 @@
                 <description>a name for this state space</description>
             </param>
             <param name="type" type="int">
-                <description> type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position)</description>
+                <description> type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position, sim_ompl_statespacetype_dubins)</description>
             </param>
             <param name="objectHandle" type="int">
                 <description>the object handle (a joint object if type is sim_ompl_statespacetype_joint_position, otherwise a shape)</description>
@@ -328,6 +328,22 @@
             </param>
         </return>
     </command>
+    <command name="getData">
+        <description>Get planner data for this motion planning task.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with simExtOMPL_createTask.</description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="int" default="0">
+                <description>0 for failure.</description>
+            </param>
+            <param name="states" type="table" item-type="float">
+                <description>a table of states, representing the configurations in the constructed search graph. States are specified linearly followed by minimum distance to the closest X_obs.</description>
+            </param>
+        </return>
+    </command>
     <command name="compute">
         <description>Use OMPL to find a solution for this motion planning task. It is equivalent to executing:<br/>
             <br/>
@@ -541,6 +557,8 @@
         <item name="pose3d">
         </item>
         <item name="joint_position">
+        </item>
+        <item name="dubins">
         </item>
     </enum>
     <script-function name="goalCallback">
