@@ -4,13 +4,13 @@
 <plugin name="OMPL" short-name="OMPL" author="federico.ferri.it@gmail.com">
     <description>The list of API functions below allows you to define and solve a motion planning problem with OMPL.</description>
     <command name="createStateSpace">
-        <description>Create a component of the state space for the motion planning problem.</description>
+        <description>Create a component of the state space for the motion planning problem. In case of a dubins state space, set additional parameters with <command-ref name="setDubinsParams" /></description>
         <params>
             <param name="name" type="string">
                 <description>a name for this state space</description>
             </param>
             <param name="type" type="int">
-                <description> type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position, sim_ompl_statespacetype_dubins)</description>
+                <description>type of this state space component (must be one of sim_ompl_statespacetype_position2d, sim_ompl_statespacetype_pose2d, sim_ompl_statespacetype_position3d, sim_ompl_statespacetype_pose3d, sim_ompl_statespacetype_joint_position, sim_ompl_statespacetype_dubins)</description>
             </param>
             <param name="objectHandle" type="int">
                 <description>the object handle (a joint object if type is sim_ompl_statespacetype_joint_position, otherwise a shape)</description>
@@ -48,6 +48,22 @@
             <param name="result" type="int" default="0">
                 <description>0 for failure</description>
             </param>
+        </return>
+    </command>
+    <command name="setDubinsParams">
+        <description>Set extra state space parameters of a dubins state space.</description>
+        <params>
+            <param name="stateSpaceHandle" type="int">
+                <description>handle to state space component</description>
+            </param>
+            <param name="turningRadius" type="float">
+                <description>turning radius</description>
+            </param>
+            <param name="isSymmetric" type="bool">
+                <description>true if it is symmetric, otherwise false</description>
+            </param>
+        </params>
+        <return>
         </return>
     </command>
     <command name="createTask">

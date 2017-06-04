@@ -135,6 +135,10 @@ struct StateSpaceDef
     std::vector<simFloat> boundsHigh;
     // use this state space as the default projection:
     bool defaultProjection;
+    // (specific to dubins state space) turning radius:
+    double dubinsTurningRadius;
+    // (specific to dubins state space) symmetric:
+    bool dubinsIsSymmetric;
 };
 
 struct TaskDef
@@ -510,9 +514,7 @@ public:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
                 break;
             case sim_ompl_statespacetype_dubins:
-                double turningRadius = 0.05;
-                bool isSymmetric = false;
-                subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(turningRadius, isSymmetric));
+                subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(stateSpace->dubinsTurningRadius, stateSpace->dubinsIsSymmetric));
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
                 break;
@@ -991,6 +993,8 @@ void createStateSpace(SScriptCallBack *p, const char *cmd, createStateSpace_in *
     statespace->defaultProjection = in->useForProjection > 0;
     statespace->weight = in->weight;
     statespace->refFrameHandle = in->refObjectHandle;
+    statespace->dubinsTurningRadius = 0.05;
+    statespace->dubinsIsSymmetric = false;
     statespaces[statespace->header.handle] = statespace;
     out->stateSpaceHandle = statespace->header.handle;
 }
@@ -1009,6 +1013,19 @@ void destroyStateSpace(SScriptCallBack *p, const char *cmd, destroyStateSpace_in
     delete statespace;
 
     out->result = 1;
+}
+
+void setDubinsParams(SScriptCallBack *p, const char *cmd, setDubinsParams_in *in, setDubinsParams_out *out)
+{
+    if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
+    {
+        simSetLastError(cmd, "Invalid state space handle handle.");
+        return;
+    }
+
+    StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
+    statespace->dubinsTurningRadius = in->turningRadius;
+    statespace->dubinsIsSymmetric = in->isSymmetric;
 }
 
 void createTask(SScriptCallBack *p, const char *cmd, createTask_in *in, createTask_out *out)
@@ -1076,6 +1093,11 @@ void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, pr
         s << "}" << std::endl;
         s << prefix << "        default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
         s << prefix << "        weight: " << stateSpace->weight << std::endl;
+        if(stateSpace->type == sim_ompl_statespacetype_dubins)
+        {
+            s << prefix << "        (dubins) turning radius: " << stateSpace->dubinsTurningRadius << std::endl;
+            s << prefix << "        (dubins) symmetric: " << (stateSpace->dubinsIsSymmetric ? "true" : "false") << std::endl;
+        }
     }
     s << prefix << "collision pairs: {";
     for(size_t i = 0; i < task->collisionPairHandles.size(); i++)
