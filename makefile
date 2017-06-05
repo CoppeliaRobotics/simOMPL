@@ -2,9 +2,9 @@ BOOST_DIR ?= $(shell find /usr/local/Cellar/boost -mindepth 1 -maxdepth 1 -type 
 BOOST_CFLAGS = -I$(BOOST_DIR)/include
 BOOST_LDLIBS = -L$(BOOST_DIR)/lib -lboost_system
 
-OMPL_DIR ?= $(shell find /usr/local/Cellar/ompl -mindepth 1 -maxdepth 1 -type d | sort | tail -n1)
-OMPL_CFLAGS = -I$(OMPL_DIR)/include
-OMPL_LDLIBS = -L$(OMPL_DIR)/lib -lompl
+OMPL_DIR ?= $(PWD)/external/ompl
+OMPL_CFLAGS = -I$(OMPL_DIR)/src
+OMPL_LDLIBS = -L$(OMPL_DIR)/build/lib -lompl
 
 # to override these variables, call make OMPL_DIR="/path/to/ompl" OMPL_LDLIBS="..."
 
