@@ -29,6 +29,9 @@ endif
 
 all: libv_repExtOMPL.$(EXT)
 
+debug: all
+release: all
+
 generated/stubs.cpp generated/stubs.h generated/reference.html: callbacks.xml
 	python external/v_repStubsGen/generate.py --xml-file callbacks.xml --gen-all "$(PWD)/generated"
 
