@@ -14,5 +14,6 @@ $ cmake --build .
 3. Checkout and compile
 ```text
 $ git clone --recursive https://github.com/fferri/v_repExtOMPL.git
-$ make
+$ cmake .
+$ cmake --build .
 ```
