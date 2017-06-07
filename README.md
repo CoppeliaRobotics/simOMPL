@@ -9,7 +9,7 @@ $ cd external/ompl
 $ mkdir build
 $ cd build
 $ cmake ..
-$ make
+$ cmake --build .
 ```
 3. Checkout and compile
 ```text
