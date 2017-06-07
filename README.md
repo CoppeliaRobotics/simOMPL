@@ -9,11 +9,10 @@ $ git clone --recursive https://github.com/fferri/v_repExtOMPL.git
 $ cd v_repExtOMPL
 
 ### compile ompl:
-$ external/ompl
-$ mkdir build
-$ cd build
-$ cmake ..
+$ cd external/ompl
+$ cmake .
 $ cmake --build .
+$ cd ../..
 
 ### compile plugin:
 $ cmake .

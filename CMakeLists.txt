@@ -15,7 +15,7 @@ include_directories(${VREP_ROOT}/programming/include)
 include_directories(${CMAKE_BINARY_DIR}/generated)
 include_directories(${CMAKE_SOURCE_DIR}/external/ompl/src)
 include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${CMAKE_SOURCE_DIR}/external/ompl/build/lib)
+link_directories(${CMAKE_SOURCE_DIR}/external/ompl/lib)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/generated/stubs.cpp ${CMAKE_BINARY_DIR}/generated/stubs.h ${CMAKE_BINARY_DIR}/generated/lua_calltips.cpp
     COMMAND python ${CMAKE_SOURCE_DIR}/external/v_repStubsGen/generate.py --xml-file ${CMAKE_SOURCE_DIR}/callbacks.xml --lua-file ${CMAKE_SOURCE_DIR}/simExtOMPL.lua --gen-all ${CMAKE_BINARY_DIR}/generated
