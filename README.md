@@ -3,17 +3,19 @@
 ### Compiling
 
 1. Install required packages for [v_repStubsGen](https://github.com/fferri/v_repStubsGen): see v_repStubsGen's [README](external/v_repStubsGen/README.md)
-2. Compile ompl in externa/ompl:
+2. Checkout and compile
 ```text
-$ cd external/ompl
+$ git clone --recursive https://github.com/fferri/v_repExtOMPL.git
+$ cd v_repExtOMPL
+
+### compile ompl:
+$ external/ompl
 $ mkdir build
 $ cd build
 $ cmake ..
 $ cmake --build .
-```
-3. Checkout and compile
-```text
-$ git clone --recursive https://github.com/fferri/v_repExtOMPL.git
+
+### compile plugin:
 $ cmake .
 $ cmake --build .
 ```
