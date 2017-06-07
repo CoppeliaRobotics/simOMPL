@@ -3,8 +3,10 @@ BOOST_CFLAGS = -I$(BOOST_DIR)/include
 BOOST_LDLIBS = -L$(BOOST_DIR)/lib -lboost_system
 
 OMPL_DIR ?= $(PWD)/external/ompl
-OMPL_CFLAGS = -I$(OMPL_DIR)/src
-OMPL_LDLIBS = -L$(OMPL_DIR)/build/lib -lompl
+OMPL_INCLUDE_DIR ?= $(OMPL_DIR)/src
+OMPL_LIBRARY_DIR ?= $(OMPL_DIR)/build/lib
+OMPL_CFLAGS = -I$(OMPL_INCLUDE_DIR)
+OMPL_LDLIBS = -L$(OMPL_LIBRARY_DIR) -lompl
 
 # to override these variables, call make OMPL_DIR="/path/to/ompl" OMPL_LDLIBS="..."
 
