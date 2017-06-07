@@ -21,7 +21,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/generated/stubs.cpp ${CMAKE_BINARY
     COMMAND python ${CMAKE_SOURCE_DIR}/external/v_repStubsGen/generate.py --xml-file ${CMAKE_SOURCE_DIR}/callbacks.xml --lua-file ${CMAKE_SOURCE_DIR}/simExtOMPL.lua --gen-all ${CMAKE_BINARY_DIR}/generated
 	DEPENDS ${CMAKE_SOURCE_DIR}/callbacks.xml)
 
-file(GLOB SOURCES *.cpp)
+set(SOURCES v_repExtOMPL.cpp)
 add_library(v_repExtOMPL SHARED ${SOURCES} ${CMAKE_BINARY_DIR}/generated/stubs.cpp "${VREP_ROOT}/programming/common/v_repLib.cpp")
 
 target_link_libraries(v_repExtOMPL ${Boost_LIBRARIES} ompl)
