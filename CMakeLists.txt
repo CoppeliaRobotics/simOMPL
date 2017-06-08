@@ -22,5 +22,4 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/generated/stubs.cpp ${CMAKE_BINARY
 
 set(SOURCES v_repExtOMPL.cpp)
 add_library(v_repExtOMPL SHARED ${SOURCES} ${CMAKE_BINARY_DIR}/generated/stubs.cpp "${VREP_COMMON}/v_repLib.cpp")
-
-target_link_libraries(v_repExtOMPL ${Boost_LIBRARIES} ${OMPL_LIBRARIES})
+target_link_libraries(v_repExtOMPL ${Boost_LIBRARIES} ${OMPL_LIBRARIES} ${VREP_LIBRARIES})
