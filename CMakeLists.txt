@@ -6,20 +6,8 @@ set(CMAKE_MACOSX_RPATH 1)
 
 find_package(Boost REQUIRED COMPONENTS system)
 
-if(NOT DEFINED ENV{VREP_ROOT})
-    message(FATAL_ERROR "Environment variable VREP_ROOT is not set")
-endif()
-file(TO_CMAKE_PATH "$ENV{VREP_ROOT}" VREP_ROOT)
-
-if(WIN32)
-    add_definitions(-DWIN_VREP)
-    add_definitions(-DNOMINMAX)
-    add_definitions(-Dstrcasecmp=_stricmp)
-elseif(UNIX AND NOT APPLE)
-    add_definitions(-DLIN_VREP)
-elseif(UNIX AND APPLE)
-    add_definitions(-DMAC_VREP)
-endif()
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+find_package(VREP REQUIRED)
 
 include_directories(${VREP_ROOT}/programming/include)
 include_directories(${CMAKE_BINARY_DIR}/generated)
