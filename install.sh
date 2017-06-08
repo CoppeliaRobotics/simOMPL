@@ -2,11 +2,18 @@
 
 set -e
 
-PLUGIN_NAME="$(basename "$(cd $(dirname $0); pwd)")"
+cd "`dirname "$0"`"
+
+PLUGIN_NAME="$(basename "$(pwd)")"
 
 if [ "x$VREP_ROOT" = "x" ]; then
-    echo "error: \$VREP_ROOT is not set" 1>&2
-    exit 1
+    # see if we can determine it automatically
+    # (i.e. the plugin dir is in $VREP_ROOT/programming/$dir)
+    VREP_ROOT="$(cd ../.. ; pwd)"
+    if [ ! -d "$VREP_ROOT/programming/include" ]; then
+        echo "error: \$VREP_ROOT is not set" 1>&2
+        exit 1
+    fi
 fi
 
 if [ "`uname`" = "Darwin" ]; then
@@ -21,12 +28,16 @@ if [ "x$BUILD_TARGET" = "x" ]; then
     BUILD_TARGET=debug
 fi
 
-cd "`dirname "$0"`"
+LIBRARY="lib$PLUGIN_NAME.$DLEXT"
 
 if [ -f CMakeLists.txt ]; then
     # plugin uses cmake
-    cmake .
+    mkdir -p build
+    cd build
+    cmake ..
     cmake --build .
+    cd ..
+    LIBRARY="build/$LIBRARY"
 elif [ -f $PLUGIN_NAME.pro ]; then
     # plugin uses qmake
     qmake $PLUGIN_NAME.pro
@@ -39,6 +50,6 @@ else
     exit 1
 fi
 
-cp -v "lib$PLUGIN_NAME.$DLEXT" "$INSTALL_TARGET"
+cp -v "$LIBRARY" "$INSTALL_TARGET"
 if [ -f *.lua ]; then cp -v *.lua "$VREP_ROOT/lua/"; fi
 
