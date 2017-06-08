@@ -14,5 +14,5 @@ $ cmake --build .
 You may need to set `OMPL_INCLUDE_PATH` and `OMPL_LIB_PATH` cmake variables to the correct values, e.g.:
 ```text
 $ cmake -G "MinGW Makefiles" -DOMPL_INCLUDE_PATH=c:\local\ompl-1.1.0-Source\src -DOMPL_LIB_PATH=c:\local\ompl-1.1.0-Source\build\lib .
-$cmake --build .
+$ cmake --build .
 ```
