@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
+include(CMakeParseArguments)
 
 if(NOT VREP_ROOT)
     if(NOT DEFINED ENV{VREP_ROOT})
