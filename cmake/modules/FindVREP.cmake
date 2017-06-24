@@ -28,6 +28,8 @@ else()
     endif()
 endif()
 
+set(VREP_EXPORTED_SOURCES "${VREP_COMMON}/v_repLib.cpp")
+
 if(WIN32)
     add_definitions(-DWIN_VREP)
     add_definitions(-DNOMINMAX)
@@ -40,4 +42,18 @@ elseif(UNIX AND APPLE)
     add_definitions(-DMAC_VREP)
     set(VREP_LIBRARIES "")
 endif()
+
+function(VREP_GENERATE_STUBS GENERATED_OUTPUT_DIR)
+    cmake_parse_arguments(VREP_GENERATE_STUBS "" "XML_FILE;LUA_FILE" "" ${ARGN})
+    if("${VREP_GENERATE_STUBS_LUA_FILE}" STREQUAL "")
+        add_custom_command(OUTPUT ${GENERATED_OUTPUT_DIR}/stubs.cpp ${GENERATED_OUTPUT_DIR}/stubs.h
+            COMMAND python ${CMAKE_SOURCE_DIR}/external/v_repStubsGen/generate.py --xml-file ${VREP_GENERATE_STUBS_XML_FILE} --gen-all ${GENERATED_OUTPUT_DIR}
+            DEPENDS ${VREP_GENERATE_STUBS_XML_FILE})
+    else()
+        add_custom_command(OUTPUT ${GENERATED_OUTPUT_DIR}/stubs.cpp ${GENERATED_OUTPUT_DIR}/stubs.h ${GENERATED_OUTPUT_DIR}/lua_calltips.cpp
+            COMMAND python ${CMAKE_SOURCE_DIR}/external/v_repStubsGen/generate.py --xml-file ${VREP_GENERATE_STUBS_XML_FILE} --lua-file ${VREP_GENERATE_STUBS_LUA_FILE} --gen-all ${GENERATED_OUTPUT_DIR}
+            DEPENDS ${VREP_GENERATE_STUBS_XML_FILE})
+    endif()
+    set(VREP_EXPORTED_SOURCES ${VREP_EXPORTED_SOURCES} "${GENERATED_OUTPUT_DIR}/stubs.cpp")
+endfunction(VREP_GENERATE_STUBS)
 
