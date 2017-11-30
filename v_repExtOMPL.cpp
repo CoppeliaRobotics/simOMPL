@@ -1,5 +1,6 @@
 #include "v_repExtOMPL.h"
 #include "v_repLib.h"
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -928,7 +929,7 @@ typedef std::shared_ptr<ValidStateSampler> ValidStateSamplerPtr;
 
 ob::ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, TaskDef *task)
 {
-    return ValidStateSamplerPtr(new ValidStateSampler(si, task));
+    return ob::ValidStateSamplerPtr(new ValidStateSampler(si, task));
 }
 
 void createStateSpace(SScriptCallBack *p, const char *cmd, createStateSpace_in *in, createStateSpace_out *out)
