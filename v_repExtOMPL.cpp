@@ -924,9 +924,9 @@ protected:
     TaskDef *task;
 };
 
-typedef boost::shared_ptr<ValidStateSampler> ValidStateSamplerPtr;
+typedef std::shared_ptr<ValidStateSampler> ValidStateSamplerPtr;
 
-ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, TaskDef *task)
+ob::ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, TaskDef *task)
 {
     return ValidStateSamplerPtr(new ValidStateSampler(si, task));
 }
@@ -1418,7 +1418,7 @@ void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
         task->problemDefinitionPtr = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(task->spaceInformationPtr));
         task->spaceInformationPtr->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(task->spaceInformationPtr, task)));
         task->spaceInformationPtr->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
-        task->spaceInformationPtr->setValidStateSamplerAllocator(boost::bind(allocValidStateSampler, _1, task));
+        task->spaceInformationPtr->setValidStateSamplerAllocator(std::bind(allocValidStateSampler, std::placeholders::_1, task));
 
         ob::ScopedState<> startState(task->stateSpacePtr);
         if(!checkStateSize(cmd, task, task->startState, "Start state"))
