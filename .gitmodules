@@ -1,3 +1,4 @@
 [submodule "external/v_repStubsGen"]
 	path = external/v_repStubsGen
 	url = https://github.com/CoppeliaRobotics/v_repStubsGen
+	branch = master
