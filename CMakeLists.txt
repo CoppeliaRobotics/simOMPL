@@ -15,14 +15,19 @@ find_package(OMPL REQUIRED)
 
 include_directories(${VREP_INCLUDE})
 include_directories(${CMAKE_BINARY_DIR}/generated)
-include_directories(${CMAKE_SOURCE_DIR}/external/ompl/src)
+include_directories(${CMAKE_SOURCE_DIR}/external)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OMPL_INCLUDE_DIRS})
 
 vrep_generate_stubs(${CMAKE_BINARY_DIR}/generated XML_FILE ${CMAKE_SOURCE_DIR}/callbacks.xml LUA_FILE ${CMAKE_SOURCE_DIR}/simExtOMPL.lua)
 
-set(SOURCES v_repExtOMPL.cpp)
-add_library(v_repExtOMPL SHARED ${SOURCES} ${CMAKE_BINARY_DIR}/generated/stubs.cpp "${VREP_EXPORTED_SOURCES}")
+set(SOURCES
+    plugin.cpp
+    ${CMAKE_SOURCE_DIR}/external/v_repPlusPlus/Plugin.cpp
+    ${CMAKE_BINARY_DIR}/generated/stubs.cpp
+    ${VREP_EXPORTED_SOURCES}
+)
+add_library(v_repExtOMPL SHARED ${SOURCES})
 target_link_libraries(v_repExtOMPL ${Boost_LIBRARIES} ${OMPL_LIBRARIES} ${VREP_LIBRARIES})
 
 install(TARGETS v_repExtOMPL DESTINATION ${VREP_ROOT})

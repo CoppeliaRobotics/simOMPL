@@ -1,30 +1,8 @@
-#include "v_repExtOMPL.h"
-#include "v_repLib.h"
 #include <functional>
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <map>
-
-#ifdef _WIN32
-#ifdef QT_COMPIL
-#include <direct.h>
-#else
-#include <shlwapi.h>
-#pragma comment(lib, "Shlwapi.lib")
-#endif
-#endif /* _WIN32 */
-#if defined (__linux) || defined (__APPLE__)
-#include <unistd.h>
-#define _stricmp strcasecmp
-#endif /* __linux || __APPLE__ */
-
-#define CONCAT(x, y, z) x y z
-#define strConCat(x, y, z)    CONCAT(x, y, z)
-
-#define PLUGIN_VERSION 3 // 3 since V3.3.0, 2 since V3.3.0Beta.
-
-LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 
 #include <ompl/base/Goal.h>
 #include <ompl/base/goals/GoalState.h>
@@ -66,6 +44,8 @@ LIBRARY vrepLib; // the V-REP library that we will dynamically load and bind
 #include <ompl/geometric/planners/stride/STRIDE.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
 
+#include "v_repPlusPlus/Plugin.h"
+#include "plugin.h"
 #include "stubs.h"
 
 namespace ob = ompl::base;
@@ -1852,82 +1832,19 @@ void setValidStateSamplerCallback(SScriptCallBack *p, const char *cmd, setValidS
     out->result = 1;
 }
 
-VREP_DLLEXPORT unsigned char v_repStart(void* reservedPointer, int reservedInt)
+class Plugin : public vrep::Plugin
 {
-    char curDirAndFile[1024];
-#ifdef _WIN32
-#ifdef QT_COMPIL
-    _getcwd(curDirAndFile, sizeof(curDirAndFile));
-#else
-    GetModuleFileName(NULL, curDirAndFile, 1023);
-    PathRemoveFileSpec(curDirAndFile);
-#endif
-#elif defined (__linux) || defined (__APPLE__)
-    getcwd(curDirAndFile, sizeof(curDirAndFile));
-#endif
-
-    std::string currentDirAndPath(curDirAndFile);
-    std::string temp(currentDirAndPath);
-#ifdef _WIN32
-    temp += "\\v_rep.dll";
-#elif defined (__linux)
-    temp += "/libv_rep.so";
-#elif defined (__APPLE__)
-    temp += "/libv_rep.dylib";
-#endif /* __linux || __APPLE__ */
-    vrepLib = loadVrepLibrary(temp.c_str());
-    if(vrepLib == NULL)
+public:
+    void onStart()
     {
-        std::cout << "Error, could not find or correctly load the V-REP library. Cannot start 'OMPL' plugin.\n";
-        return 0;
-    }
-    if(getVrepProcAddresses(vrepLib) == 0)
-    {
-        std::cout << "Error, could not find all required functions in the V-REP library. Cannot start 'OMPL' plugin.\n";
-        unloadVrepLibrary(vrepLib);
-        return 0;
+        if(!registerScriptStuff())
+            throw std::runtime_error("failed to register script stuff");
     }
 
-    int vrepVer;
-    simGetIntegerParameter(sim_intparam_program_version, &vrepVer);
-    if(vrepVer < 30203) // if V-REP version is smaller than 3.02.03
+    void onSimulationEnded()
     {
-        std::cout << "Sorry, your V-REP copy is somewhat old. Cannot start 'OMPL' plugin.\n";
-        unloadVrepLibrary(vrepLib);
-        return 0;
-    }
-
-    if(!registerScriptStuff())
-    {
-        std::cout << "Initialization failed.\n";
-        unloadVrepLibrary(vrepLib);
-        return 0;
-    }
-
-    return PLUGIN_VERSION; // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
-}
-
-VREP_DLLEXPORT void v_repEnd()
-{
-    unloadVrepLibrary(vrepLib); // release the library
-}
-
-VREP_DLLEXPORT void* v_repMessage(int message, int* auxiliaryData, void* customData, int* replyData)
-{
-    // Keep following 5 lines at the beginning and unchanged:
-    static bool refreshDlgFlag = true;
-    int errorModeSaved;
-    simGetIntegerParameter(sim_intparam_error_report_mode, &errorModeSaved);
-    simSetIntegerParameter(sim_intparam_error_report_mode, sim_api_errormessage_ignore);
-    void* retVal=NULL;
-
-    if(message == sim_message_eventcallback_simulationended)
-    { // Simulation just ended
         destroyTransientObjects();
     }
+};
 
-    // Keep following unchanged:
-    simSetIntegerParameter(sim_intparam_error_report_mode, errorModeSaved); // restore previous settings
-    return retVal;
-}
-
+VREP_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)

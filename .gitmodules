@@ -2,3 +2,7 @@
 	path = external/v_repStubsGen
 	url = https://github.com/CoppeliaRobotics/v_repStubsGen
 	branch = master
+[submodule "external/v_repPlusPlus"]
+	path = external/v_repPlusPlus
+	url = https://github.com/CoppeliaRobotics/v_repPlusPlus.git
+	branch = master
