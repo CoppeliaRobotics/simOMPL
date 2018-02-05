@@ -45,9 +45,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setDubinsParams">
@@ -93,9 +90,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="printTaskInfo">
@@ -106,9 +100,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setVerboseLevel">
@@ -122,9 +113,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setStateValidityCheckingResolution">
@@ -138,9 +126,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setStateSpace">
@@ -154,9 +139,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setAlgorithm">
@@ -170,9 +152,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setCollisionPairs">
@@ -186,9 +165,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setStartState">
@@ -202,9 +178,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setGoalState">
@@ -218,9 +191,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="addGoalState">
@@ -234,9 +204,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setGoal">
@@ -262,9 +229,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setup">
@@ -275,9 +239,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="solve">
@@ -291,8 +252,8 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
+            <param name="solved" type="bool">
+                <description>true if a solution is found.</description>
             </param>
         </return>
     </command>
@@ -307,9 +268,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="interpolatePath">
@@ -323,9 +281,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="getPath">
@@ -336,9 +291,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
             <param name="states" type="table" item-type="float">
                 <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
             </param>
@@ -352,9 +304,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure.</description>
-            </param>
             <param name="states" type="table" item-type="float">
                 <description>a table of states, representing the configurations in the constructed search graph. States are specified linearly followed by minimum distance to the closest X_obs.</description>
             </param>
@@ -385,8 +334,8 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
+            <param name="solved" type="bool">
+                <description>true if a solution has been found.</description>
             </param>
             <param name="states" type="table" item-type="float">
                 <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
@@ -401,9 +350,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>1 in case of success</description>
-            </param>
             <param name="state" type="table" item-type="float">
                 <description>state vector</description>
             </param>
@@ -420,9 +366,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="isStateValid">
@@ -455,9 +398,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setStateValidationCallback">
@@ -471,9 +411,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setGoalCallback">
@@ -487,9 +424,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <command name="setValidStateSamplerCallback">
@@ -506,9 +440,6 @@
             </param>
         </params>
         <return>
-            <param name="result" type="int" default="0">
-                <description>0 for failure</description>
-            </param>
         </return>
     </command>
     <enum name="Algorithm" item-prefix="algorithm_" base="30001">

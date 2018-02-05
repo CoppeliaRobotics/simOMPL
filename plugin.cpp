@@ -915,22 +915,13 @@ ob::ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, 
 void createStateSpace(SScriptCallBack *p, const char *cmd, createStateSpace_in *in, createStateSpace_out *out)
 {
     if(in->boundsLow.size() != in->boundsHigh.size())
-    {
-        simSetLastError(cmd, "Lower and upper bounds must have the same length.");
-        return;
-    }
+        throw std::string("Lower and upper bounds must have the same length.");
 
     if(in->weight <= 0)
-    {
-        simSetLastError(cmd, "State component weight must be positive.");
-        return;
-    }
+        throw std::string("State component weight must be positive.");
 
     if(in->refObjectHandle != -1 && simIsHandleValid(in->refObjectHandle, sim_appobj_object_type) <= 0)
-    {
-        simSetLastError(cmd, "Reference object handle is not valid.");
-        return;
-    }
+        throw std::string("Reference object handle is not valid.");
 
     StateSpaceDef *statespace = new StateSpaceDef();
     statespace->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
@@ -954,26 +945,17 @@ void createStateSpace(SScriptCallBack *p, const char *cmd, createStateSpace_in *
 void destroyStateSpace(SScriptCallBack *p, const char *cmd, destroyStateSpace_in *in, destroyStateSpace_out *out)
 {
     if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-    {
-        simSetLastError(cmd, "Invalid state space handle handle.");
-        out->result = 0;
-        return;
-    }
+        throw std::string("Invalid state space handle.");
 
     StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
     statespaces.erase(in->stateSpaceHandle);
     delete statespace;
-
-    out->result = 1;
 }
 
 void setDubinsParams(SScriptCallBack *p, const char *cmd, setDubinsParams_in *in, setDubinsParams_out *out)
 {
     if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-    {
-        simSetLastError(cmd, "Invalid state space handle handle.");
-        return;
-    }
+        throw std::string("Invalid state space handle.");
 
     StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
     statespace->dubinsTurningRadius = in->turningRadius;
@@ -997,32 +979,25 @@ void createTask(SScriptCallBack *p, const char *cmd, createTask_in *in, createTa
     out->taskHandle = task->header.handle;
 }
 
-TaskDef * getTaskOrSetError(const char *CMD, simInt taskHandle)
+TaskDef * getTask(const char *CMD, simInt taskHandle)
 {
     if(tasks.find(taskHandle) == tasks.end())
-    {
-        simSetLastError(CMD, "Invalid task handle.");
-        return NULL;
-    }
+        throw std::string("Invalid task handle.");
 
     return tasks[taskHandle];
 }
 
 void destroyTask(SScriptCallBack *p, const char *cmd, destroyTask_in *in, destroyTask_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     tasks.erase(in->taskHandle);
     delete task;
-
-    out->result = 1;
 }
 
 void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, printTaskInfo_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     std::stringstream s;
     std::string prefix = "OMPL: ";
@@ -1147,34 +1122,25 @@ void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, pr
 
     simAddStatusbarMessage(s.str().c_str());
     std::cout << s.str();
-
-    out->result = 1;
 }
 
 void setVerboseLevel(SScriptCallBack *p, const char *cmd, setVerboseLevel_in *in, setVerboseLevel_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     task->verboseLevel = in->verboseLevel;
-
-    out->result = 1;
 }
 
 void setStateValidityCheckingResolution(SScriptCallBack *p, const char *cmd, setStateValidityCheckingResolution_in *in, setStateValidityCheckingResolution_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     task->stateValidityCheckingResolution = in->resolution;
-
-    out->result = 1;
 }
 
 void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, setStateSpace_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     bool valid_statespace_handles = true;
 
@@ -1190,10 +1156,7 @@ void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, se
     }
 
     if(!valid_statespace_handles)
-    {
-        simSetLastError(cmd, "Invalid state space handle.");
-        return;
-    }
+        throw std::string("Invalid state space handle.");
 
     task->stateSpaces.clear();
     task->dim = 0;
@@ -1223,57 +1186,43 @@ void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, se
             break;
         }
     }
-
-    out->result = 1;
 }
 
 void setAlgorithm(SScriptCallBack *p, const char *cmd, setAlgorithm_in *in, setAlgorithm_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     task->algorithm = static_cast<Algorithm>(in->algorithm);
-
-    out->result = 1;
 }
 
 void setCollisionPairs(SScriptCallBack *p, const char *cmd, setCollisionPairs_in *in, setCollisionPairs_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     int numHandles = (in->collisionPairHandles.size() / 2) * 2;
     task->collisionPairHandles.clear();
     for(int i = 0; i < numHandles; i++)
         task->collisionPairHandles.push_back(in->collisionPairHandles[i]);
-
-    out->result = 1;
 }
 
-bool checkStateSize(const char *CMD, const TaskDef *task, const std::vector<float>& s, std::string descr = "State")
+void validateStateSize(const TaskDef *task, const std::vector<float>& s, std::string descr = "State")
 {
     if(s.size() == 0)
-    {
-        simSetLastError(CMD, (descr + " is empty.").c_str());
-        return false;
-    }
+        throw descr + " is empty.";
     if(s.size() != task->dim)
     {
         std::stringstream ss;
         ss << descr << " is of incorrect size. Expected " << task->dim << ", got " << s.size() << ".";
         if(task->dim == 0)
             ss << " Did you forget to set the state space for this task?";
-        simSetLastError(CMD, ss.str().c_str());
-        return false;
+        throw ss.str();
     }
-    return true;
 }
 
 void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, setStartState_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
-    if(!checkStateSize(cmd, task, in->state)) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
+    validateStateSize(task, in->state);
 
     task->startState.clear();
     for(size_t i = 0; i < in->state.size(); i++)
@@ -1290,15 +1239,12 @@ void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, se
         task->problemDefinitionPtr->clearStartStates();
         task->problemDefinitionPtr->addStartState(startState);
     }
-
-    out->result = 1;
 }
 
 void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setGoalState_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
-    if(!checkStateSize(cmd, task, in->state)) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
+    validateStateSize(task, in->state);
 
     task->goal.type = TaskDef::Goal::STATE;
     task->goal.states.clear();
@@ -1306,15 +1252,12 @@ void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setG
 
     for(size_t i = 0; i < in->state.size(); i++)
         task->goal.states[0].push_back(in->state[i]);
-
-    out->result = 1;
 }
 
 void addGoalState(SScriptCallBack *p, const char *cmd, addGoalState_in *in, addGoalState_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
-    if(!checkStateSize(cmd, task, in->state)) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
+    validateStateSize(task, in->state);
 
     task->goal.type = TaskDef::Goal::STATE;
 
@@ -1323,14 +1266,11 @@ void addGoalState(SScriptCallBack *p, const char *cmd, addGoalState_in *in, addG
 
     for(size_t i = 0; i < in->state.size(); i++)
         task->goal.states[last].push_back(in->state[i]);
-
-    out->result = 1;
 }
 
 void setGoal(SScriptCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     task->goal.type = TaskDef::Goal::DUMMY_PAIR;
     task->goal.dummyPair.goalDummy = in->goalDummy;
@@ -1344,8 +1284,6 @@ void setGoal(SScriptCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *o
     task->goal.metric[3] = in->metric[3];
 
     task->goal.refDummy = in->refDummy;
-
-    out->result = 1;
 }
 
 ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
@@ -1387,348 +1325,238 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
 
 void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    try
+    task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(task));
+    task->spaceInformationPtr = ob::SpaceInformationPtr(new ob::SpaceInformation(task->stateSpacePtr));
+    task->projectionEvaluatorPtr = ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(task->stateSpacePtr, task));
+    task->stateSpacePtr->registerDefaultProjection(task->projectionEvaluatorPtr);
+    task->problemDefinitionPtr = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(task->spaceInformationPtr));
+    task->spaceInformationPtr->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(task->spaceInformationPtr, task)));
+    task->spaceInformationPtr->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
+    task->spaceInformationPtr->setValidStateSamplerAllocator(std::bind(allocValidStateSampler, std::placeholders::_1, task));
+
+    ob::ScopedState<> startState(task->stateSpacePtr);
+    validateStateSize(task, task->startState, "Start state");
+    for(size_t i = 0; i < task->startState.size(); i++)
+        startState[i] = task->startState[i];
+    task->problemDefinitionPtr->addStartState(startState);
+
+    ob::GoalPtr goal;
+    if(task->goal.type == TaskDef::Goal::STATE)
     {
-        task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(task));
-        task->spaceInformationPtr = ob::SpaceInformationPtr(new ob::SpaceInformation(task->stateSpacePtr));
-        task->projectionEvaluatorPtr = ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(task->stateSpacePtr, task));
-        task->stateSpacePtr->registerDefaultProjection(task->projectionEvaluatorPtr);
-        task->problemDefinitionPtr = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(task->spaceInformationPtr));
-        task->spaceInformationPtr->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(task->spaceInformationPtr, task)));
-        task->spaceInformationPtr->setStateValidityCheckingResolution(task->stateValidityCheckingResolution);
-        task->spaceInformationPtr->setValidStateSamplerAllocator(std::bind(allocValidStateSampler, std::placeholders::_1, task));
+        for(size_t i = 0; i < task->goal.states.size(); i++)
+            validateStateSize(task, task->goal.states[i], "Goal state");
 
-        ob::ScopedState<> startState(task->stateSpacePtr);
-        if(!checkStateSize(cmd, task, task->startState, "Start state"))
-            return;
-        for(size_t i = 0; i < task->startState.size(); i++)
-            startState[i] = task->startState[i];
-        task->problemDefinitionPtr->addStartState(startState);
-
-        ob::GoalPtr goal;
-        if(task->goal.type == TaskDef::Goal::STATE)
+        if(task->goal.states.size() > 1)
         {
-            for(size_t i = 0; i < task->goal.states.size(); i++)
-                if(!checkStateSize(cmd, task, task->goal.states[i], "Goal state"))
-                    return;
-
-            if(task->goal.states.size() > 1)
+            goal = ob::GoalPtr(new ob::GoalStates(task->spaceInformationPtr));
+            for(size_t j = 0; j < task->goal.states.size(); j++)
             {
-                goal = ob::GoalPtr(new ob::GoalStates(task->spaceInformationPtr));
-                for(size_t j = 0; j < task->goal.states.size(); j++)
-                {
-                    ob::ScopedState<> goalState(task->stateSpacePtr);
-                    for(size_t i = 0; i < task->goal.states[j].size(); i++)
-                        goalState[i] = task->goal.states[j][i];
-                    goal->as<ob::GoalStates>()->addState(goalState);
-                }
-            }
-            else if(task->goal.states.size() == 1)
-            {
-                goal = ob::GoalPtr(new ob::GoalState(task->spaceInformationPtr));
                 ob::ScopedState<> goalState(task->stateSpacePtr);
-                for(size_t i = 0; i < task->goal.states[0].size(); i++)
-                    goalState[i] = task->goal.states[0][i];
-                goal->as<ob::GoalState>()->setState(goalState);
-            }
-            else
-            {
-                simSetLastError(cmd, "No goal state specified.");
-                return;
+                for(size_t i = 0; i < task->goal.states[j].size(); i++)
+                    goalState[i] = task->goal.states[j][i];
+                goal->as<ob::GoalStates>()->addState(goalState);
             }
         }
-        else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
+        else if(task->goal.states.size() == 1)
         {
-            goal = ob::GoalPtr(new Goal(task->spaceInformationPtr, task, (double)task->goal.tolerance));
+            goal = ob::GoalPtr(new ob::GoalState(task->spaceInformationPtr));
+            ob::ScopedState<> goalState(task->stateSpacePtr);
+            for(size_t i = 0; i < task->goal.states[0].size(); i++)
+                goalState[i] = task->goal.states[0][i];
+            goal->as<ob::GoalState>()->setState(goalState);
         }
-        task->problemDefinitionPtr->setGoal(goal);
-
-        task->planner = plannerFactory(task->algorithm, task->spaceInformationPtr);
-        if(!task->planner)
+        else
         {
-            simSetLastError(cmd, "Invalid motion planning algorithm.");
-            return;
+            throw std::string("No goal state specified.");
         }
-        task->planner->setProblemDefinition(task->problemDefinitionPtr);
-
-        out->result = 1;
     }
-    catch(ompl::Exception& ex)
+    else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
     {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
-        if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+        goal = ob::GoalPtr(new Goal(task->spaceInformationPtr, task, (double)task->goal.tolerance));
     }
+    task->problemDefinitionPtr->setGoal(goal);
+
+    task->planner = plannerFactory(task->algorithm, task->spaceInformationPtr);
+    if(!task->planner)
+    {
+        throw std::string("Invalid motion planning algorithm.");
+    }
+    task->planner->setProblemDefinition(task->problemDefinitionPtr);
 }
 
 void solve(SScriptCallBack *p, const char *cmd, solve_in *in, solve_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    try
+    ob::PlannerStatus solved = task->planner->solve(in->maxTime);
+    if(solved)
     {
-        ob::PlannerStatus solved = task->planner->solve(in->maxTime);
-        if(solved)
-        {
-            if(task->verboseLevel >= 1)
-            {
-                const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
-                og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+        out->solved = true;
 
-                simAddStatusbarMessage("OMPL: found solution:");
-                std::stringstream s;
-                path.print(s);
-                simAddStatusbarMessage(s.str().c_str());
-            }
-
-            out->result = 1;
-        }
-        else
+        if(task->verboseLevel >= 1)
         {
-            if(task->verboseLevel >= 1)
-                simAddStatusbarMessage("OMPL: could not find solution.");
+            const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+            og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+            simAddStatusbarMessage("OMPL: found solution:");
+            std::stringstream s;
+            path.print(s);
+            simAddStatusbarMessage(s.str().c_str());
         }
     }
-    catch(ompl::Exception& ex)
+    else
     {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
+        out->solved = false;
+
         if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+            simAddStatusbarMessage("OMPL: could not find solution.");
     }
 }
 
 void simplifyPath(SScriptCallBack *p, const char *cmd, simplifyPath_in *in, simplifyPath_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    try
+    if(task->verboseLevel >= 2)
+        simAddStatusbarMessage("OMPL: simplifying solution...");
+
+    const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+    og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+    og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(task->spaceInformationPtr, task->problemDefinitionPtr->getGoal()));
+    if(in->maxSimplificationTime < -std::numeric_limits<double>::epsilon())
+        pathSimplifier->simplifyMax(path);
+    else
+        pathSimplifier->simplify(path, in->maxSimplificationTime);
+
+    if(task->verboseLevel >= 1)
     {
-        if(task->verboseLevel >= 2)
-            simAddStatusbarMessage("OMPL: simplifying solution...");
-
-        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
-        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
-
-        og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(task->spaceInformationPtr, task->problemDefinitionPtr->getGoal()));
-        if(in->maxSimplificationTime < -std::numeric_limits<double>::epsilon())
-            pathSimplifier->simplifyMax(path);
-        else
-            pathSimplifier->simplify(path, in->maxSimplificationTime);
-
-        if(task->verboseLevel >= 1)
-        {
-            simAddStatusbarMessage("OMPL: simplified solution:");
-            std::stringstream s;
-            path.print(s);
-            simAddStatusbarMessage(s.str().c_str());
-        }
-
-        out->result = 1;
-    }
-    catch(ompl::Exception& ex)
-    {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
-        if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+        simAddStatusbarMessage("OMPL: simplified solution:");
+        std::stringstream s;
+        path.print(s);
+        simAddStatusbarMessage(s.str().c_str());
     }
 }
 
 void interpolatePath(SScriptCallBack *p, const char *cmd, interpolatePath_in *in, interpolatePath_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    try
+    if(task->verboseLevel >= 2)
+        simAddStatusbarMessage("OMPL: interpolating solution...");
+
+    const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+    og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+    if(in->stateCnt == 0)
+        path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
+    else
+        path.interpolate(in->stateCnt);
+
+    if(task->verboseLevel >= 2)
     {
-        if(task->verboseLevel >= 2)
-            simAddStatusbarMessage("OMPL: interpolating solution...");
-
-        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
-        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
-
-        if(in->stateCnt == 0)
-            path.interpolate(); // this doesn't give the same result as path.interpolate(0) as I thought!!
-        else
-            path.interpolate(in->stateCnt);
-
-        if(task->verboseLevel >= 2)
-        {
-            simAddStatusbarMessage("OMPL: interpolated:");
-            std::stringstream s;
-            path.print(s);
-            simAddStatusbarMessage(s.str().c_str());
-        }
-
-        out->result = 1;
-    }
-    catch(ompl::Exception& ex)
-    {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
-        if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+        simAddStatusbarMessage("OMPL: interpolated:");
+        std::stringstream s;
+        path.print(s);
+        simAddStatusbarMessage(s.str().c_str());
     }
 }
 
 void getPath(SScriptCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    try
+    const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
+    og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
+
+    for(size_t i = 0; i < path.getStateCount(); i++)
     {
-        const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
-        og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
-
-        for(size_t i = 0; i < path.getStateCount(); i++)
-        {
-            const ob::StateSpace::StateType *s = path.getState(i);
-            std::vector<double> v;
-            task->stateSpacePtr->copyToReals(v, s);
-            for(size_t j = 0; j < v.size(); j++)
-                out->states.push_back((float)v[j]);
-        }
-
-        out->result = 1;
-    }
-    catch(ompl::Exception& ex)
-    {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
-        if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+        const ob::StateSpace::StateType *s = path.getState(i);
+        std::vector<double> v;
+        task->stateSpacePtr->copyToReals(v, s);
+        for(size_t j = 0; j < v.size(); j++)
+            out->states.push_back((float)v[j]);
     }
 }
 
 void getData(SScriptCallBack *p, const char *cmd, getData_in *in, getData_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
     float min_value = 1000.0f, max_value = 0.0f;
 
-    try
+    std::vector<unsigned int> edge_list;
+    ompl::base::PlannerData data(task->spaceInformationPtr);
+    task->planner->getPlannerData(data);
+
+    for(unsigned int i = 0; i < data.numVertices(); i++)
     {
-        std::vector<unsigned int> edge_list;
-        ompl::base::PlannerData data(task->spaceInformationPtr);
-        task->planner->getPlannerData(data);
+        ompl::base::PlannerDataVertex v(data.getVertex(i));
+        int tag = v.getTag(); // Minimum distance to the closest X_obs for AdaptiveLazyPRM*.
+        float radius;
+        memcpy(&radius, &tag, sizeof(float));
 
-        for(unsigned int i = 0; i < data.numVertices(); i++)
-        {
-            ompl::base::PlannerDataVertex v(data.getVertex(i));
-            int tag = v.getTag(); // Minimum distance to the closest X_obs for AdaptiveLazyPRM*.
-            float radius;
-            memcpy(&radius, &tag, sizeof(float));
+        const ob::StateSpace::StateType *state = v.getState();
+        std::vector<double> config;
+        task->stateSpacePtr->copyToReals(config, state);
+        for(unsigned int j = 0; j < config.size(); j++)
+            out->states.push_back((float)config[j]);
 
-            const ob::StateSpace::StateType *state = v.getState();
-            std::vector<double> config;
-            task->stateSpacePtr->copyToReals(config, state);
-            for(unsigned int j = 0; j < config.size(); j++)
-                out->states.push_back((float)config[j]);
-
-            config.clear();
-            out->states.push_back(radius);
-        }
-    }
-    catch(ompl::Exception& ex)
-    {
-        std::string s = "OMPL: exception: ";
-        s += ex.what();
-        std::cout << s << std::endl;
-        simSetLastError(cmd, s.c_str());
-        if(task->verboseLevel >= 1)
-            simAddStatusbarMessage(s.c_str());
+        config.clear();
+        out->states.push_back(radius);
     }
 }
 
 void compute(SScriptCallBack *p, const char *cmd, compute_in *in, compute_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
-    if(!setup(p, in->taskHandle)) return;
-    if(!solve(p, in->taskHandle, in->maxTime)) return;
-    if(!simplifyPath(p, in->taskHandle, in->maxSimplificationTime)) return;
-    if(!interpolatePath(p, in->taskHandle, in->stateCnt)) return;
-    getPath_out path;
-    getPath(p, &path, in->taskHandle);
-    if(!path.result) return;
-    out->states = path.states;
-    out->result = 1;
+    setup(p, in->taskHandle);
+    out->solved = solve(p, in->taskHandle, in->maxTime);
+    if(!out->solved) return;
+    simplifyPath(p, in->taskHandle, in->maxSimplificationTime);
+    interpolatePath(p, in->taskHandle, in->stateCnt);
+    out->states = getPath(p, in->taskHandle);
 }
 
 void readState(SScriptCallBack *p, const char *cmd, readState_in *in, readState_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(!task->stateSpacePtr)
-    {
-        simSetLastError(cmd, "This method can only be used inside callbacks.");
-        return;
-    }
+        throw std::string("This method can only be used inside callbacks.");
 
     ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
     task->stateSpacePtr->as<StateSpace>()->readState(state);
     std::vector<double> stateVec = state.reals();
     for(size_t i = 0; i < stateVec.size(); i++)
         out->state.push_back((float)stateVec[i]);
-
-    out->result = 1;
 }
 
 void writeState(SScriptCallBack *p, const char *cmd, writeState_in *in, writeState_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(!task->stateSpacePtr)
-    {
-        simSetLastError(cmd, "This method can only be used inside callbacks.");
-        return;
-    }
+        throw std::string("This method can only be used inside callbacks.");
 
-    if(!checkStateSize(cmd, task, in->state))
-        return;
+    validateStateSize(task, in->state);
 
     ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
     for(int i = 0; i < task->dim; i++)
         state[i] = (double)in->state[i];
     task->stateSpacePtr->as<StateSpace>()->writeState(state);
-
-    out->result = 1;
 }
 
 void isStateValid(SScriptCallBack *p, const char *cmd, isStateValid_in *in, isStateValid_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(!task->stateSpacePtr)
-    {
-        simSetLastError(cmd, "This method can only be used inside callbacks.");
-        return;
-    }
+        throw std::string("This method can only be used inside callbacks.");
 
-    if(!checkStateSize(cmd, task, in->state))
-        return;
+    validateStateSize(task, in->state);
 
     std::vector<double> stateVec;
     for(size_t i = 0; i < in->state.size(); i++)
@@ -1742,14 +1570,10 @@ void isStateValid(SScriptCallBack *p, const char *cmd, isStateValid_in *in, isSt
 
 void setProjectionEvaluationCallback(SScriptCallBack *p, const char *cmd, setProjectionEvaluationCallback_in *in, setProjectionEvaluationCallback_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(in->projectionSize < 1)
-    {
-        simSetLastError(cmd, "Projection size must be positive.");
-        return;
-    }
+        throw std::string("Projection size must be positive.");
 
     if(in->callback == "")
     {
@@ -1765,14 +1589,11 @@ void setProjectionEvaluationCallback(SScriptCallBack *p, const char *cmd, setPro
         task->projectionEvaluation.callback.scriptId = p->scriptID;
         task->projectionEvaluation.callback.function = in->callback;
     }
-
-    out->result = 1;
 }
 
 void setStateValidationCallback(SScriptCallBack *p, const char *cmd, setStateValidationCallback_in *in, setStateValidationCallback_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(in->callback == "")
     {
@@ -1786,50 +1607,32 @@ void setStateValidationCallback(SScriptCallBack *p, const char *cmd, setStateVal
         task->stateValidation.callback.scriptId = p->scriptID;
         task->stateValidation.callback.function = in->callback;
     }
-
-    out->result = 1;
 }
 
 void setGoalCallback(SScriptCallBack *p, const char *cmd, setGoalCallback_in *in, setGoalCallback_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(in->callback == "")
-    {
-        simSetLastError(cmd, "Invalid callback name.");
-        return;
-    }
-    else
-    {
-        task->goal.type = TaskDef::Goal::CLLBACK;
-        task->goal.callback.scriptId = p->scriptID;
-        task->goal.callback.function = in->callback;
-    }
-
-    out->result = 1;
+        throw std::string("Invalid callback name.");
+ 
+    task->goal.type = TaskDef::Goal::CLLBACK;
+    task->goal.callback.scriptId = p->scriptID;
+    task->goal.callback.function = in->callback;
 }
 
 void setValidStateSamplerCallback(SScriptCallBack *p, const char *cmd, setValidStateSamplerCallback_in *in, setValidStateSamplerCallback_out *out)
 {
-    TaskDef *task = getTaskOrSetError(cmd, in->taskHandle);
-    if(!task) return;
+    TaskDef *task = getTask(cmd, in->taskHandle);
 
     if(in->callback == "" || in->callbackNear == "")
-    {
-        simSetLastError(cmd, "Invalid callback name.");
-        return;
-    }
-    else
-    {
-        task->validStateSampling.type = TaskDef::ValidStateSampling::CLLBACK;
-        task->validStateSampling.callback.scriptId = p->scriptID;
-        task->validStateSampling.callback.function = in->callback;
-        task->validStateSampling.callbackNear.scriptId = p->scriptID;
-        task->validStateSampling.callbackNear.function = in->callbackNear;
-    }
+        throw std::string("Invalid callback name.");
 
-    out->result = 1;
+    task->validStateSampling.type = TaskDef::ValidStateSampling::CLLBACK;
+    task->validStateSampling.callback.scriptId = p->scriptID;
+    task->validStateSampling.callback.function = in->callback;
+    task->validStateSampling.callbackNear.scriptId = p->scriptID;
+    task->validStateSampling.callbackNear.function = in->callbackNear;
 }
 
 class Plugin : public vrep::Plugin
