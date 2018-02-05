@@ -979,7 +979,7 @@ void createTask(SScriptCallBack *p, const char *cmd, createTask_in *in, createTa
     out->taskHandle = task->header.handle;
 }
 
-TaskDef * getTask(const char *CMD, simInt taskHandle)
+TaskDef * getTask(simInt taskHandle)
 {
     if(tasks.find(taskHandle) == tasks.end())
         throw std::string("Invalid task handle.");
@@ -989,7 +989,7 @@ TaskDef * getTask(const char *CMD, simInt taskHandle)
 
 void destroyTask(SScriptCallBack *p, const char *cmd, destroyTask_in *in, destroyTask_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     tasks.erase(in->taskHandle);
     delete task;
@@ -997,7 +997,7 @@ void destroyTask(SScriptCallBack *p, const char *cmd, destroyTask_in *in, destro
 
 void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, printTaskInfo_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     std::stringstream s;
     std::string prefix = "OMPL: ";
@@ -1126,21 +1126,21 @@ void printTaskInfo(SScriptCallBack *p, const char *cmd, printTaskInfo_in *in, pr
 
 void setVerboseLevel(SScriptCallBack *p, const char *cmd, setVerboseLevel_in *in, setVerboseLevel_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     task->verboseLevel = in->verboseLevel;
 }
 
 void setStateValidityCheckingResolution(SScriptCallBack *p, const char *cmd, setStateValidityCheckingResolution_in *in, setStateValidityCheckingResolution_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     task->stateValidityCheckingResolution = in->resolution;
 }
 
 void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, setStateSpace_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     bool valid_statespace_handles = true;
 
@@ -1190,14 +1190,14 @@ void setStateSpace(SScriptCallBack *p, const char *cmd, setStateSpace_in *in, se
 
 void setAlgorithm(SScriptCallBack *p, const char *cmd, setAlgorithm_in *in, setAlgorithm_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     task->algorithm = static_cast<Algorithm>(in->algorithm);
 }
 
 void setCollisionPairs(SScriptCallBack *p, const char *cmd, setCollisionPairs_in *in, setCollisionPairs_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     int numHandles = (in->collisionPairHandles.size() / 2) * 2;
     task->collisionPairHandles.clear();
@@ -1221,7 +1221,7 @@ void validateStateSize(const TaskDef *task, const std::vector<float>& s, std::st
 
 void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, setStartState_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
     validateStateSize(task, in->state);
 
     task->startState.clear();
@@ -1243,7 +1243,7 @@ void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, se
 
 void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setGoalState_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
     validateStateSize(task, in->state);
 
     task->goal.type = TaskDef::Goal::STATE;
@@ -1256,7 +1256,7 @@ void setGoalState(SScriptCallBack *p, const char *cmd, setGoalState_in *in, setG
 
 void addGoalState(SScriptCallBack *p, const char *cmd, addGoalState_in *in, addGoalState_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
     validateStateSize(task, in->state);
 
     task->goal.type = TaskDef::Goal::STATE;
@@ -1270,7 +1270,7 @@ void addGoalState(SScriptCallBack *p, const char *cmd, addGoalState_in *in, addG
 
 void setGoal(SScriptCallBack *p, const char *cmd, setGoal_in *in, setGoal_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     task->goal.type = TaskDef::Goal::DUMMY_PAIR;
     task->goal.dummyPair.goalDummy = in->goalDummy;
@@ -1325,7 +1325,7 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
 
 void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(task));
     task->spaceInformationPtr = ob::SpaceInformationPtr(new ob::SpaceInformation(task->stateSpacePtr));
@@ -1388,7 +1388,7 @@ void setup(SScriptCallBack *p, const char *cmd, setup_in *in, setup_out *out)
 
 void solve(SScriptCallBack *p, const char *cmd, solve_in *in, solve_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     ob::PlannerStatus solved = task->planner->solve(in->maxTime);
     if(solved)
@@ -1417,7 +1417,7 @@ void solve(SScriptCallBack *p, const char *cmd, solve_in *in, solve_out *out)
 
 void simplifyPath(SScriptCallBack *p, const char *cmd, simplifyPath_in *in, simplifyPath_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(task->verboseLevel >= 2)
         simAddStatusbarMessage("OMPL: simplifying solution...");
@@ -1442,7 +1442,7 @@ void simplifyPath(SScriptCallBack *p, const char *cmd, simplifyPath_in *in, simp
 
 void interpolatePath(SScriptCallBack *p, const char *cmd, interpolatePath_in *in, interpolatePath_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(task->verboseLevel >= 2)
         simAddStatusbarMessage("OMPL: interpolating solution...");
@@ -1466,7 +1466,7 @@ void interpolatePath(SScriptCallBack *p, const char *cmd, interpolatePath_in *in
 
 void getPath(SScriptCallBack *p, const char *cmd, getPath_in *in, getPath_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
     og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
@@ -1483,7 +1483,7 @@ void getPath(SScriptCallBack *p, const char *cmd, getPath_in *in, getPath_out *o
 
 void getData(SScriptCallBack *p, const char *cmd, getData_in *in, getData_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
     float min_value = 1000.0f, max_value = 0.0f;
 
     std::vector<unsigned int> edge_list;
@@ -1510,7 +1510,7 @@ void getData(SScriptCallBack *p, const char *cmd, getData_in *in, getData_out *o
 
 void compute(SScriptCallBack *p, const char *cmd, compute_in *in, compute_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     setup(p, in->taskHandle);
     out->solved = solve(p, in->taskHandle, in->maxTime);
@@ -1522,7 +1522,7 @@ void compute(SScriptCallBack *p, const char *cmd, compute_in *in, compute_out *o
 
 void readState(SScriptCallBack *p, const char *cmd, readState_in *in, readState_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(!task->stateSpacePtr)
         throw std::string("This method can only be used inside callbacks.");
@@ -1536,7 +1536,7 @@ void readState(SScriptCallBack *p, const char *cmd, readState_in *in, readState_
 
 void writeState(SScriptCallBack *p, const char *cmd, writeState_in *in, writeState_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(!task->stateSpacePtr)
         throw std::string("This method can only be used inside callbacks.");
@@ -1551,7 +1551,7 @@ void writeState(SScriptCallBack *p, const char *cmd, writeState_in *in, writeSta
 
 void isStateValid(SScriptCallBack *p, const char *cmd, isStateValid_in *in, isStateValid_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(!task->stateSpacePtr)
         throw std::string("This method can only be used inside callbacks.");
@@ -1570,7 +1570,7 @@ void isStateValid(SScriptCallBack *p, const char *cmd, isStateValid_in *in, isSt
 
 void setProjectionEvaluationCallback(SScriptCallBack *p, const char *cmd, setProjectionEvaluationCallback_in *in, setProjectionEvaluationCallback_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(in->projectionSize < 1)
         throw std::string("Projection size must be positive.");
@@ -1593,7 +1593,7 @@ void setProjectionEvaluationCallback(SScriptCallBack *p, const char *cmd, setPro
 
 void setStateValidationCallback(SScriptCallBack *p, const char *cmd, setStateValidationCallback_in *in, setStateValidationCallback_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(in->callback == "")
     {
@@ -1611,7 +1611,7 @@ void setStateValidationCallback(SScriptCallBack *p, const char *cmd, setStateVal
 
 void setGoalCallback(SScriptCallBack *p, const char *cmd, setGoalCallback_in *in, setGoalCallback_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(in->callback == "")
         throw std::string("Invalid callback name.");
@@ -1623,7 +1623,7 @@ void setGoalCallback(SScriptCallBack *p, const char *cmd, setGoalCallback_in *in
 
 void setValidStateSamplerCallback(SScriptCallBack *p, const char *cmd, setValidStateSamplerCallback_in *in, setValidStateSamplerCallback_out *out)
 {
-    TaskDef *task = getTask(cmd, in->taskHandle);
+    TaskDef *task = getTask(in->taskHandle);
 
     if(in->callback == "" || in->callbackNear == "")
         throw std::string("Invalid callback name.");
