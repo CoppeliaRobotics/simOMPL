@@ -51,6 +51,12 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+#if OMPL_VERSION_VALUE >= 1004000  // Version greater than 1.4.0
+typedef Eigen::Ref<Eigen::VectorXd> OMPLProjection;
+#else  // All other versions
+typedef ompl::base::EuclideanProjection& OMPLProjection;
+#endif
+
 struct LuaCallbackFunction
 {
     // name of the Lua function
@@ -251,7 +257,7 @@ public:
             cellSizes_[i] = 0.05;
     }
 
-    virtual void project(const ob::State *state, ob::EuclideanProjection& projection) const
+    virtual void project(const ob::State *state, OMPLProjection projection) const
     {
         for(int i = 0; i < dim; i++)
             projection(i) = 0.0;
@@ -305,7 +311,7 @@ protected:
         return 0;
     }
 
-    virtual void defaultProjection(const ob::State *state, ob::EuclideanProjection& projection) const
+    virtual void defaultProjection(const ob::State *state, OMPLProjection projection) const
     {
         const ob::CompoundState *s = state->as<ob::CompoundStateSpace::StateType>();
 
@@ -364,7 +370,7 @@ protected:
         return s;
     }
 
-    virtual void dummyPairProjection(const ob::State *state, ob::EuclideanProjection& projection) const
+    virtual void dummyPairProjection(const ob::State *state, OMPLProjection projection) const
     {
         /*
         simFloat pos[3];
@@ -396,7 +402,7 @@ protected:
         return task->projectionEvaluation.dim;
     }
 
-    virtual void luaProjectCallback(const ob::State *state, ob::EuclideanProjection& projection) const
+    virtual void luaProjectCallback(const ob::State *state, OMPLProjection projection) const
     {
         std::vector<double> stateVec;
         statespace->copyToReals(stateVec, state);
@@ -619,6 +625,37 @@ public:
         }
     }
 
+    // Store relative pose of objects:
+    void saveRelPoseState(std::vector<float>& p)
+    {
+        for (size_t i = 0; i < task->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            if (stateSpace->type != sim_ompl_statespacetype_joint_position)
+            {
+                p.resize(p.size() + 7);
+                simGetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[p.size() - 7]);
+                simGetObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, &p[p.size() - 4]);
+            }
+        }
+    }
+
+    // Restore relative pose of objects:
+    void restoreRelPoseState(const std::vector<float>& p)
+    {
+        int pt = 0;
+        for (size_t i = 0; i < task->stateSpaces.size(); i++)
+        {
+            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            if (stateSpace->type != sim_ompl_statespacetype_joint_position)
+            {
+                simSetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[pt+0]);
+                simSetObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, &p[pt+3]);
+                pt += 7;
+            }
+        }
+    }
+
 protected:
     TaskDef *task;
 };
@@ -657,6 +694,8 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
+        std::vector<float> pose_old;
+        statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
         statespace->as<StateSpace>()->writeState(s);
@@ -679,6 +718,7 @@ protected:
 
         // restore original state:
         statespace->as<StateSpace>()->writeState(s_old);
+        statespace->as<StateSpace>()->restoreRelPoseState(pose_old);
 
         return !inCollision;
     }
@@ -752,6 +792,8 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
+        std::vector<float> pose_old;
+        statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
         statespace->as<StateSpace>()->writeState(s);
@@ -780,6 +822,7 @@ protected:
 
         // restore original state:
         statespace->as<StateSpace>()->writeState(s_old);
+        statespace->as<StateSpace>()->restoreRelPoseState(pose_old);
 
         return satisfied;
     }
