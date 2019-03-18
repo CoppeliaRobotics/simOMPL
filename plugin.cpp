@@ -1262,6 +1262,18 @@ void validateStateSize(const TaskDef *task, const std::vector<float>& s, std::st
     }
 }
 
+bool isMultiQuery(Algorithm algorithm)
+{
+    switch(algorithm)
+    {
+    case sim_ompl_algorithm_PRM:
+    case sim_ompl_algorithm_PRMstar:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, setStartState_out *out)
 {
     TaskDef *task = getTask(in->taskHandle);
@@ -1273,7 +1285,7 @@ void setStartState(SScriptCallBack *p, const char *cmd, setStartState_in *in, se
 
     // for multi-query PRM, if the OMPL's ProblemDefinition has already been set,
     // we want only to clear the query and add the new start state:
-    if(task->problemDefinitionPtr && task->planner && task->algorithm == sim_ompl_algorithm_PRM)
+    if(task->problemDefinitionPtr && task->planner && isMultiQuery(task->algorithm))
     {
         task->planner->as<og::PRM>()->clearQuery();
         ob::ScopedState<> startState(task->stateSpacePtr);
