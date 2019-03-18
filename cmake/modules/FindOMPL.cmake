@@ -84,6 +84,17 @@ else()
     set(OMPL_INCLUDE_DIRS "")
 endif()
 
+find_path(EIGEN_INCLUDE_DIRS Eigen/Core
+    PATHS ${OMPL_INCLUDE_PATH}
+    PATH_SUFFIXES eigen3 include/eigen3 src/eigen3)
+if (EIGEN_INCLUDE_DIRS)
+    string(REGEX REPLACE "Eigen/Core$" "" EIGEN_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+    list(APPEND OMPL_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+    unset(EIGEN_INCLUDE_DIRS)
+else()
+    set(EIGEN_INCLUDE_DIRS "")
+endif()
+
 # find version
 find_file(OMPL_CONFIG config.h
     PATHS ${OMPL_INCLUDE_DIRS}
