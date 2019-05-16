@@ -116,7 +116,7 @@
         </return>
     </command>
     <command name="setStateValidityCheckingResolution">
-        <description>Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% fs the state space's extent.</description>
+        <description>Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% of the state space's extent.</description>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
