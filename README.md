@@ -1,13 +1,13 @@
-# OMPL (Open Motion Planning Library) plugin for V-REP
+# OMPL (Open Motion Planning Library) plugin for CoppeliaSim
 
 ### Compiling
 
-1. Install required packages for [v_repStubsGen](https://github.com/CoppeliaRobotics/v_repStubsGen): see v_repStubsGen's [README](external/v_repStubsGen/README.md)
+1. Install required packages for [libPlugin](https://github.com/CoppeliaRobotics/libPlugin): see libPlugin's [README](external/libPlugin/README.md)
 2. Compile ompl-1.1.0
 2. Checkout and compile
 ```text
-$ git clone --recursive https://github.com/CoppeliaRobotics/v_repExtOMPL.git
-$ cd v_repExtOMPL
+$ git clone --recursive https://github.com/CoppeliaRobotics/simExtOMPL.git
+$ cd simExtOMPL
 $ cmake .
 $ cmake --build .
 ```

@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+#include <ompl/config.h>
 #include <ompl/base/Goal.h>
 #include <ompl/base/goals/GoalState.h>
 #include <ompl/base/goals/GoalStates.h>
@@ -17,8 +18,6 @@
 #include <ompl/base/spaces/SE3StateSpace.h>
 #include <ompl/base/spaces/DubinsStateSpace.h>
 
-#include <ompl/geometric/planners/rrt/BiTRRT.h>
-#include <ompl/geometric/planners/bitstar/BITstar.h>
 #include <ompl/geometric/planners/kpiece/BKPIECE1.h>
 #include <ompl/geometric/planners/cforest/CForest.h>
 #include <ompl/geometric/planners/est/EST.h>
@@ -43,15 +42,19 @@
 #include <ompl/geometric/planners/prm/SPARStwo.h>
 #include <ompl/geometric/planners/stride/STRIDE.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
+#if OMPL_VERSION_VALUE >= 1001000 // 1.1.0
+#include <ompl/geometric/planners/rrt/BiTRRT.h>
+#include <ompl/geometric/planners/bitstar/BITstar.h>
+#endif
 
-#include "v_repPlusPlus/Plugin.h"
+#include "simPlusPlus/Plugin.h"
 #include "plugin.h"
 #include "stubs.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-#if OMPL_VERSION_VALUE >= 1004000  // Version greater than 1.4.0
+#if OMPL_VERSION_VALUE >= 1004000  // 1.4.0
 typedef Eigen::Ref<Eigen::VectorXd> OMPLProjection;
 #else  // All other versions
 typedef ompl::base::EuclideanProjection& OMPLProjection;
@@ -61,7 +64,7 @@ struct LuaCallbackFunction
 {
     // name of the Lua function
     std::string function;
-    // id of the V-REP script where the function is defined in
+    // id of the script where the function is defined in
     simInt scriptId;
 };
 
@@ -80,7 +83,7 @@ struct StateSpaceDef
     ObjectDefHeader header;
     // type of this state space:
     StateSpaceType type;
-    // V-REP handle of the object (objects, or joint if type = joint_position):
+    // handle of the object (objects, or joint if type = joint_position):
     simInt objectHandle;
     // object handle in order to specify optional reference frame that is not absolute
     // for sim_ompl_statespace_pose2d, etc.
@@ -158,7 +161,7 @@ struct TaskDef
     Algorithm algorithm;
     // state space dimension:
     int dim;
-    // how many things we should say in the V-REP console? (0 = stay silent)
+    // how many things we should say in the console? (0 = stay silent)
     int verboseLevel;
     // OMPL classes (created with the setup() command):
     // state space
@@ -441,7 +444,7 @@ public:
     StateSpace(TaskDef *task)
         : ob::CompoundStateSpace(), task(task)
     {
-        setName("VREPCompoundStateSpace");
+        setName("SimCompoundStateSpace");
         type_ = ompl::base::STATE_SPACE_TYPE_COUNT + 1;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
@@ -513,7 +516,7 @@ public:
         }
     }
 
-    // writes state s to V-REP:
+    // writes state s to CoppeliaSim:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         int j = 0;
@@ -574,7 +577,7 @@ public:
         }
     }
 
-    // reads state s from V-REP:
+    // reads state s from CoppeliaSim:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         simFloat pos[3], orient[4], value;
@@ -864,7 +867,7 @@ public:
     ValidStateSampler(const ob::SpaceInformation *si, TaskDef *task)
         : ob::UniformValidStateSampler(si), task(task)
     {
-        name_ = "VREPValidStateSampler";
+        name_ = "SimValidStateSampler";
     }
 
     bool sample(ob::State *state)
@@ -1348,8 +1351,6 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
 #define PLANNER(x) case sim_ompl_algorithm_##x: planner = ob::PlannerPtr(new og::x(si)); break
     switch(algorithm)
     {
-        PLANNER(BiTRRT);
-        PLANNER(BITstar);
         PLANNER(BKPIECE1);
         PLANNER(CForest);
         PLANNER(EST); // needs projection
@@ -1374,6 +1375,10 @@ ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
         PLANNER(SPARStwo);
         PLANNER(STRIDE);
         PLANNER(TRRT);
+#if OMPL_VERSION_VALUE >= 1001000 // 1.1.0
+        PLANNER(BiTRRT);
+        PLANNER(BITstar);
+#endif
     }
 #undef PLANNER
     return planner;
@@ -1481,7 +1486,11 @@ void simplifyPath(SScriptCallBack *p, const char *cmd, simplifyPath_in *in, simp
     const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
     og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
 
+#if OMPL_VERSION_VALUE >= 1001000 // 1.1.0
     og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(task->spaceInformationPtr, task->problemDefinitionPtr->getGoal()));
+#else
+    og::PathSimplifierPtr pathSimplifier(new og::PathSimplifier(task->spaceInformationPtr));
+#endif
     if(in->maxSimplificationTime < -std::numeric_limits<double>::epsilon())
         pathSimplifier->simplifyMax(path);
     else
@@ -1691,7 +1700,7 @@ void setValidStateSamplerCallback(SScriptCallBack *p, const char *cmd, setValidS
     task->validStateSampling.callbackNear.function = in->callbackNear;
 }
 
-class Plugin : public vrep::Plugin
+class Plugin : public sim::Plugin
 {
 public:
     void onStart()
@@ -1709,4 +1718,4 @@ public:
     }
 };
 
-VREP_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)
+SIM_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)

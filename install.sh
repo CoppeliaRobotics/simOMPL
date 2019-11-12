@@ -6,21 +6,21 @@ cd "`dirname "$0"`"
 
 PLUGIN_NAME="$(basename "$(pwd)")"
 
-if [ "x$VREP_ROOT" = "x" ]; then
+if [ "x$COPPELIASIM_ROOT_DIR" = "x" ]; then
     # see if we can determine it automatically
-    # (i.e. the plugin dir is in $VREP_ROOT/programming/$dir)
-    VREP_ROOT="$(cd ../.. ; pwd)"
-    if [ ! -d "$VREP_ROOT/programming/include" ]; then
-        echo "error: \$VREP_ROOT is not set" 1>&2
+    # (i.e. the plugin dir is in $COPPELIASIM_ROOT_DIR/programming/$dir)
+    COPPELIASIM_ROOT_DIR="$(cd ../.. ; pwd)"
+    if [ ! -d "$COPPELIASIM_ROOT_DIR/programming/include" ]; then
+        echo "error: \$COPPELIASIM_ROOT_DIR is not set" 1>&2
         exit 1
     fi
 fi
 
 if [ "`uname`" = "Darwin" ]; then
-    INSTALL_TARGET="$VREP_ROOT/vrep.app/Contents/MacOS/"
+    INSTALL_TARGET="$COPPELIASIM_ROOT_DIR/coppeliaSim.app/Contents/MacOS/"
     DLEXT=dylib
 else
-    INSTALL_TARGET="$VREP_ROOT"
+    INSTALL_TARGET="$COPPELIASIM_ROOT_DIR"
     DLEXT=so
 fi
 
@@ -51,5 +51,5 @@ else
 fi
 
 cp -v "$LIBRARY" "$INSTALL_TARGET"
-if [ -f *.lua ]; then cp -v *.lua "$VREP_ROOT/lua/"; fi
+if [ -f *.lua ]; then cp -v *.lua "$COPPELIASIM_ROOT_DIR/lua/"; fi
 
