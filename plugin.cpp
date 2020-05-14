@@ -925,16 +925,60 @@ ob::ValidStateSamplerPtr allocValidStateSampler(const ob::SpaceInformation *si, 
     return ob::ValidStateSamplerPtr(new ValidStateSampler(si, task));
 }
 
+class OutputHandler : public ompl::msg::OutputHandler
+{
+public:
+    void log(const std::string &text, ompl::msg::LogLevel level, const char *filename, int line)
+    {
+        int csim_level = sim_verbosity_none;
+        switch(level)
+        {
+        case ompl::msg::LogLevel::LOG_DEV2:
+        case ompl::msg::LogLevel::LOG_DEV1:
+            csim_level = sim_verbosity_trace;
+            break;
+        case ompl::msg::LogLevel::LOG_DEBUG:
+            csim_level = sim_verbosity_debug;
+            break;
+        case ompl::msg::LogLevel::LOG_INFO:
+            csim_level = sim_verbosity_infos;
+            break;
+        case ompl::msg::LogLevel::LOG_WARN:
+            csim_level = sim_verbosity_warnings;
+            break;
+        case ompl::msg::LogLevel::LOG_ERROR:
+            csim_level = sim_verbosity_errors;
+            break;
+        case ompl::msg::LogLevel::LOG_NONE:
+            csim_level = sim_verbosity_none;
+            break;
+        default:
+            csim_level = sim_verbosity_none;
+            break;
+        }
+        ::log(csim_level, boost::format("OMPL: %s:%d: %s") % filename % line % text);
+    }
+};
+
 class Plugin : public sim::Plugin
 {
 public:
     void onStart()
     {
+        oh = new OutputHandler;
+        ompl::msg::useOutputHandler(oh);
+
         if(!registerScriptStuff())
             throw std::runtime_error("failed to register script stuff");
 
         setExtVersion("OMPL (open motion planning library) Plugin");
         setBuildDate(BUILD_DATE);
+    }
+
+    void onEnd()
+    {
+        ompl::msg::restorePreviousOutputHandler();
+        delete oh;
     }
 
     void onSimulationEnded()
@@ -1741,6 +1785,7 @@ public:
     }
 
 private:
+    OutputHandler *oh;
     std::map<simInt, TaskDef *> tasks;
     std::map<simInt, StateSpaceDef *> statespaces;
     simInt nextTaskHandle = 1000;
