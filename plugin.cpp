@@ -44,7 +44,11 @@
 #include <ompl/geometric/planners/rrt/TRRT.h>
 #if OMPL_VERSION_VALUE >= 1001000 // 1.1.0
 #include <ompl/geometric/planners/rrt/BiTRRT.h>
+#if OMPL_VERSION_VALUE >= 1005000 // 1.5.0
+#include <ompl/geometric/planners/informedtrees/BITstar.h>
+#else
 #include <ompl/geometric/planners/bitstar/BITstar.h>
+#endif
 #endif
 
 #include "simPlusPlus/Plugin.h"

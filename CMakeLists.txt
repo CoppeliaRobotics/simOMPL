@@ -3,7 +3,7 @@ project(simExtOMPL)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MACOSX_RPATH 1)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(Boost REQUIRED COMPONENTS system serialization)
 
