@@ -1057,10 +1057,17 @@ public:
         out->taskHandle = task->header.handle;
     }
 
-    TaskDef * getTask(simInt taskHandle)
+    TaskDef * getTask(simInt taskHandle, bool mustBeSetUp = false)
     {
         if(tasks.find(taskHandle) == tasks.end())
             throw std::string("Invalid task handle.");
+
+        if(mustBeSetUp)
+        {
+            TaskDef *task = tasks[taskHandle];
+            if(!task->stateSpacePtr || !task->spaceInformationPtr || !task->projectionEvaluatorPtr || !task->problemDefinitionPtr)
+                throw std::string("simOMPL.setup(taskHandle) has not been called");
+        }
 
         return tasks[taskHandle];
     }
@@ -1481,7 +1488,7 @@ public:
 
     void solve(solve_in *in, solve_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
 
         ob::PlannerStatus solved = task->planner->solve(in->maxTime);
         if(solved)
@@ -1509,7 +1516,7 @@ public:
 
     void simplifyPath(simplifyPath_in *in, simplifyPath_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
 
         if(task->verboseLevel >= 2)
             log(sim_verbosity_debug, "OMPL: simplifying solution...");
@@ -1537,7 +1544,7 @@ public:
 
     void interpolatePath(interpolatePath_in *in, interpolatePath_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
 
         if(task->verboseLevel >= 2)
             log(sim_verbosity_debug, "OMPL: interpolating solution...");
@@ -1560,31 +1567,31 @@ public:
 
     void hasSolution(hasSolution_in *in, hasSolution_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
         out->result = task->problemDefinitionPtr->hasSolution();
     }
 
     void hasExactSolution(hasExactSolution_in *in, hasExactSolution_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
         out->result = task->problemDefinitionPtr->hasExactSolution();
     }
 
     void hasApproximateSolution(hasApproximateSolution_in *in, hasApproximateSolution_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
         out->result = task->problemDefinitionPtr->hasApproximateSolution();
     }
 
     void getGoalDistance(getGoalDistance_in *in, getGoalDistance_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
         out->distance = task->problemDefinitionPtr->getSolutionDifference();
     }
 
     void getPath(getPath_in *in, getPath_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
 
         const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
         og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
@@ -1601,7 +1608,7 @@ public:
 
     void getPlannerData(getPlannerData_in *in, getPlannerData_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
         ompl::base::PlannerData data(task->spaceInformationPtr);
         task->planner->getPlannerData(data);
 
@@ -1645,7 +1652,7 @@ public:
 
     void compute(compute_in *in, compute_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
+        TaskDef *task = getTask(in->taskHandle, true);
 
         setup_in in1;
         in1._scriptID = in->_scriptID;
@@ -1688,10 +1695,7 @@ public:
 
     void readState(readState_in *in, readState_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
-
-        if(!task->stateSpacePtr)
-            throw std::string("This method can only be used inside callbacks.");
+        TaskDef *task = getTask(in->taskHandle, true);
 
         ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
         task->stateSpacePtr->as<StateSpace>()->readState(state);
@@ -1702,10 +1706,7 @@ public:
 
     void writeState(writeState_in *in, writeState_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
-
-        if(!task->stateSpacePtr)
-            throw std::string("This method can only be used inside callbacks.");
+        TaskDef *task = getTask(in->taskHandle, true);
 
         validateStateSize(task, in->state);
 
@@ -1717,10 +1718,7 @@ public:
 
     void isStateValid(isStateValid_in *in, isStateValid_out *out)
     {
-        TaskDef *task = getTask(in->taskHandle);
-
-        if(!task->stateSpacePtr)
-            throw std::string("This method can only be used inside callbacks.");
+        TaskDef *task = getTask(in->taskHandle, true);
 
         validateStateSize(task, in->state);
 
