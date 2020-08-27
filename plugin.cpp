@@ -1726,6 +1726,23 @@ public:
         out->valid = task->spaceInformationPtr->isValid(s) ? 1 : 0;
     }
 
+    void projectStates(projectStates_in *in, projectStates_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle, true);
+
+        for(size_t h = 0; h < in->state.size(); h += task->dim)
+        {
+            ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+            for(int i = 0; i < task->dim; i++)
+                state[i] = (double)in->state[h + i];
+
+            Eigen::VectorXd projection(task->projectionEvaluatorPtr->getDimension());
+            task->projectionEvaluatorPtr->project(state(), projection);
+            for(size_t j = 0; j < projection.size(); j++)
+                out->projection.push_back((float)projection(j));
+        }
+    }
+
     void setProjectionEvaluationCallback(setProjectionEvaluationCallback_in *in, setProjectionEvaluationCallback_out *out)
     {
         TaskDef *task = getTask(in->taskHandle);
