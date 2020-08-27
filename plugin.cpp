@@ -1558,6 +1558,30 @@ public:
         }
     }
 
+    void hasSolution(hasSolution_in *in, hasSolution_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle);
+        out->result = task->problemDefinitionPtr->hasSolution();
+    }
+
+    void hasExactSolution(hasExactSolution_in *in, hasExactSolution_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle);
+        out->result = task->problemDefinitionPtr->hasExactSolution();
+    }
+
+    void hasApproximateSolution(hasApproximateSolution_in *in, hasApproximateSolution_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle);
+        out->result = task->problemDefinitionPtr->hasApproximateSolution();
+    }
+
+    void getGoalDistance(getGoalDistance_in *in, getGoalDistance_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle);
+        out->distance = task->problemDefinitionPtr->getSolutionDifference();
+    }
+
     void getPath(getPath_in *in, getPath_out *out)
     {
         TaskDef *task = getTask(in->taskHandle);

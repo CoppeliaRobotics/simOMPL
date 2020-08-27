@@ -283,6 +283,58 @@
         <return>
         </return>
     </command>
+    <command name="hasSolution">
+        <description>Returns true if a solution path has been found (could be approximate).</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="bool">
+                <description>true if a solution path has been found (could be approximate)</description>
+            </param>
+        </return>
+    </command>
+    <command name="hasExactSolution">
+        <description>Returns true if an exact solution path has been found. Specifically returns hasSolution() and not hasApproximateSolution()</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="bool">
+                <description>true if an exact solution path has been found</description>
+            </param>
+        </return>
+    </command>
+    <command name="hasApproximateSolution">
+        <description>Return true if the top found solution is approximate (does not actually reach the desired goal, but hopefully is closer to it)</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+        </params>
+        <return>
+            <param name="result" type="bool">
+                <description>true if the top found solution is approximate</description>
+            </param>
+        </return>
+    </command>
+    <command name="getGoalDistance">
+        <description>Get the distance to the desired goal for the top solution.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+        </params>
+        <return>
+            <param name="distance" type="float">
+                <description>distance to the desired goal for the top solution, or -1.0 if there are no solutions available</description>
+            </param>
+        </return>
+    </command>
     <command name="getPath">
         <description>Return the top solution path, if one is found. The top path is the shortest one that was found, preference being given to solutions that are not approximate.</description>
         <params>
