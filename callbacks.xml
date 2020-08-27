@@ -284,7 +284,7 @@
         </return>
     </command>
     <command name="getPath">
-        <description>Use OMPL to find a solution for this motion planning task.</description>
+        <description>Return the top solution path, if one is found. The top path is the shortest one that was found, preference being given to solutions that are not approximate.</description>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
