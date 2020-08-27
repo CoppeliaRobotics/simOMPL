@@ -1575,31 +1575,48 @@ public:
         }
     }
 
-    void getData(getData_in *in, getData_out *out)
+    void getPlannerData(getPlannerData_in *in, getPlannerData_out *out)
     {
         TaskDef *task = getTask(in->taskHandle);
-        float min_value = 1000.0f, max_value = 0.0f;
-
-        std::vector<unsigned int> edge_list;
         ompl::base::PlannerData data(task->spaceInformationPtr);
         task->planner->getPlannerData(data);
 
-        for(unsigned int i = 0; i < data.numVertices(); i++)
+        for(size_t i = 0; i < data.numVertices(); i++)
         {
             ompl::base::PlannerDataVertex v(data.getVertex(i));
-            int tag = v.getTag(); // Minimum distance to the closest X_obs for AdaptiveLazyPRM*.
-            float radius;
-            memcpy(&radius, &tag, sizeof(float));
 
             const ob::StateSpace::StateType *state = v.getState();
-            std::vector<double> config;
-            task->stateSpacePtr->copyToReals(config, state);
-            for(unsigned int j = 0; j < config.size(); j++)
-                out->states.push_back((float)config[j]);
+            std::vector<double> stateReals;
+            task->stateSpacePtr->copyToReals(stateReals, state);
+            for(unsigned int j = 0; j < stateReals.size(); j++)
+                out->states.push_back((float)stateReals[j]);
 
-            config.clear();
-            out->states.push_back(radius);
+            int tag = v.getTag();
+            out->tags.push_back(tag);
+
+            float tagReal;
+            memcpy(&tagReal, &tag, sizeof(float));
+            out->tagsReal.push_back(tagReal);
+
+            for(size_t j = 0; j < data.numVertices(); j++)
+            {
+                if(!data.edgeExists(i, j)) continue;
+
+                //ompl::base::PlannerDataEdge e(data.getEdge(i, j));
+                out->edges.push_back(i);
+                out->edges.push_back(j);
+
+                ompl::base::Cost cost;
+                data.getEdgeWeight(i, j, &cost);
+                out->edgeWeights.push_back((float)cost.value());
+            }
         }
+
+        for(size_t i = 0; i < data.numStartVertices(); i++)
+            out->startVertices.push_back(data.getStartIndex(i));
+
+        for(size_t i = 0; i < data.numGoalVertices(); i++)
+            out->goalVertices.push_back(data.getGoalIndex(i));
     }
 
     void compute(compute_in *in, compute_out *out)

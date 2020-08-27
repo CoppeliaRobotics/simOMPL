@@ -296,8 +296,8 @@
             </param>
         </return>
     </command>
-    <command name="getData">
-        <description>Get planner data for this motion planning task.</description>
+    <command name="getPlannerData">
+        <description>Get planner data for this motion planning task. Data is represented as a graph. For each graph vertex, a state and a tag are returned. A list of edges is returned as well, as pairs of vertex indices, describing connectivity of vertices. Some vertices are marked start or goal.</description>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" />.</description>
@@ -305,7 +305,25 @@
         </params>
         <return>
             <param name="states" type="table" item-type="float">
-                <description>a table of states, representing the configurations in the constructed search graph. States are specified linearly followed by minimum distance to the closest X_obs.</description>
+                <description>a table of states, representing the configurations in the constructed search graph. States are specified linearly.</description>
+            </param>
+            <param name="tags" type="table" item-type="int">
+                <description>a table of tags (one integer for every vertex)</description>
+            </param>
+            <param name="tagsReal" type="table" item-type="float">
+                <description>a table of tags (one float for every vertex)</description>
+            </param>
+            <param name="edges" type="table" item-type="int">
+                <description>the pairs of vertex indices describing vertex connectivity</description>
+            </param>
+            <param name="edgeWeights" type="table" item-type="float">
+                <description>the weight (cost) associated to each edge</description>
+            </param>
+            <param name="startVertices" type="table" item-type="int">
+                <description>the indices of vertices marked 'start'</description>
+            </param>
+            <param name="goalVertices" type="table" item-type="int">
+                <description>the indices of vertices marked 'goal'</description>
             </param>
         </return>
     </command>
