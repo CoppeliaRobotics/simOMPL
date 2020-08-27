@@ -382,7 +382,6 @@
     <command name="compute">
         <description>Use OMPL to find a solution for this motion planning task. It is equivalent to executing:<br/>
             <br/>
-            simOMPL.setup(task)<br/>
             if simOMPL.solve(task, maxTime) then<br/>
             simOMPL.simplifyPath(task, maxSimplificationTime)<br/>
             simOMPL.interpolatePath(task, stateCnt)<br/>

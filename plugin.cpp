@@ -1654,12 +1654,6 @@ public:
     {
         TaskDef *task = getTask(in->taskHandle, true);
 
-        setup_in in1;
-        in1._scriptID = in->_scriptID;
-        in1.taskHandle = in->taskHandle;
-        setup_out out1;
-        setup(&in1, &out1);
-
         solve_in in2;
         in2._scriptID = in->_scriptID;
         in2.taskHandle = in->taskHandle;
