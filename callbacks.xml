@@ -141,6 +141,19 @@
         <return>
         </return>
     </command>
+    <command name="getStateSpaceDimension">
+        <description>Get the dimension of the state space, i.e. the number of elements of a state.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+        </params>
+        <return>
+            <param name="dim" type="int">
+                <description>dimension of the state space</description>
+            </param>
+        </return>
+    </command>
     <command name="setAlgorithm">
         <description>Set the search algorithm for the specified task. Default algorithm used is KPIECE1.</description>
         <params>

@@ -1273,6 +1273,13 @@ public:
         }
     }
 
+    void getStateSpaceDimension(getStateSpaceDimension_in *in, getStateSpaceDimension_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle);
+
+        out->dim = task->dim;
+    }
+
     void setAlgorithm(setAlgorithm_in *in, setAlgorithm_out *out)
     {
         TaskDef *task = getTask(in->taskHandle);
