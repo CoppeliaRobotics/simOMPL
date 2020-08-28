@@ -1,10 +1,19 @@
 local simOMPL={}
 
+--@fun getPathStateCount get the number of states in the given path
+--@arg int taskHandle the handle of the task
+--@arg int path the path, as returned by simOMPL.getPath
+--@ret int count the number of states in the path
 function simOMPL.getPathStateCount(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     return #path/n
 end
 
+--@fun getPathState extract the state at specified index from the given path
+--@arg int taskHandle the handle of the task
+--@arg int path the path, as returned by simOMPL.getPath
+--@arg int index the index, starting from 1
+--@ret table state a state extracted from the path
 function simOMPL.getPathState(taskHandle,path,index)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     local s={}
@@ -12,9 +21,16 @@ function simOMPL.getPathState(taskHandle,path,index)
     return s
 end
 
-function simOMPL.drawPath(taskHandle,path,lineSize,parentObjectHandle,color,extraAttributes)
+--@fun drawPath draw a solution path for the specified motion planning task (as lines)
+--@arg int taskHandle the handle of the task
+--@arg table path the path, as returned by simOMPL.getPath
+--@arg float lineSize size of the line (in pixels)
+--@arg table color color of the lines (3 float values)
+--@arg int extraAttributes extra attributes to pass to sim.addDrawingObject
+--@ret table dwos a table of handles of new drawing objects
+function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
     lineSize=lineSize or 2
-    parentObjectHandle=parentObjectHandle or -1
+    parentObjectHandle=-1
     color=color or {1,0,0}
     extraAttributes=extraAttributes or 0
     sim.setThreadAutomaticSwitch(false)
@@ -26,9 +42,17 @@ function simOMPL.drawPath(taskHandle,path,lineSize,parentObjectHandle,color,extr
         sim.addDrawingObjectItem(dwoPath,d)
     end
     sim.setThreadAutomaticSwitch(true)
-    return dwoPath
+    return {dwoPath}
 end
 
+--@fun drawPlannerData draw planner data (graph) extracted from the specified motion planning task
+--@arg int task handle of the task
+--@arg float pointSize size of nodes (in meters)
+--@arg float lineSize size of lines (in pixels)
+--@arg table color color of nodes and lines (3 float values)
+--@arg table startColor color of start nodes (3 float values)
+--@arg table goalColor color of goal nodes (3 float values)
+--@ret table dwos a table of handles of new drawing objects
 function simOMPL.drawPlannerData(task,pointSize,lineSize,color,startColor,goalColor)
     local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(task)
     local states=simOMPL.projectStates(task,states1)
@@ -63,7 +87,14 @@ function simOMPL.drawPlannerData(task,pointSize,lineSize,color,startColor,goalCo
         sim.addDrawingObjectItem(dwoGoal,p)
     end
     sim.setThreadAutomaticSwitch(true)
-    return dwoPoints,dwoLines,dwoStart,dwoGoal
+    return {dwoPoints,dwoLines,dwoStart,dwoGoal}
+end
+
+--@fun removeDrawingObjects remove the drawing objects created with related functions
+--@arg int task handle of the task
+--@arg table dwos table of handles to drawing objects, as returned by the functions
+function simOMPL.removeDrawingObjects(task,dwos)
+    for i,ob in pairs(dwos) do sim.removeDrawingObject(ob) end
 end
 
 return simOMPL
