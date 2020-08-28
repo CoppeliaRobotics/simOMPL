@@ -15,6 +15,10 @@ end
 --@arg int index the index, starting from 1
 --@ret table state a state extracted from the path
 function simOMPL.getPathState(taskHandle,path,index)
+    if index==0 then error('invalid index') end
+    if index<0 then
+        index=simOMPL.getPathStateCount(taskHandle,path)+index+1
+    end
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     local s={}
     for i=(index-1)*n+1,(index)*n do table.insert(s,path[i]) end
