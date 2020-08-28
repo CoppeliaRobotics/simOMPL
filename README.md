@@ -2,7 +2,19 @@
 
 ### Requirements
 
-- ompl-1.5.0
+- ompl-1.5.0 with the following modification:
+
+in file `src/ompl/base/spaces/src/SO3StateSpace.cpp` change:
+
+```cpp
+static const double MAX_QUATERNION_NORM_ERROR = 1e-9;
+```
+
+to:
+
+```cpp
+static const double MAX_QUATERNION_NORM_ERROR = 1e-6;
+```
 
 ### Compiling
 
