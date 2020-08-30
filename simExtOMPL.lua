@@ -25,6 +25,22 @@ function simOMPL.getPathState(taskHandle,path,index)
     return s
 end
 
+--@fun getReversedPath reverse the given path
+--@arg int taskHandle the handle of the task
+--@arg table path the path, as returned by simOMPL.getPath
+--@ret table reversedPath the reversed path
+function simOMPL.getReversedPath(taskHandle,path)
+    local n=simOMPL.getStateSpaceDimension(taskHandle)
+    local p={}
+    for i=1,#path/n do
+        local ii=#path/n-i+1
+        for j=1,n do
+            table.insert(p,path[(ii-1)*n+j])
+        end
+    end
+    return p
+end
+
 --@fun drawPath draw a solution path for the specified motion planning task (as lines)
 --@arg int taskHandle the handle of the task
 --@arg table path the path, as returned by simOMPL.getPath
