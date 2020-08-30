@@ -2,7 +2,7 @@ local simOMPL={}
 
 --@fun getPathStateCount get the number of states in the given path
 --@arg int taskHandle the handle of the task
---@arg int path the path, as returned by simOMPL.getPath
+--@arg table path the path, as returned by simOMPL.getPath
 --@ret int count the number of states in the path
 function simOMPL.getPathStateCount(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
@@ -11,7 +11,7 @@ end
 
 --@fun getPathState extract the state at specified index from the given path
 --@arg int taskHandle the handle of the task
---@arg int path the path, as returned by simOMPL.getPath
+--@arg table path the path, as returned by simOMPL.getPath
 --@arg int index the index, starting from 1
 --@ret table state a state extracted from the path
 function simOMPL.getPathState(taskHandle,path,index)
