@@ -1,5 +1,15 @@
 local simOMPL={}
 
+--@fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
+--@arg int taskHandle the handle of the task
+--@arg table states a table of tables, one element for each goal state
+function simOMPL.setGoalStates(taskHandle,states)
+    simOMPL.setGoalState(taskHandle,states[1])
+    for i=2,#states do
+        simOMPL.addGoalState(taskHandle,states[i])
+    end
+end
+
 --@fun getPathStateCount get the number of states in the given path
 --@arg int taskHandle the handle of the task
 --@arg table path the path, as returned by simOMPL.getPath
