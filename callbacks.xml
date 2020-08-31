@@ -13,7 +13,7 @@
                 <description>type of this state space component (see <enum-ref name="StateSpaceType" />)</description>
             </param>
             <param name="objectHandle" type="int">
-                <description>the object handle (a joint object if type is simOMPL.StateSpaceType.joint_position, otherwise a shape)</description>
+                <description>the object handle (a joint object if type is simOMPL.StateSpaceType.joint_position or .cyclic_joint_position, otherwise a shape)</description>
             </param>
             <param name="boundsLow" type="table" item-type="float">
                 <description>lower bounds (if type is pose, specify only the 3 position components)</description>
@@ -604,6 +604,8 @@
         <item name="joint_position">
         </item>
         <item name="dubins">
+        </item>
+        <item name="cyclic_joint_position">
         </item>
     </enum>
     <script-function name="goalCallback">

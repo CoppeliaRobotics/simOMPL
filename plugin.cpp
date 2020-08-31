@@ -87,7 +87,7 @@ struct StateSpaceDef
     ObjectDefHeader header;
     // type of this state space:
     StateSpaceType type;
-    // handle of the object (objects, or joint if type = joint_position):
+    // handle of the object (object, or joint if type = joint_position/cyclic_joint_position):
     simInt objectHandle;
     // object handle in order to specify optional reference frame that is not absolute
     // for sim_ompl_statespace_pose2d, etc.
@@ -276,6 +276,7 @@ protected:
             case sim_ompl_statespacetype_position3d:
                 return 3;
             case sim_ompl_statespacetype_joint_position:
+            case sim_ompl_statespacetype_cyclic_joint_position:
                 return 1;
             case sim_ompl_statespacetype_dubins:
                 return 2;
@@ -317,6 +318,9 @@ protected:
                 break;
             case sim_ompl_statespacetype_joint_position:
                 projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
+                projection(0) = s->as<ob::SO2StateSpace::StateType>(i)->value;
                 break;
             case sim_ompl_statespacetype_dubins:
                 projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
@@ -444,6 +448,9 @@ public:
             case sim_ompl_statespacetype_joint_position:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
                 break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
+                subSpace = ob::StateSpacePtr(new ob::SO2StateSpace());
+                break;
             case sim_ompl_statespacetype_dubins:
                 subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(stateSpace->dubinsTurningRadius, stateSpace->dubinsIsSymmetric));
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
@@ -478,6 +485,10 @@ public:
                 break;
             case sim_ompl_statespacetype_joint_position:
                 as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
+                break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
+                if(!stateSpace->boundsLow.empty() || !stateSpace->boundsHigh.empty())
+                    ::log(sim_verbosity_warnings, "cyclic_joint_position state space has no bounds");
                 break;
             case sim_ompl_statespacetype_dubins:
                 as<ob::SE2StateSpace>(i)->setBounds(bounds);
@@ -534,6 +545,10 @@ public:
                 value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 simSetJointPosition(stateSpace->objectHandle, value);
                 break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
+                value = (float)s->as<ob::SO2StateSpace::StateType>(i)->value;
+                simSetJointPosition(stateSpace->objectHandle, value);
+                break;
             case sim_ompl_statespacetype_dubins:
                 simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
@@ -588,6 +603,10 @@ public:
                 simGetJointPosition(stateSpace->objectHandle, &value);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
                 break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
+                simGetJointPosition(stateSpace->objectHandle, &value);
+                s->as<ob::SO2StateSpace::StateType>(i)->value = value;
+                break;
             case sim_ompl_statespacetype_dubins:
                 simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
@@ -601,10 +620,13 @@ public:
     // Store relative pose of objects:
     void saveRelPoseState(std::vector<float>& p)
     {
-        for (size_t i = 0; i < task->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
-            if (stateSpace->type != sim_ompl_statespacetype_joint_position)
+            if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
+                    stateSpace->type == sim_ompl_statespacetype_pose3d ||
+                    stateSpace->type == sim_ompl_statespacetype_position2d ||
+                    stateSpace->type == sim_ompl_statespacetype_position3d)
             {
                 p.resize(p.size() + 7);
                 simGetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[p.size() - 7]);
@@ -617,10 +639,13 @@ public:
     void restoreRelPoseState(const std::vector<float>& p)
     {
         int pt = 0;
-        for (size_t i = 0; i < task->stateSpaces.size(); i++)
+        for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
-            if (stateSpace->type != sim_ompl_statespacetype_joint_position)
+            if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
+                    stateSpace->type == sim_ompl_statespacetype_pose3d ||
+                    stateSpace->type == sim_ompl_statespacetype_position2d ||
+                    stateSpace->type == sim_ompl_statespacetype_position3d)
             {
                 simSetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[pt+0]);
                 simSetObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, &p[pt+3]);
@@ -1264,6 +1289,9 @@ public:
                 task->dim += 7;
                 break;
             case sim_ompl_statespacetype_joint_position:
+                task->dim += 1;
+                break;
+            case sim_ompl_statespacetype_cyclic_joint_position:
                 task->dim += 1;
                 break;
             case sim_ompl_statespacetype_dubins:
