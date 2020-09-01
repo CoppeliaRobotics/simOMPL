@@ -51,6 +51,21 @@ function simOMPL.getReversedPath(taskHandle,path)
     return p
 end
 
+--@fun projectionSize return the dimension of the projection
+--@arg int taskHandle the handle of the task
+--@ret int size of the projection
+function simOMPL.projectionSize(taskHandle)
+    local s=simOMPL.readState(taskHandle)
+    local p=simOMPL.projectStates(taskHandle,s)
+    return #p
+end
+
+function simOMPL.__projectionMustBe3D(taskHandle)
+    if simOMPL.projectionSize(taskHandle)~=3 then
+        error('this functions works only with 3D projections (pass useForProjection=1 to createStateSpace wherever appropriate, or otherwise use setProjectionEvaluationCallback to specify a custom projection to map the state into a 3D point)')
+    end
+end
+
 --@fun drawPath draw a solution path for the specified motion planning task (as lines)
 --@arg int taskHandle the handle of the task
 --@arg table path the path, as returned by simOMPL.getPath
@@ -59,6 +74,7 @@ end
 --@arg int extraAttributes extra attributes to pass to sim.addDrawingObject
 --@ret table dwos a table of handles of new drawing objects
 function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
+    simOMPL.__projectionMustBe3D(taskHandle)
     lineSize=lineSize or 2
     parentObjectHandle=-1
     color=color or {1,0,0}
@@ -84,6 +100,7 @@ end
 --@arg table goalColor color of goal nodes (3 float values)
 --@ret table dwos a table of handles of new drawing objects
 function simOMPL.drawPlannerData(task,pointSize,lineSize,color,startColor,goalColor)
+    simOMPL.__projectionMustBe3D(taskHandle)
     local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(task)
     local states=simOMPL.projectStates(task,states1)
     pointSize=pointSize or 0.02
