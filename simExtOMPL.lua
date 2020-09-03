@@ -92,17 +92,17 @@ function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
 end
 
 --@fun drawPlannerData draw planner data (graph) extracted from the specified motion planning task
---@arg int task handle of the task
+--@arg int taskHandle handle of the task
 --@arg float pointSize size of nodes (in meters)
 --@arg float lineSize size of lines (in pixels)
 --@arg table color color of nodes and lines (3 float values)
 --@arg table startColor color of start nodes (3 float values)
 --@arg table goalColor color of goal nodes (3 float values)
 --@ret table dwos a table of handles of new drawing objects
-function simOMPL.drawPlannerData(task,pointSize,lineSize,color,startColor,goalColor)
+function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,goalColor)
     simOMPL.__projectionMustBe3D(taskHandle)
-    local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(task)
-    local states=simOMPL.projectStates(task,states1)
+    local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(taskHandle)
+    local states=simOMPL.projectStates(taskHandle,states1)
     pointSize=pointSize or 0.02
     lineSize=lineSize or 2
     color=color or {0.5,0.5,0.5}
@@ -138,9 +138,9 @@ function simOMPL.drawPlannerData(task,pointSize,lineSize,color,startColor,goalCo
 end
 
 --@fun removeDrawingObjects remove the drawing objects created with related functions
---@arg int task handle of the task
+--@arg int taskHandle handle of the task
 --@arg table dwos table of handles to drawing objects, as returned by the functions
-function simOMPL.removeDrawingObjects(task,dwos)
+function simOMPL.removeDrawingObjects(taskHandle,dwos)
     for i,ob in pairs(dwos) do sim.removeDrawingObject(ob) end
 end
 
