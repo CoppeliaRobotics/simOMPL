@@ -1751,14 +1751,11 @@ public:
 
         validateStateSize(task, in->state);
 
-        std::vector<double> stateVec;
-        for(size_t i = 0; i < in->state.size(); i++)
-            stateVec.push_back((double)in->state[i]);
         ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
-        ob::State *s = &(*state);
-        task->stateSpacePtr->copyFromReals(s, stateVec);
+        for(size_t i = 0; i < in->state.size(); i++)
+            state[i] = (double)in->state[i];
 
-        out->valid = task->spaceInformationPtr->isValid(s) ? 1 : 0;
+        out->valid = task->spaceInformationPtr->isValid(state.get()) ? 1 : 0;
     }
 
     void projectStates(projectStates_in *in, projectStates_out *out)
