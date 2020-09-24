@@ -35,6 +35,23 @@ function simOMPL.getPathState(taskHandle,path,index)
     return s
 end
 
+--@fun getProjectedPathLength get the length of the path projected onto the default projection
+--@arg int taskHandle the handle of the task
+--@arg table path the path, as returned by simOMPL.getPath
+function simOMPL.getProjectedPathLength(taskHandle,path)
+    local m=simOMPL.projectionSize(taskHandle)
+    local pathProjection=simOMPL.projectStates(taskHandle,path)
+    local length=0
+    for i=2,#pathProjection/m do
+        local s=0
+        for j=1,m do
+            s=s+math.pow(path[i*m+j]-path[(i-1)*m+j],2)
+        end
+        length=length+math.sqrt(s)
+    end
+    return length
+end
+
 --@fun getReversedPath reverse the given path
 --@arg int taskHandle the handle of the task
 --@arg table path the path, as returned by simOMPL.getPath
