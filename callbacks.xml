@@ -461,8 +461,8 @@
             </param>
         </params>
         <return>
-            <param name="valid" type="int">
-                <description>1 if valid, 0 otherwise</description>
+            <param name="valid" type="bool">
+                <description>true if the state is valid</description>
             </param>
         </return>
     </command>

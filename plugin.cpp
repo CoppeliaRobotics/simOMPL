@@ -1755,7 +1755,7 @@ public:
         for(size_t i = 0; i < in->state.size(); i++)
             state[i] = (double)in->state[i];
 
-        out->valid = task->spaceInformationPtr->isValid(state.get()) ? 1 : 0;
+        out->valid = task->spaceInformationPtr->isValid(state.get());
     }
 
     void projectStates(projectStates_in *in, projectStates_out *out)
