@@ -4,7 +4,13 @@
 <plugin name="OMPL" short-name="OMPL" author="federico.ferri.it@gmail.com">
     <description>The list of API functions below allows you to define and solve a motion planning problem with OMPL.</description>
     <command name="createStateSpace">
-        <description>Create a component of the state space for the motion planning problem. In case of a dubins state space, set additional parameters with <command-ref name="setDubinsParams" /></description>
+        <description>Create a component of the state space for the motion planning problem.
+            <br />
+            In case of a dubins state space, set additional parameters with <command-ref name="setDubinsParams" />
+        </description>
+        <categories>
+            <category name="state-space" />
+        </categories>
         <params>
             <param name="name" type="string">
                 <description>a name for this state space</description>
@@ -25,10 +31,10 @@
                 <description>if true, this object position or joint value will be used for computing a default projection</description>
             </param>
             <param name="weight" type="float" default="1.0">
-                <description>(optional) the weight of this state space component, used for computing distance between states. Default value is 1.0</description>
+                <description>the weight of this state space component, used for computing distance between states. Default value is 1.0</description>
             </param>
             <param name="refObjectHandle" type="int" default="-1">
-                <description>(optional) an object handle relative to which reference frame position/orientations will be evaluated. Default value is -1, for the absolute reference frame</description>
+                <description>an object handle relative to which reference frame position/orientations will be evaluated. Default value is -1, for the absolute reference frame</description>
             </param>
         </params>
         <return>
@@ -38,7 +44,14 @@
         </return>
     </command>
     <command name="destroyStateSpace">
-        <description>Destroy the spacified state space component.<br /><br />Note: state space components created during simulation are automatically destroyed when simulation ends.</description>
+        <description>Destroy the spacified state space component.
+            <br />
+            <br />
+            Note: state space components created during simulation are automatically destroyed when simulation ends.
+        </description>
+        <categories>
+            <category name="state-space" />
+        </categories>
         <params>
             <param name="stateSpaceHandle" type="int">
                 <description>handle to state space component</description>
@@ -49,6 +62,9 @@
     </command>
     <command name="setDubinsParams">
         <description>Set extra state space parameters of a dubins state space.</description>
+        <categories>
+            <category name="state-space" />
+        </categories>
         <params>
             <param name="stateSpaceHandle" type="int">
                 <description>handle to state space component</description>
@@ -64,13 +80,20 @@
         </return>
     </command>
     <command name="createTask">
-        <description>Create a task object, used to represent the motion planning task. A task object contains informations about: <ul>
-<li>collision pairs (used by the default state validity checker)</li>
-<li>state spaces</li>
-<li>start state</li>
-<li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>
-<li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>
-</ul></description>
+        <description>Create a task object, used to represent the motion planning task.
+            <br />
+            A task object contains informations about:
+            <ul>
+                <li>collision pairs (used by the default state validity checker)</li>
+                <li>state spaces</li>
+                <li>start state</li>
+                <li>goal state, or goal specification (e.g. pair of dummies, Lua callback, ...)</li>
+                <li>various Lua callbacks (projection evaluation, state validation, goal satisfaction)</li>
+            </ul>
+        </description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="name" type="string">
                 <description>a name for this task object</description>
@@ -83,7 +106,14 @@
         </return>
     </command>
     <command name="destroyTask">
-        <description>Destroy the specified task object.<br /><br />Note: task objects created during simulation are automatically destroyed when simulation ends.</description>
+        <description>Destroy the specified task object.
+            <br />
+            <br />
+            Note: task objects created during simulation are automatically destroyed when simulation ends.
+        </description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -93,7 +123,13 @@
         </return>
     </command>
     <command name="printTaskInfo">
-        <description>Print a summary of the specified task object. Useful for debugging and submitting bug reports.</description>
+        <description>Print a summary of the specified task object.
+            <br />
+            Useful for debugging and submitting bug reports.
+        </description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -104,6 +140,9 @@
     </command>
     <command name="setVerboseLevel">
         <description>Set the verbosity level for messages printed to application console.</description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -116,7 +155,14 @@
         </return>
     </command>
     <command name="setStateValidityCheckingResolution">
-        <description>Set the resolution of state validity checking, expressed as fraction of state space's extent. Default resolution is 0.01 which is 1% of the state space's extent.</description>
+        <description>Set the resolution of state validity checking, expressed as fraction of state space's extent.
+            <br />
+            Default resolution is 0.01 which is 1% of the state space's extent.
+        </description>
+        <categories>
+            <category name="task" />
+            <category name="state-validation" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -130,6 +176,10 @@
     </command>
     <command name="setStateSpace">
         <description>Set the state space of this task object.</description>
+        <categories>
+            <category name="state-space" />
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -143,6 +193,9 @@
     </command>
     <command name="getStateSpaceDimension">
         <description>Get the dimension of the state space, i.e. the number of elements of a state.</description>
+        <categories>
+            <category name="state-space" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -156,6 +209,10 @@
     </command>
     <command name="setAlgorithm">
         <description>Set the search algorithm for the specified task. Default algorithm used is KPIECE1.</description>
+        <categories>
+            <category name="task" />
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -169,12 +226,15 @@
     </command>
     <command name="setCollisionPairs">
         <description>Set the collision pairs for the specified task object.</description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="collisionPairHandles" type="table" item-type="int">
-                <description>a table containing 2 entity handles for each collision pair. A collision pair is represented by a collider and a collidee, that will be tested against each other. The first pair could be used for robot self-collision testing, and a second pair could be used for robot-environment collision testing. The collider can be an object or a collection handle. The collidee can be an object or collection handle, or sim_handle_all, in which case the collider will be checked agains all other collidable objects in the scene.</description>
+                <description>a table containing 2 entity handles for each collision pair. A collision pair is represented by a collider and a collidee, that will be tested against each other. The collider can be an object or a collection handle. The collidee can be an object or collection handle, or sim_handle_all, in which case the collider will be checked agains all other collidable objects in the scene.</description>
             </param>
         </params>
         <return>
@@ -182,6 +242,9 @@
     </command>
     <command name="setStartState">
         <description>Set the start state for the specified task object.</description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -195,6 +258,10 @@
     </command>
     <command name="setGoalState">
         <description>Set the goal state for the specified task object.</description>
+        <categories>
+            <category name="task" />
+            <category name="goal" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -208,6 +275,10 @@
     </command>
     <command name="addGoalState">
         <description>Add a goal state, without clearing previously set goal state(s), if any.</description>
+        <categories>
+            <category name="task" />
+            <category name="goal" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -220,7 +291,14 @@
         </return>
     </command>
     <command name="setGoal">
-        <description>Set the goal for the specificed task object by a dummy pair. One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric</description>
+        <description>Set the goal for the specificed task object by a dummy pair.
+            <br />
+            One of the two dummies is part of the robot. The other dummy is fixed in the environment. When the task is solved, the position or pose of the two dummies will (approximatively) be the same. Dummy-dummy distances are relative to an optional reference dummy, and are evaluated using an optional metric
+        </description>
+        <categories>
+            <category name="task" />
+            <category name="goal" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -232,13 +310,13 @@
                 <description>a dummy fixed in the environment, representing the goal pose/position</description>
             </param>
             <param name="tolerance" type="float" default="0.001f">
-                <description>an optional tolerated dummy-dummy distance. Defaults to 0.001</description>
+                <description>tolerated dummy-dummy distance</description>
             </param>
             <param name="metric" type="table" item-type="float" default="{1.0, 1.0, 1.0, 0.1}">
-                <description>an optional metric (x,y,z,angle) used to evaluate the dummy-dummy distance</description>
+                <description>a metric (x,y,z,angle) used to evaluate the dummy-dummy distance</description>
             </param>
             <param name="refDummy" type="int" default="-1">
-                <description>an optional reference dummy, relative to which the metric will be used</description>
+                <description>an reference dummy, relative to which the metric will be used</description>
             </param>
         </params>
         <return>
@@ -246,6 +324,9 @@
     </command>
     <command name="setup">
         <description>Setup the OMPL classes with the information contained in the task.</description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -256,6 +337,9 @@
     </command>
     <command name="solve">
         <description>Run the planning algorithm to search for a solution.</description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -272,12 +356,15 @@
     </command>
     <command name="simplifyPath">
         <description>Simplify the path found by planner.</description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="maxSimplificationTime" type="float" default="-1.0">
-                <description>(optional) maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
+                <description>maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
             </param>
         </params>
         <return>
@@ -285,12 +372,15 @@
     </command>
     <command name="interpolatePath">
         <description>Interpolate the path found by planner to obtain a minimum number of states.</description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="stateCnt" type="int" default="0">
-                <description>(optional) minimum number of states to be returned. 0 for a default behaviour.</description>
+                <description>minimum number of states to be returned. 0 for a default behaviour.</description>
             </param>
         </params>
         <return>
@@ -298,6 +388,9 @@
     </command>
     <command name="hasSolution">
         <description>Returns true if a solution path has been found (could be approximate).</description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -310,7 +403,13 @@
         </return>
     </command>
     <command name="hasExactSolution">
-        <description>Returns true if an exact solution path has been found. Specifically returns hasSolution() and not hasApproximateSolution()</description>
+        <description>Returns true if an exact solution path has been found.
+            <br />
+            Specifically returns hasSolution() and not hasApproximateSolution()
+        </description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -323,7 +422,13 @@
         </return>
     </command>
     <command name="hasApproximateSolution">
-        <description>Return true if the top found solution is approximate (does not actually reach the desired goal, but hopefully is closer to it)</description>
+        <description>Return true if the top found solution is approximate.
+            <br />
+            An approximate solution does not actually reach the desired goal, but hopefully is closer to it.
+        </description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -337,6 +442,9 @@
     </command>
     <command name="getGoalDistance">
         <description>Get the distance to the desired goal for the top solution.</description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -349,7 +457,14 @@
         </return>
     </command>
     <command name="getPath">
-        <description>Return the top solution path, if one is found. The top path is the shortest one that was found, preference being given to solutions that are not approximate.</description>
+        <description>Return the top solution path, if one is found.
+            <br />
+            The top path is the shortest one that was found, preference being given to solutions that are not approximate.
+        </description>
+        <categories>
+            <category name="planning" />
+            <category name="path" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -362,7 +477,13 @@
         </return>
     </command>
     <command name="getPlannerData">
-        <description>Get planner data for this motion planning task. Data is represented as a graph. For each graph vertex, a state and a tag are returned. A list of edges is returned as well, as pairs of vertex indices, describing connectivity of vertices. Some vertices are marked start or goal.</description>
+        <description>Get planner data for this motion planning task.
+            <br />
+            Data is represented as a graph. For each graph vertex, a state and a tag are returned. A list of edges is returned as well, as pairs of vertex indices, describing connectivity of vertices. Some vertices are marked start or goal.
+        </description>
+        <categories>
+            <category name="planning" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" />.</description>
@@ -393,14 +514,21 @@
         </return>
     </command>
     <command name="compute">
-        <description>Use OMPL to find a solution for this motion planning task. It is equivalent to executing:<br/>
-            <br/>
-            if simOMPL.solve(task, maxTime) then<br/>
-            simOMPL.simplifyPath(task, maxSimplificationTime)<br/>
-            simOMPL.interpolatePath(task, stateCnt)<br/>
-            path = simOMPL.getPath(task)<br/>
-            end
+        <description>Use OMPL to find a solution for this motion planning task.
+            <br />
+            It is equivalent to executing:
+            <code>
+if simOMPL.solve(task, maxTime) then
+    simOMPL.simplifyPath(task, maxSimplificationTime)
+    simOMPL.interpolatePath(task, stateCnt)
+    path = simOMPL.getPath(task)
+end
+            </code>
         </description>
+        <categories>
+            <category name="planning" />
+            <category name="path" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -409,10 +537,10 @@
                 <description>maximum time used for the path searching procedure, in seconds.</description>
             </param>
             <param name="maxSimplificationTime" type="float" default="-1.0">
-                <description>(optional) maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
+                <description>maximum time used for the path simplification procedure, in seconds. -1 for a default simplification procedure.</description>
             </param>
             <param name="stateCnt" type="int" default="0">
-                <description>(optional) minimum number of states to be returned. 0 for a default behaviour.</description>
+                <description>minimum number of states to be returned. 0 for a default behaviour.</description>
             </param>
         </params>
         <return>
@@ -426,6 +554,9 @@
     </command>
     <command name="readState">
         <description>Read a state vector from current simulator state.</description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -439,6 +570,9 @@
     </command>
     <command name="writeState">
         <description>Write the specified state to simulator</description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -451,7 +585,13 @@
         </return>
     </command>
     <command name="isStateValid">
-        <description>Check if the specified state is valid. If a state validation callback has been specified, that will be used to determine the validity of the state, otherwise the default state validation method will be used.</description>
+        <description>Check if the specified state is valid.
+            <br />
+            If a state validation callback has been specified, that will be used to determine the validity of the state, otherwise the default state validation method will be used.
+        </description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -468,6 +608,9 @@
     </command>
     <command name="isStateWithinBounds">
         <description>Check if the specified state is inside the bounding box.</description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -484,6 +627,9 @@
     </command>
     <command name="enforceBounds">
         <description>Bring the state within the bounds of the state space.</description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -500,6 +646,9 @@
     </command>
     <command name="stateDistance">
         <description>Compute the distanbce between two states.</description>
+        <categories>
+            <category name="state" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -518,7 +667,15 @@
         </return>
     </command>
     <command name="projectStates">
-        <description>Project a state using the task's projection evaluation routine. If multiple states are specified (e.g. a path) multiple projections will be returned.</description>
+        <description>Project a state using the task's projection evaluation routine.
+            <br />
+            If multiple states are specified (e.g. a path) multiple projections will be returned.
+        </description>
+        <categories>
+            <category name="state" />
+            <category name="projection" />
+            <category name="path" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -534,7 +691,16 @@
         </return>
     </command>
     <command name="setProjectionEvaluationCallback">
-        <description>Set a custom projection evaluation. The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.<br /><br />table projection=evaluateProjection(table state)</description>
+        <description>Set a custom projection evaluation.
+            <br />
+            The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.
+            <br />
+            <code>table projection=evaluateProjection(table state)</code>
+        </description>
+        <categories>
+            <category name="projection" />
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -550,7 +716,15 @@
         </return>
     </command>
     <command name="setStateValidationCallback">
-        <description>Set a custom state validation. By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:<br /><br />boolean valid=stateValidator(table state)</description>
+        <description>Set a custom state validation.
+            <br />
+            By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:
+            <br />
+            <code>boolean valid=stateValidator(table state)</code>
+        </description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -563,7 +737,18 @@
         </return>
     </command>
     <command name="setGoalCallback">
-        <description>Set a custom goal callback for the specified task. The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:<br /><br />boolean satisfied, number distance=goalSatisfied(table state)<br /><br />If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse.</description>
+        <description>Set a custom goal callback for the specified task.
+            <br />
+            The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:
+            <br />
+            <code>boolean satisfied, number distance=goalSatisfied(table state)</code>
+            <br />
+            If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse.
+        </description>
+        <categories>
+            <category name="task" />
+            <category name="goal" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
@@ -576,7 +761,19 @@
         </return>
     </command>
     <command name="setValidStateSamplerCallback">
-        <description>The valid state sampler callbacks must generate valid states. There are two callbacks to implement:<ul><li>the valid state sampling callback: table sampledState=sample()</li><li>the near valid state sampling callback: table sampledState=sampleNear(table state, number distance)</li></ul></description>
+        <description>Set a valid state sampler callbacks for the specified task.
+            <br />
+            The valid state sampler callbacks must generate valid states.
+            <br />
+            There are two callbacks to implement:
+            <ul>
+                <li>the valid state sampling callback: <code>table sampledState=sample()</code></li>
+                <li>the near valid state sampling callback: <code>table sampledState=sampleNear(table state, number distance)</code></li>
+            </ul>
+        </description>
+        <categories>
+            <category name="task" />
+        </categories>
         <params>
             <param name="taskHandle" type="int">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>

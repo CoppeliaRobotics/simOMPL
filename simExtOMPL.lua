@@ -3,6 +3,7 @@ local simOMPL={}
 --@fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
 --@arg int taskHandle the handle of the task
 --@arg table states a table of tables, one element for each goal state
+--@cats task, goal
 function simOMPL.setGoalStates(taskHandle,states)
     simOMPL.setGoalState(taskHandle,states[1])
     for i=2,#states do
@@ -14,6 +15,7 @@ end
 --@arg int taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@ret int count the number of states in the path
+--@cats path, state
 function simOMPL.getPathStateCount(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     return #path/n
@@ -24,6 +26,7 @@ end
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@arg int index the index, starting from 1
 --@ret table.float state a state extracted from the path
+--@cats path, state
 function simOMPL.getPathState(taskHandle,path,index)
     if index==0 then error('invalid index') end
     if index<0 then
@@ -38,6 +41,7 @@ end
 --@fun getProjectedPathLength get the length of the path projected onto the default projection
 --@arg int taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
+--@cats path, projection
 function simOMPL.getProjectedPathLength(taskHandle,path)
     local m=simOMPL.projectionSize(taskHandle)
     local pathProjection=simOMPL.projectStates(taskHandle,path)
@@ -56,6 +60,7 @@ end
 --@arg int taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@ret table.float reversedPath the reversed path
+--@cats path
 function simOMPL.getReversedPath(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     local p={}
@@ -71,6 +76,7 @@ end
 --@fun projectionSize return the dimension of the projection
 --@arg int taskHandle the handle of the task
 --@ret int size of the projection
+--@cats projection
 function simOMPL.projectionSize(taskHandle)
     local s=simOMPL.readState(taskHandle)
     local p=simOMPL.projectStates(taskHandle,s)
@@ -90,6 +96,7 @@ end
 --@arg table.float color color of the lines (3 float values)
 --@arg int extraAttributes extra attributes to pass to sim.addDrawingObject
 --@ret table.int dwos a table of handles of new drawing objects
+--@cats path, drawing
 function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
     simOMPL.__projectionMustBe3D(taskHandle)
     lineSize=lineSize or 2
@@ -116,6 +123,7 @@ end
 --@arg table.float startColor color of start nodes (3 float values)
 --@arg table.float goalColor color of goal nodes (3 float values)
 --@ret table.int dwos a table of handles of new drawing objects
+--@cats drawing
 function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,goalColor)
     simOMPL.__projectionMustBe3D(taskHandle)
     local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(taskHandle)
@@ -157,6 +165,7 @@ end
 --@fun removeDrawingObjects remove the drawing objects created with related functions
 --@arg int taskHandle handle of the task
 --@arg table.int dwos table of handles to drawing objects, as returned by the functions
+--@cats drawing
 function simOMPL.removeDrawingObjects(taskHandle,dwos)
     for i,ob in pairs(dwos) do sim.removeDrawingObject(ob) end
 end
