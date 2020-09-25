@@ -1758,6 +1758,49 @@ public:
         out->valid = task->spaceInformationPtr->isValid(state.get());
     }
 
+    void isStateWithinBounds(isStateWithinBounds_in *in, isStateWithinBounds_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle, true);
+
+        validateStateSize(task, in->state);
+
+        ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+        for(size_t i = 0; i < in->state.size(); i++)
+            state[i] = (double)in->state[i];
+
+        out->valid = state.satisfiesBounds();
+    }
+
+    void enforceBounds(enforceBounds_in *in, enforceBounds_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle, true);
+
+        validateStateSize(task, in->state);
+
+        ob::ScopedState<ob::CompoundStateSpace> state(task->stateSpacePtr);
+        for(size_t i = 0; i < in->state.size(); i++)
+            state[i] = (double)in->state[i];
+        state.enforceBounds();
+        for(size_t i = 0; i < in->state.size(); i++)
+            out->state.push_back(state[i]);
+    }
+
+    void stateDistance(stateDistance_in *in, stateDistance_out *out)
+    {
+        TaskDef *task = getTask(in->taskHandle, true);
+
+        validateStateSize(task, in->a);
+        validateStateSize(task, in->b);
+
+        ob::ScopedState<ob::CompoundStateSpace> a(task->stateSpacePtr), b(task->stateSpacePtr);
+        for(size_t i = 0; i < in->a.size(); i++)
+        {
+            a[i] = (double)in->a[i];
+            b[i] = (double)in->b[i];
+        }
+        out->distance = a.distance(b);
+    }
+
     void projectStates(projectStates_in *in, projectStates_out *out)
     {
         TaskDef *task = getTask(in->taskHandle, true);

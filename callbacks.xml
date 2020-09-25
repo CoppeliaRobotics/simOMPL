@@ -466,6 +466,57 @@
             </param>
         </return>
     </command>
+    <command name="isStateWithinBounds">
+        <description>Check if the specified state is inside the bounding box.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </params>
+        <return>
+            <param name="valid" type="bool">
+                <description>true if the state is within the bounding box</description>
+            </param>
+        </return>
+    </command>
+    <command name="enforceBounds">
+        <description>Bring the state within the bounds of the state space.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </params>
+        <return>
+            <param name="state" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </return>
+    </command>
+    <command name="stateDistance">
+        <description>Compute the distanbce between two states.</description>
+        <params>
+            <param name="taskHandle" type="int">
+                <description>a handle to a task object created with <command-ref name="createTask" /></description>
+            </param>
+            <param name="a" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+            <param name="b" type="table" item-type="float">
+                <description>state vector</description>
+            </param>
+        </params>
+        <return>
+            <param name="distance" type="float">
+                <description>computed distance</description>
+            </param>
+        </return>
+    </command>
     <command name="projectStates">
         <description>Project a state using the task's projection evaluation routine. If multiple states are specified (e.g. a path) multiple projections will be returned.</description>
         <params>
