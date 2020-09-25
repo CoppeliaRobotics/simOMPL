@@ -12,7 +12,7 @@ end
 
 --@fun getPathStateCount get the number of states in the given path
 --@arg int taskHandle the handle of the task
---@arg table path the path, as returned by simOMPL.getPath
+--@arg table.float path the path, as returned by simOMPL.getPath
 --@ret int count the number of states in the path
 function simOMPL.getPathStateCount(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
@@ -21,9 +21,9 @@ end
 
 --@fun getPathState extract the state at specified index from the given path
 --@arg int taskHandle the handle of the task
---@arg table path the path, as returned by simOMPL.getPath
+--@arg table.float path the path, as returned by simOMPL.getPath
 --@arg int index the index, starting from 1
---@ret table state a state extracted from the path
+--@ret table.float state a state extracted from the path
 function simOMPL.getPathState(taskHandle,path,index)
     if index==0 then error('invalid index') end
     if index<0 then
@@ -37,7 +37,7 @@ end
 
 --@fun getProjectedPathLength get the length of the path projected onto the default projection
 --@arg int taskHandle the handle of the task
---@arg table path the path, as returned by simOMPL.getPath
+--@arg table.float path the path, as returned by simOMPL.getPath
 function simOMPL.getProjectedPathLength(taskHandle,path)
     local m=simOMPL.projectionSize(taskHandle)
     local pathProjection=simOMPL.projectStates(taskHandle,path)
@@ -54,8 +54,8 @@ end
 
 --@fun getReversedPath reverse the given path
 --@arg int taskHandle the handle of the task
---@arg table path the path, as returned by simOMPL.getPath
---@ret table reversedPath the reversed path
+--@arg table.float path the path, as returned by simOMPL.getPath
+--@ret table.float reversedPath the reversed path
 function simOMPL.getReversedPath(taskHandle,path)
     local n=simOMPL.getStateSpaceDimension(taskHandle)
     local p={}
@@ -85,11 +85,11 @@ end
 
 --@fun drawPath draw a solution path for the specified motion planning task (as lines)
 --@arg int taskHandle the handle of the task
---@arg table path the path, as returned by simOMPL.getPath
+--@arg table.float path the path, as returned by simOMPL.getPath
 --@arg float lineSize size of the line (in pixels)
---@arg table color color of the lines (3 float values)
+--@arg table.float color color of the lines (3 float values)
 --@arg int extraAttributes extra attributes to pass to sim.addDrawingObject
---@ret table dwos a table of handles of new drawing objects
+--@ret table.int dwos a table of handles of new drawing objects
 function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
     simOMPL.__projectionMustBe3D(taskHandle)
     lineSize=lineSize or 2
@@ -112,10 +112,10 @@ end
 --@arg int taskHandle handle of the task
 --@arg float pointSize size of nodes (in meters)
 --@arg float lineSize size of lines (in pixels)
---@arg table color color of nodes and lines (3 float values)
---@arg table startColor color of start nodes (3 float values)
---@arg table goalColor color of goal nodes (3 float values)
---@ret table dwos a table of handles of new drawing objects
+--@arg table.float color color of nodes and lines (3 float values)
+--@arg table.float startColor color of start nodes (3 float values)
+--@arg table.float goalColor color of goal nodes (3 float values)
+--@ret table.int dwos a table of handles of new drawing objects
 function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,goalColor)
     simOMPL.__projectionMustBe3D(taskHandle)
     local states1,tags,tagsReal,edges,edgeWeights,startVertices,goalVertices=simOMPL.getPlannerData(taskHandle)
@@ -156,7 +156,7 @@ end
 
 --@fun removeDrawingObjects remove the drawing objects created with related functions
 --@arg int taskHandle handle of the task
---@arg table dwos table of handles to drawing objects, as returned by the functions
+--@arg table.int dwos table of handles to drawing objects, as returned by the functions
 function simOMPL.removeDrawingObjects(taskHandle,dwos)
     for i,ob in pairs(dwos) do sim.removeDrawingObject(ob) end
 end
