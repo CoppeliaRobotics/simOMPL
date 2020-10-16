@@ -488,7 +488,7 @@ public:
                 break;
             case sim_ompl_statespacetype_cyclic_joint_position:
                 if(!stateSpace->boundsLow.empty() || !stateSpace->boundsHigh.empty())
-                    ::log(sim_verbosity_warnings, "cyclic_joint_position state space has no bounds");
+                    sim::addLog(sim_verbosity_warnings, "cyclic_joint_position state space has no bounds");
                 break;
             case sim_ompl_statespacetype_dubins:
                 as<ob::SE2StateSpace>(i)->setBounds(bounds);
@@ -985,7 +985,7 @@ public:
             csim_level = sim_verbosity_none;
             break;
         }
-        ::log(csim_level, boost::format("OMPL: %s:%d: %s") % filename % line % text);
+        sim::addLog(csim_level, "OMPL: %s:%d: %s", filename, line, text);
     }
 };
 
@@ -1537,7 +1537,7 @@ public:
 
                 std::stringstream s;
                 path.print(s);
-                log(sim_verbosity_infos, "OMPL: found solution: " + s.str());
+                sim::addLog(sim_verbosity_infos, "found solution: " + s.str());
             }
         }
         else
@@ -1545,7 +1545,7 @@ public:
             out->solved = false;
 
             if(task->verboseLevel >= 1)
-                log(sim_verbosity_infos, "OMPL: could not find solution.");
+                sim::addLog(sim_verbosity_infos, "could not find solution.");
         }
     }
 
@@ -1554,7 +1554,7 @@ public:
         TaskDef *task = getTask(in->taskHandle, true);
 
         if(task->verboseLevel >= 2)
-            log(sim_verbosity_debug, "OMPL: simplifying solution...");
+            sim::addLog(sim_verbosity_debug, "simplifying solution...");
 
         const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
         og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
@@ -1573,7 +1573,7 @@ public:
         {
             std::stringstream s;
             path.print(s);
-            log(sim_verbosity_infos, "OMPL: simplified solution: " + s.str());
+            sim::addLog(sim_verbosity_infos, "simplified solution: " + s.str());
         }
     }
 
@@ -1582,7 +1582,7 @@ public:
         TaskDef *task = getTask(in->taskHandle, true);
 
         if(task->verboseLevel >= 2)
-            log(sim_verbosity_debug, "OMPL: interpolating solution...");
+            sim::addLog(sim_verbosity_debug, "interpolating solution...");
 
         const ob::PathPtr &path_ = task->problemDefinitionPtr->getSolutionPath();
         og::PathGeometric &path = static_cast<og::PathGeometric&>(*path_);
@@ -1596,7 +1596,7 @@ public:
         {
             std::stringstream s;
             path.print(s);
-            log(sim_verbosity_infos, "OMPL: interpolated solution: " + s.str());
+            sim::addLog(sim_verbosity_infos, "interpolated solution: " + s.str());
         }
     }
 
