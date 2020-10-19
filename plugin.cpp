@@ -1018,13 +1018,13 @@ public:
     void createStateSpace(createStateSpace_in *in, createStateSpace_out *out)
     {
         if(in->boundsLow.size() != in->boundsHigh.size())
-            throw std::string("Lower and upper bounds must have the same length.");
+            throw std::runtime_error("Lower and upper bounds must have the same length.");
 
         if(in->weight <= 0)
-            throw std::string("State component weight must be positive.");
+            throw std::runtime_error("State component weight must be positive.");
 
         if(in->refObjectHandle != -1 && simIsHandleValid(in->refObjectHandle, sim_appobj_object_type) <= 0)
-            throw std::string("Reference object handle is not valid.");
+            throw std::runtime_error("Reference object handle is not valid.");
 
         StateSpaceDef *statespace = new StateSpaceDef();
         statespace->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
@@ -1048,7 +1048,7 @@ public:
     void destroyStateSpace(destroyStateSpace_in *in, destroyStateSpace_out *out)
     {
         if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-            throw std::string("Invalid state space handle.");
+            throw std::runtime_error("Invalid state space handle.");
 
         StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
         statespaces.erase(in->stateSpaceHandle);
@@ -1058,7 +1058,7 @@ public:
     void setDubinsParams(setDubinsParams_in *in, setDubinsParams_out *out)
     {
         if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-            throw std::string("Invalid state space handle.");
+            throw std::runtime_error("Invalid state space handle.");
 
         StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
         statespace->dubinsTurningRadius = in->turningRadius;
@@ -1085,13 +1085,13 @@ public:
     TaskDef * getTask(simInt taskHandle, bool mustBeSetUp = false)
     {
         if(tasks.find(taskHandle) == tasks.end())
-            throw std::string("Invalid task handle.");
+            throw std::runtime_error("Invalid task handle.");
 
         if(mustBeSetUp)
         {
             TaskDef *task = tasks[taskHandle];
             if(!task->stateSpacePtr || !task->spaceInformationPtr || !task->projectionEvaluatorPtr || !task->problemDefinitionPtr)
-                throw std::string("simOMPL.setup(taskHandle) has not been called");
+                throw std::runtime_error("simOMPL.setup(taskHandle) has not been called");
         }
 
         return tasks[taskHandle];
@@ -1266,7 +1266,7 @@ public:
         }
 
         if(!valid_statespace_handles)
-            throw std::string("Invalid state space handle.");
+            throw std::runtime_error("Invalid state space handle.");
 
         task->stateSpaces.clear();
         task->dim = 0;
@@ -1504,7 +1504,7 @@ public:
             }
             else
             {
-                throw std::string("No goal state specified.");
+                throw std::runtime_error("No goal state specified.");
             }
         }
         else if(task->goal.type == TaskDef::Goal::DUMMY_PAIR || task->goal.type == TaskDef::Goal::CLLBACK)
@@ -1516,7 +1516,7 @@ public:
         task->planner = plannerFactory(task->algorithm, task->spaceInformationPtr);
         if(!task->planner)
         {
-            throw std::string("Invalid motion planning algorithm.");
+            throw std::runtime_error("Invalid motion planning algorithm.");
         }
         task->planner->setProblemDefinition(task->problemDefinitionPtr);
     }
@@ -1823,7 +1823,7 @@ public:
         TaskDef *task = getTask(in->taskHandle);
 
         if(in->projectionSize < 1)
-            throw std::string("Projection size must be positive.");
+            throw std::runtime_error("Projection size must be positive.");
 
         if(in->callback == "")
         {
@@ -1864,7 +1864,7 @@ public:
         TaskDef *task = getTask(in->taskHandle);
 
         if(in->callback == "")
-            throw std::string("Invalid callback name.");
+            throw std::runtime_error("Invalid callback name.");
 
         task->goal.type = TaskDef::Goal::CLLBACK;
         task->goal.callback.scriptId = in->_scriptID;
@@ -1876,7 +1876,7 @@ public:
         TaskDef *task = getTask(in->taskHandle);
 
         if(in->callback == "" || in->callbackNear == "")
-            throw std::string("Invalid callback name.");
+            throw std::runtime_error("Invalid callback name.");
 
         task->validStateSampling.type = TaskDef::ValidStateSampling::CLLBACK;
         task->validStateSampling.callback.scriptId = in->_scriptID;
