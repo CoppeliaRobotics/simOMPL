@@ -19,7 +19,14 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
     ${LIBPLUGIN_DIR}/cmake)
 find_package(CoppeliaSim 4.1.0.0 REQUIRED)
-find_package(OMPL REQUIRED)
+
+set(FIND_OMPL_VIA_PKGCONFIG ON CACHE BOOL "Use pkg-config to find OMPL")
+if(FIND_OMPL_VIA_PKGCONFIG)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(OMPL REQUIRED IMPORTED_TARGET ompl)
+else()
+    find_package(OMPL REQUIRED)
+endif()
 
 include_directories(${COPPELIASIM_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -36,7 +43,12 @@ set(SOURCES
     ${COPPELIASIM_EXPORTED_SOURCES}
 )
 add_library(simExtOMPL SHARED ${SOURCES})
-target_link_libraries(simExtOMPL ${Boost_LIBRARIES} ${OMPL_LIBRARIES} ${COPPELIASIM_LIBRARIES})
+target_link_libraries(simExtOMPL ${Boost_LIBRARIES} ${COPPELIASIM_LIBRARIES})
+if(FIND_OMPL_VIA_PKGCONFIG)
+    target_link_libraries(simExtOMPL PkgConfig::OMPL)
+else()
+    target_link_libraries(simExtOMPL ${OMPL_LIBRARIES})
+endif()
 
 install(TARGETS simExtOMPL DESTINATION ${COPPELIASIM_PLUGINS_DIR})
 
