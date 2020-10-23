@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH
     ${LIBPLUGIN_DIR}/cmake)
 find_package(CoppeliaSim 4.1.0.0 REQUIRED)
 
-set(FIND_OMPL_VIA_PKGCONFIG ON CACHE BOOL "Use pkg-config to find OMPL")
+set(FIND_OMPL_VIA_PKGCONFIG OFF CACHE BOOL "Use pkg-config to find OMPL")
 if(FIND_OMPL_VIA_PKGCONFIG)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(OMPL REQUIRED IMPORTED_TARGET ompl)
