@@ -692,10 +692,7 @@ end
     </command>
     <command name="setProjectionEvaluationCallback">
         <description>Set a custom projection evaluation.
-            <br />
-            The argument of the callback will be a state, and the return value must be a table of numbers, with a size equal to the projectionSize argument, i.e.
-            <br />
-            <code>table projection=evaluateProjection(table state)</code>
+            See <script-function-ref name="projectionEvaluationCallback" /> for the arguments and the return values of the callback.
         </description>
         <categories>
             <category name="projection" />
@@ -717,10 +714,9 @@ end
     </command>
     <command name="setStateValidationCallback">
         <description>Set a custom state validation.
+            See <script-function-ref name="stateValidationCallback" /> for the arguments and the return values of the callback.
             <br />
-            By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not. Argument to the callback is the state to validate, and return value must be a boolean indicating the validity of the state, i.e.:
-            <br />
-            <code>boolean valid=stateValidator(table state)</code>
+            By default state validation is performed by collision checking, between robot's collision objects and environment's objects. By specifying a custom state validation, it is possible to perform any arbitrary check on a state to determine wether it is valid or not.
         </description>
         <categories>
             <category name="task" />
@@ -738,10 +734,7 @@ end
     </command>
     <command name="setGoalCallback">
         <description>Set a custom goal callback for the specified task.
-            <br />
-            The argument passed to the callback is the state to test for goal satisfaction. The return values must be a boolean indicating wether the goal is satisfied, and a float indicating the distance to the goal, i.e.:
-            <br />
-            <code>boolean satisfied, number distance=goalSatisfied(table state)</code>
+            See <script-function-ref name="goalCallback" /> for the arguments and the return values of the callback.
             <br />
             If a distance to the goal is not known, a constant value can be used, but the performance of the algorithm will be worse.
         </description>
@@ -762,14 +755,9 @@ end
     </command>
     <command name="setValidStateSamplerCallback">
         <description>Set a valid state sampler callbacks for the specified task.
+            See <script-function-ref name="validStateSamplerCallback" /> and <script-function-ref name="validStateSamplerCallbackNear" /> for the arguments and the return values of the callbacks.
             <br />
             The valid state sampler callbacks must generate valid states.
-            <br />
-            There are two callbacks to implement:
-            <ul>
-                <li>the valid state sampling callback: <code>table sampledState=sample()</code></li>
-                <li>the near valid state sampling callback: <code>table sampledState=sampleNear(table state, number distance)</code></li>
-            </ul>
         </description>
         <categories>
             <category name="task" />
