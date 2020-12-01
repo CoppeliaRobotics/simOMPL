@@ -93,7 +93,7 @@ end
 --@arg int taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@arg float lineSize size of the line (in pixels)
---@arg table.float color color of the lines (3 float values)
+--@arg {type=table,item_type=float,size=3} color color of the lines
 --@arg int extraAttributes extra attributes to pass to sim.addDrawingObject
 --@ret table.int dwos a table of handles of new drawing objects
 --@cats path, drawing
@@ -119,9 +119,9 @@ end
 --@arg int taskHandle handle of the task
 --@arg float pointSize size of nodes (in meters)
 --@arg float lineSize size of lines (in pixels)
---@arg table.float color color of nodes and lines (3 float values)
---@arg table.float startColor color of start nodes (3 float values)
---@arg table.float goalColor color of goal nodes (3 float values)
+--@arg {type=table,item_type=float,size=3} color color of nodes and lines
+--@arg {type=table,item_type=float,size=3} startColor color of start nodes
+--@arg {type=table,item_type=float,size=3} goalColor color of goal nodes
 --@ret table.int dwos a table of handles of new drawing objects
 --@cats drawing
 function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,goalColor)
