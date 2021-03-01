@@ -52,6 +52,7 @@
 #endif
 
 #include "simPlusPlus/Plugin.h"
+#include "simPlusPlus/Handle.h"
 #include "config.h"
 #include "plugin.h"
 #include "stubs.h"
@@ -73,19 +74,10 @@ struct LuaCallbackFunction
     simInt scriptId;
 };
 
-struct ObjectDefHeader
-{
-    // internal handle of this object (used by the plugin):
-    simInt handle;
-    // name of this object:
-    std::string name;
-    // objects created during simulation will be destroyed when simulation terminates:
-    bool destroyAfterSimulationStop;
-};
-
 struct StateSpaceDef
 {
-    ObjectDefHeader header;
+    // name of this object:
+    std::string name;
     // type of this state space:
     StateSpaceType type;
     // handle of the object (object, or joint if type = joint_position/cyclic_joint_position):
@@ -109,9 +101,10 @@ struct StateSpaceDef
 
 struct TaskDef
 {
-    ObjectDefHeader header;
+    // name of this object:
+    std::string name;
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
-    std::vector<simInt> stateSpaces;
+    std::vector<std::string> stateSpaces;
     // handle of the collision pairs:
     std::vector<simInt> collisionPairHandles;
     // start state:
@@ -184,8 +177,8 @@ struct TaskDef
 class ProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
-    ProjectionEvaluator(std::map<simInt, StateSpaceDef *> &ss, const ob::StateSpacePtr& space, TaskDef *task)
-        : ob::ProjectionEvaluator(space), statespaces(ss), statespace(space)
+    ProjectionEvaluator(sim::Handles<StateSpaceDef> &ssh, const ob::StateSpacePtr& space, TaskDef *task)
+        : ob::ProjectionEvaluator(space), stateSpaceHandles(ssh), statespace(space)
     {
         this->task = task;
 
@@ -264,7 +257,7 @@ protected:
     {
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -293,7 +286,7 @@ protected:
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
 
             if(!stateSpace->defaultProjection) continue;
 
@@ -407,7 +400,7 @@ protected:
         }
     }
 
-    std::map<simInt, StateSpaceDef *> &statespaces;
+    sim::Handles<StateSpaceDef> stateSpaceHandles;
     TaskDef *task;
     const ob::StateSpacePtr& statespace;
     int dim;
@@ -416,15 +409,15 @@ protected:
 class StateSpace : public ob::CompoundStateSpace
 {
 public:
-    StateSpace(std::map<simInt, StateSpaceDef *> &ss, TaskDef *task)
-        : ob::CompoundStateSpace(), statespaces(ss), task(task)
+    StateSpace(sim::Handles<StateSpaceDef> &ssh, TaskDef *task)
+        : ob::CompoundStateSpace(), stateSpaceHandles(ssh), task(task)
     {
         setName("SimCompoundStateSpace");
         type_ = ompl::base::STATE_SPACE_TYPE_COUNT + 1;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
 
             ob::StateSpacePtr subSpace;
 
@@ -432,13 +425,13 @@ public:
             {
             case sim_ompl_statespacetype_pose2d:
                 subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
                 break;
             case sim_ompl_statespacetype_pose3d:
                 subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
                 break;
             case sim_ompl_statespacetype_position2d:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
@@ -454,12 +447,12 @@ public:
                 break;
             case sim_ompl_statespacetype_dubins:
                 subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(stateSpace->dubinsTurningRadius, stateSpace->dubinsIsSymmetric));
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->header.name + ".position");
-                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->header.name + ".orientation");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
+                subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
                 break;
             }
 
-            subSpace->setName(stateSpace->header.name);
+            subSpace->setName(stateSpace->name);
             addSubspace(subSpace, stateSpace->weight);
 
             // set bounds:
@@ -506,7 +499,7 @@ public:
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
 
             switch(stateSpace->type)
             {
@@ -570,7 +563,7 @@ public:
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
 
             switch(stateSpace->type)
             {
@@ -623,7 +616,7 @@ public:
     {
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
             if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
                     stateSpace->type == sim_ompl_statespacetype_pose3d ||
                     stateSpace->type == sim_ompl_statespacetype_position2d ||
@@ -642,7 +635,7 @@ public:
         int pt = 0;
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
             if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
                     stateSpace->type == sim_ompl_statespacetype_pose3d ||
                     stateSpace->type == sim_ompl_statespacetype_position2d ||
@@ -656,7 +649,7 @@ public:
     }
 
 protected:
-    std::map<simInt, StateSpaceDef *> &statespaces;
+    sim::Handles<StateSpaceDef> &stateSpaceHandles;
     TaskDef *task;
 };
 
@@ -1011,9 +1004,12 @@ public:
         delete oh;
     }
 
-    void onSimulationEnded()
+    void onScriptStateDestroyed(int scriptID)
     {
-        destroyTransientObjects();
+        for(auto statespace : stateSpaceHandles.find(scriptID))
+            delete stateSpaceHandles.remove(statespace);
+        for(auto task : taskHandles.find(scriptID))
+            delete taskHandles.remove(task);
     }
 
     void createStateSpace(createStateSpace_in *in, createStateSpace_out *out)
@@ -1028,9 +1024,7 @@ public:
             throw std::runtime_error("Reference object handle is not valid.");
 
         StateSpaceDef *statespace = new StateSpaceDef();
-        statespace->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        statespace->header.handle = nextStateSpaceHandle++;
-        statespace->header.name = in->name;
+        statespace->name = in->name;
         statespace->type = static_cast<StateSpaceType>(in->type);
         statespace->objectHandle = in->objectHandle;
         for(size_t i = 0; i < in->boundsLow.size(); i++)
@@ -1042,26 +1036,18 @@ public:
         statespace->refFrameHandle = in->refObjectHandle;
         statespace->dubinsTurningRadius = 0.05;
         statespace->dubinsIsSymmetric = false;
-        statespaces[statespace->header.handle] = statespace;
-        out->stateSpaceHandle = statespace->header.handle;
+        out->stateSpaceHandle = stateSpaceHandles.add(statespace, in->_scriptID);
     }
 
     void destroyStateSpace(destroyStateSpace_in *in, destroyStateSpace_out *out)
     {
-        if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-            throw std::runtime_error("Invalid state space handle.");
-
-        StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
-        statespaces.erase(in->stateSpaceHandle);
-        delete statespace;
+        StateSpaceDef *statespace = stateSpaceHandles.get(in->stateSpaceHandle);
+        delete stateSpaceHandles.remove(statespace);
     }
 
     void setDubinsParams(setDubinsParams_in *in, setDubinsParams_out *out)
     {
-        if(statespaces.find(in->stateSpaceHandle) == statespaces.end())
-            throw std::runtime_error("Invalid state space handle.");
-
-        StateSpaceDef *statespace = statespaces[in->stateSpaceHandle];
+        StateSpaceDef *statespace = stateSpaceHandles.get(in->stateSpaceHandle);
         statespace->dubinsTurningRadius = in->turningRadius;
         statespace->dubinsIsSymmetric = in->isSymmetric;
     }
@@ -1069,9 +1055,7 @@ public:
     void createTask(createTask_in *in, createTask_out *out)
     {
         TaskDef *task = new TaskDef();
-        task->header.destroyAfterSimulationStop = simGetSimulationState() != sim_simulation_stopped;
-        task->header.handle = nextTaskHandle++;
-        task->header.name = in->name;
+        task->name = in->name;
         task->goal.type = TaskDef::Goal::STATE;
         task->stateValidation.type = TaskDef::StateValidation::DEFAULT;
         task->stateValidityCheckingResolution = 0.01f; // 1% of state space's extent
@@ -1079,31 +1063,27 @@ public:
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         task->algorithm = sim_ompl_algorithm_KPIECE1;
         task->verboseLevel = 0;
-        tasks[task->header.handle] = task;
-        out->taskHandle = task->header.handle;
+        out->taskHandle = taskHandles.add(task, in->_scriptID);
     }
 
-    TaskDef * getTask(simInt taskHandle, bool mustBeSetUp = false)
+    TaskDef * getTask(const std::string &taskHandle, bool mustBeSetUp = false)
     {
-        if(tasks.find(taskHandle) == tasks.end())
-            throw std::runtime_error("Invalid task handle.");
+        auto task = taskHandles.get(taskHandle);
 
         if(mustBeSetUp)
         {
-            TaskDef *task = tasks[taskHandle];
             if(!task->stateSpacePtr || !task->spaceInformationPtr || !task->projectionEvaluatorPtr || !task->problemDefinitionPtr)
                 throw std::runtime_error("simOMPL.setup(taskHandle) has not been called");
         }
 
-        return tasks[taskHandle];
+        return task;
     }
 
     void destroyTask(destroyTask_in *in, destroyTask_out *out)
     {
         TaskDef *task = getTask(in->taskHandle);
 
-        tasks.erase(in->taskHandle);
-        delete task;
+        delete taskHandles.remove(task);
     }
 
     void printTaskInfo(printTaskInfo_in *in, printTaskInfo_out *out)
@@ -1112,13 +1092,13 @@ public:
 
         std::stringstream s;
         std::string prefix = "OMPL: ";
-        s << prefix << "task name: " << task->header.name << std::endl;
+        s << prefix << "task name: " << task->name << std::endl;
         s << prefix << "state spaces: (dimension: " << task->dim << ")" << std::endl;
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
-            StateSpaceDef *stateSpace = statespaces[task->stateSpaces[i]];
-            s << prefix << "    state space: " << stateSpace->header.handle << std::endl;
-            s << prefix << "        name: " << stateSpace->header.name << std::endl;
+            StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
+            s << prefix << "    state space: " << task->stateSpaces[i] << std::endl;
+            s << prefix << "        name: " << stateSpace->name << std::endl;
             s << prefix << "        type: " << statespacetype_string(stateSpace->type) << std::endl;
             s << prefix << "        object handle: " << stateSpace->objectHandle << std::endl;
             s << prefix << "        bounds low: {";
@@ -1253,29 +1233,25 @@ public:
     {
         TaskDef *task = getTask(in->taskHandle);
 
-        bool valid_statespace_handles = true;
-
         for(size_t i = 0; i < in->stateSpaceHandles.size(); i++)
         {
-            simInt stateSpaceHandle = in->stateSpaceHandles[i];
-
-            if(statespaces.find(stateSpaceHandle) == statespaces.end())
+            try
             {
-                valid_statespace_handles = false;
-                break;
+                stateSpaceHandles.get(in->stateSpaceHandles[i]);
+            }
+            catch(...)
+            {
+                throw std::runtime_error("Invalid state space handle.");
             }
         }
-
-        if(!valid_statespace_handles)
-            throw std::runtime_error("Invalid state space handle.");
 
         task->stateSpaces.clear();
         task->dim = 0;
         for(size_t i = 0; i < in->stateSpaceHandles.size(); i++)
         {
-            simInt stateSpaceHandle = in->stateSpaceHandles[i];
+            std::string stateSpaceHandle = in->stateSpaceHandles[i];
             task->stateSpaces.push_back(stateSpaceHandle);
-            switch(statespaces.find(stateSpaceHandle)->second->type)
+            switch(stateSpaceHandles.get(stateSpaceHandle)->type)
             {
             case sim_ompl_statespacetype_position2d:
                 task->dim += 2;
@@ -1463,9 +1439,9 @@ public:
     {
         TaskDef *task = getTask(in->taskHandle);
 
-        task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(statespaces, task));
+        task->stateSpacePtr = ob::StateSpacePtr(new StateSpace(stateSpaceHandles, task));
         task->spaceInformationPtr = ob::SpaceInformationPtr(new ob::SpaceInformation(task->stateSpacePtr));
-        task->projectionEvaluatorPtr = ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(statespaces, task->stateSpacePtr, task));
+        task->projectionEvaluatorPtr = ob::ProjectionEvaluatorPtr(new ProjectionEvaluator(stateSpaceHandles, task->stateSpacePtr, task));
         task->stateSpacePtr->registerDefaultProjection(task->projectionEvaluatorPtr);
         task->problemDefinitionPtr = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(task->spaceInformationPtr));
         task->spaceInformationPtr->setStateValidityChecker(ob::StateValidityCheckerPtr(new StateValidityChecker(task->spaceInformationPtr, task)));
@@ -1886,40 +1862,10 @@ public:
         task->validStateSampling.callbackNear.function = in->callbackNear;
     }
 
-    // this function will be called at simulation end to destroy objects that
-    // were created during simulation, which otherwise would leak indefinitely:
-    template<typename T>
-    void destroyTransientObjects(std::map<simInt, T *>& c)
-    {
-        std::vector<simInt> transientObjects;
-
-        for(typename std::map<simInt, T *>::const_iterator it = c.begin(); it != c.end(); ++it)
-        {
-            if(it->second->header.destroyAfterSimulationStop)
-                transientObjects.push_back(it->first);
-        }
-
-        for(size_t i = 0; i < transientObjects.size(); i++)
-        {
-            simInt key = transientObjects[i];
-            T *t = c[key];
-            c.erase(key);
-            delete t;
-        }
-    }
-
-    void destroyTransientObjects()
-    {
-        destroyTransientObjects(tasks);
-        destroyTransientObjects(statespaces);
-    }
-
 private:
     OutputHandler *oh;
-    std::map<simInt, TaskDef *> tasks;
-    std::map<simInt, StateSpaceDef *> statespaces;
-    simInt nextTaskHandle = 1000;
-    simInt nextStateSpaceHandle = 9000;
+    sim::Handles<TaskDef> taskHandles;
+    sim::Handles<StateSpaceDef> stateSpaceHandles;
 };
 
 SIM_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)

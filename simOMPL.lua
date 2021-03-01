@@ -1,7 +1,7 @@
 local simOMPL={}
 
 --@fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table states a table of tables, one element for each goal state
 --@cats task, goal
 function simOMPL.setGoalStates(taskHandle,states)
@@ -12,7 +12,7 @@ function simOMPL.setGoalStates(taskHandle,states)
 end
 
 --@fun getPathStateCount get the number of states in the given path
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@ret int count the number of states in the path
 --@cats path, state
@@ -22,7 +22,7 @@ function simOMPL.getPathStateCount(taskHandle,path)
 end
 
 --@fun getPathState extract the state at specified index from the given path
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@arg int index the index, starting from 1
 --@ret table.float state a state extracted from the path
@@ -39,7 +39,7 @@ function simOMPL.getPathState(taskHandle,path,index)
 end
 
 --@fun getProjectedPathLength get the length of the path projected onto the default projection
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@cats path, projection
 function simOMPL.getProjectedPathLength(taskHandle,path)
@@ -57,7 +57,7 @@ function simOMPL.getProjectedPathLength(taskHandle,path)
 end
 
 --@fun getReversedPath reverse the given path
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@ret table.float reversedPath the reversed path
 --@cats path
@@ -74,7 +74,7 @@ function simOMPL.getReversedPath(taskHandle,path)
 end
 
 --@fun projectionSize return the dimension of the projection
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@ret int size of the projection
 --@cats projection
 function simOMPL.projectionSize(taskHandle)
@@ -90,7 +90,7 @@ function simOMPL.__projectionMustBe3D(taskHandle)
 end
 
 --@fun drawPath draw a solution path for the specified motion planning task (as lines)
---@arg int taskHandle the handle of the task
+--@arg string taskHandle the handle of the task
 --@arg table.float path the path, as returned by simOMPL.getPath
 --@arg float lineSize size of the line (in pixels)
 --@arg {type=table,item_type=float,size=3} color color of the lines
@@ -116,7 +116,7 @@ function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
 end
 
 --@fun drawPlannerData draw planner data (graph) extracted from the specified motion planning task
---@arg int taskHandle handle of the task
+--@arg string taskHandle handle of the task
 --@arg float pointSize size of nodes (in meters)
 --@arg float lineSize size of lines (in pixels)
 --@arg {type=table,item_type=float,size=3} color color of nodes and lines
@@ -163,7 +163,7 @@ function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,
 end
 
 --@fun removeDrawingObjects remove the drawing objects created with related functions
---@arg int taskHandle handle of the task
+--@arg string taskHandle handle of the task
 --@arg table.int dwos table of handles to drawing objects, as returned by the functions
 --@cats drawing
 function simOMPL.removeDrawingObjects(taskHandle,dwos)

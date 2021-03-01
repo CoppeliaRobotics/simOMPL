@@ -38,7 +38,7 @@
             </param>
         </params>
         <return>
-            <param name="stateSpaceHandle" type="int">
+            <param name="stateSpaceHandle" type="string">
                 <description>a handle to the created state space component</description>
             </param>
         </return>
@@ -53,7 +53,7 @@
             <category name="state-space" />
         </categories>
         <params>
-            <param name="stateSpaceHandle" type="int">
+            <param name="stateSpaceHandle" type="string">
                 <description>handle to state space component</description>
             </param>
         </params>
@@ -66,7 +66,7 @@
             <category name="state-space" />
         </categories>
         <params>
-            <param name="stateSpaceHandle" type="int">
+            <param name="stateSpaceHandle" type="string">
                 <description>handle to state space component</description>
             </param>
             <param name="turningRadius" type="float">
@@ -100,7 +100,7 @@
             </param>
         </params>
         <return>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to the created task object</description>
             </param>
         </return>
@@ -115,7 +115,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -131,7 +131,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -144,7 +144,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="verboseLevel" type="int">
@@ -164,7 +164,7 @@
             <category name="state-validation" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="resolution" type="float">
@@ -181,10 +181,10 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="stateSpaceHandles" type="table" item-type="int">
+            <param name="stateSpaceHandles" type="table" item-type="string">
                 <description>a table of handles to state space components, created with <command-ref name="createStateSpace" /></description>
             </param>
         </params>
@@ -197,7 +197,7 @@
             <category name="state-space" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -214,7 +214,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="algorithm" type="int">
@@ -230,7 +230,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="collisionPairHandles" type="table" item-type="int">
@@ -246,7 +246,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -263,7 +263,7 @@
             <category name="goal" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -280,7 +280,7 @@
             <category name="goal" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -300,7 +300,7 @@
             <category name="goal" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="robotDummy" type="int">
@@ -328,7 +328,7 @@
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -341,7 +341,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="maxTime" type="float">
@@ -360,7 +360,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="maxSimplificationTime" type="float" default="-1.0">
@@ -376,7 +376,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="stateCnt" type="int" default="0">
@@ -392,7 +392,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -411,7 +411,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -430,7 +430,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -446,7 +446,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -466,7 +466,7 @@
             <category name="path" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -485,7 +485,7 @@
             <category name="planning" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" />.</description>
             </param>
         </params>
@@ -530,7 +530,7 @@ end
             <category name="path" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="maxTime" type="float">
@@ -558,7 +558,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
         </params>
@@ -574,7 +574,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -593,7 +593,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -612,7 +612,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -631,7 +631,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -650,7 +650,7 @@ end
             <category name="state" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="a" type="table" item-type="float">
@@ -677,7 +677,7 @@ end
             <category name="path" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="state" type="table" item-type="float">
@@ -699,7 +699,7 @@ end
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="callback" type="string">
@@ -722,7 +722,7 @@ end
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="callback" type="string">
@@ -743,7 +743,7 @@ end
             <category name="goal" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="callback" type="string">
@@ -763,7 +763,7 @@ end
             <category name="task" />
         </categories>
         <params>
-            <param name="taskHandle" type="int">
+            <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
             <param name="callback" type="string">
