@@ -1036,7 +1036,7 @@ public:
         statespace->refFrameHandle = in->refObjectHandle;
         statespace->dubinsTurningRadius = 0.05;
         statespace->dubinsIsSymmetric = false;
-        out->stateSpaceHandle = stateSpaceHandles.add(statespace, in->_scriptID);
+        out->stateSpaceHandle = stateSpaceHandles.add(statespace, in->_.scriptID);
     }
 
     void destroyStateSpace(destroyStateSpace_in *in, destroyStateSpace_out *out)
@@ -1063,7 +1063,7 @@ public:
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
         task->algorithm = sim_ompl_algorithm_KPIECE1;
         task->verboseLevel = 0;
-        out->taskHandle = taskHandles.add(task, in->_scriptID);
+        out->taskHandle = taskHandles.add(task, in->_.scriptID);
     }
 
     TaskDef * getTask(const std::string &taskHandle, bool mustBeSetUp = false)
@@ -1667,7 +1667,7 @@ public:
         TaskDef *task = getTask(in->taskHandle, true);
 
         solve_in in2;
-        in2._scriptID = in->_scriptID;
+        in2._ = in->_;
         in2.taskHandle = in->taskHandle;
         in2.maxTime = in->maxTime;
         solve_out out2;
@@ -1677,21 +1677,21 @@ public:
         if(!out->solved) return;
 
         simplifyPath_in in3;
-        in3._scriptID = in->_scriptID;
+        in3._ = in->_;
         in3.taskHandle = in->taskHandle;
         in3.maxSimplificationTime = in->maxSimplificationTime;
         simplifyPath_out out3;
         simplifyPath(&in3, &out3);
 
         interpolatePath_in in4;
-        in4._scriptID = in->_scriptID;
+        in4._ = in->_;
         in4.taskHandle = in->taskHandle;
         in4.stateCnt = in->stateCnt;
         interpolatePath_out out4;
         interpolatePath(&in4, &out4);
 
         getPath_in in5;
-        in5._scriptID = in->_scriptID;
+        in5._ = in->_;
         in5.taskHandle = in->taskHandle;
         getPath_out out5;
         getPath(&in5, &out5);
@@ -1813,7 +1813,7 @@ public:
         {
             task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::CLLBACK;
             task->projectionEvaluation.dim = in->projectionSize;
-            task->projectionEvaluation.callback.scriptId = in->_scriptID;
+            task->projectionEvaluation.callback.scriptId = in->_.scriptID;
             task->projectionEvaluation.callback.function = in->callback;
         }
     }
@@ -1831,7 +1831,7 @@ public:
         else
         {
             task->stateValidation.type = TaskDef::StateValidation::CLLBACK;
-            task->stateValidation.callback.scriptId = in->_scriptID;
+            task->stateValidation.callback.scriptId = in->_.scriptID;
             task->stateValidation.callback.function = in->callback;
         }
     }
@@ -1844,7 +1844,7 @@ public:
             throw std::runtime_error("Invalid callback name.");
 
         task->goal.type = TaskDef::Goal::CLLBACK;
-        task->goal.callback.scriptId = in->_scriptID;
+        task->goal.callback.scriptId = in->_.scriptID;
         task->goal.callback.function = in->callback;
     }
 
@@ -1856,9 +1856,9 @@ public:
             throw std::runtime_error("Invalid callback name.");
 
         task->validStateSampling.type = TaskDef::ValidStateSampling::CLLBACK;
-        task->validStateSampling.callback.scriptId = in->_scriptID;
+        task->validStateSampling.callback.scriptId = in->_.scriptID;
         task->validStateSampling.callback.function = in->callback;
-        task->validStateSampling.callbackNear.scriptId = in->_scriptID;
+        task->validStateSampling.callbackNear.scriptId = in->_.scriptID;
         task->validStateSampling.callbackNear.function = in->callbackNear;
     }
 
