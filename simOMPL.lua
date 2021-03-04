@@ -104,7 +104,7 @@ function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
     color=color or {1,0,0}
     extraAttributes=extraAttributes or 0
     sim.setThreadAutomaticSwitch(false)
-    local dwoPath=sim.addDrawingObject(sim.drawing_lines+extraAttributes,lineSize,0,parentObjectHandle,99999,{1,0,0})
+    local dwoPath=sim.addDrawingObject(sim.drawing_lines+extraAttributes,lineSize,0,parentObjectHandle,99999,color)
     local pathProjection=simOMPL.projectStates(taskHandle,path)
     for i=4,#pathProjection,3 do
         local d={}
