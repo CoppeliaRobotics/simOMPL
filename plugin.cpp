@@ -174,6 +174,9 @@ struct TaskDef
     ob::PlannerPtr planner;
 };
 
+template<> std::string sim::Handle<StateSpaceDef>::tag() { return "OMPL.StateSpace"; }
+template<> std::string sim::Handle<TaskDef>::tag() { return "OMPL.Task"; }
+
 class ProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
