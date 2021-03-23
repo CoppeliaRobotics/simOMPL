@@ -56,5 +56,5 @@ target_link_libraries(simExtOMPL Boost::boost Boost::system Boost::serialization
 target_link_libraries(simExtOMPL Eigen3::Eigen)
 target_link_libraries(simExtOMPL ${OMPL_LINK_LIBRARY})
 if(NOT WIN32)
-    coppeliasim_add_library(${OMPL_LIBRARY})
+    install(DIRECTORY ${OMPL_BUILD_DIR}/lib/ DESTINATION ${COPPELIASIM_LIBRARIES_DIR})
 endif()
