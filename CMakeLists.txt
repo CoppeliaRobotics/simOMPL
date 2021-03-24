@@ -33,18 +33,11 @@ ExternalProject_Add(ompl-${OMPL_VERSION}
     INSTALL_COMMAND ""
 )
 
-set(OMPL_INCLUDE_DIRS ${OMPL_SRC_DIR}/src ${OMPL_BUILD_DIR}/src)
-if(WIN32)
-    set(OMPL_LIBRARY ${OMPL_BUILD_DIR}/..../${CMAKE_SHARED_LIBRARY_PREFIX}ompl${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(OMPL_LINK_LIBRARY ${OMPL_BUILD_DIR}/src/ompl/${CMAKE_BUILD_TYPE}/ompl${CMAKE_LINK_LIBRARY_SUFFIX})
-else()
-    set(OMPL_LIBRARY ${OMPL_BUILD_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ompl.${OMPL_ABI_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(OMPL_LINK_LIBRARY ${OMPL_LIBRARY})
-endif()
+include_directories(${OMPL_SRC_DIR}/src ${OMPL_BUILD_DIR}/src)
+link_directories(${OMPL_BUILD_DIR}/lib)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
-include_directories(${OMPL_INCLUDE_DIRS})
 
 coppeliasim_generate_stubs(${CMAKE_CURRENT_BINARY_DIR}/generated XML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/callbacks.xml LUA_FILE ${CMAKE_CURRENT_SOURCE_DIR}/simOMPL.lua)
 
@@ -54,7 +47,7 @@ coppeliasim_add_plugin(simExtOMPL SOURCES plugin.cpp)
 add_dependencies(simExtOMPL ompl-${OMPL_VERSION})
 target_link_libraries(simExtOMPL Boost::boost Boost::system Boost::serialization)
 target_link_libraries(simExtOMPL Eigen3::Eigen)
-target_link_libraries(simExtOMPL ${OMPL_LINK_LIBRARY})
+target_link_libraries(simExtOMPL ompl)
 if(NOT WIN32)
     install(DIRECTORY ${OMPL_BUILD_DIR}/lib/ DESTINATION ${COPPELIASIM_LIBRARIES_DIR})
 endif()
