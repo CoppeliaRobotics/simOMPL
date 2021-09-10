@@ -1419,8 +1419,8 @@ public:
             PLANNER(PDST); // needs projection
             PLANNER(PRM);
             PLANNER(PRMstar);
-            PLANNER(pRRT);
-            PLANNER(pSBL);
+            //PLANNER(pRRT); // parallel planners not supported
+            //PLANNER(pSBL); // parallel planners not supported
             PLANNER(RRT);
             PLANNER(RRTConnect);
             PLANNER(RRTstar);

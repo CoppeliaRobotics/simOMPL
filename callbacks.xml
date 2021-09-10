@@ -807,10 +807,12 @@ end
         </item>
         <item name="PRMstar">
         </item>
+        <!-- parallel planners are not supported:
         <item name="pRRT">
         </item>
         <item name="pSBL">
         </item>
+        -->
         <item name="RRT">
         </item>
         <item name="RRTConnect">
