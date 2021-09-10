@@ -1308,14 +1308,14 @@ public:
     void validateStateSize(const TaskDef *task, const std::vector<float>& s, std::string descr = "State")
     {
         if(s.size() == 0)
-            throw descr + " is empty.";
+            throw std::runtime_error(descr + " is empty.");
         if(s.size() != task->dim)
         {
             std::stringstream ss;
             ss << descr << " is of incorrect size. Expected " << task->dim << ", got " << s.size() << ".";
             if(task->dim == 0)
                 ss << " Did you forget to set the state space for this task?";
-            throw ss.str();
+            throw std::runtime_error(ss.str());
         }
     }
 
