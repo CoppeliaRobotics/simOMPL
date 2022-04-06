@@ -2,7 +2,7 @@ local simOMPL={}
 
 --@fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
 --@arg string taskHandle the handle of the task
---@arg table states a table of tables, one element for each goal state
+--@arg {type=table,size=1..*} states a table of tables, one element for each goal state
 --@cats task, goal
 function simOMPL.setGoalStates(taskHandle,states)
     simOMPL.setGoalState(taskHandle,states[1])
