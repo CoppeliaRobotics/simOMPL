@@ -170,4 +170,24 @@ function simOMPL.removeDrawingObjects(taskHandle,dwos)
     for i,ob in pairs(dwos) do sim.removeDrawingObject(ob) end
 end
 
+--@fun createStateSpaceForJoint convenience function that wraps simOMPL.createStateSpace
+--@arg string name name of the state space
+--@arg int jointHandle handle of the joint
+--@arg int useForProjection use for projection
+--@arg {type=float,default=nil} weight weight
+--@ret int ssHandle handle of the state space
+--@cats state
+function simOMPL.createStateSpaceForJoint(name,jointHandle,useForProjection,weight)
+    local cyclic,interval=sim.getJointInterval(jointHandle)
+    return simOMPL.createStateSpace(name,
+        cyclic and simOMPL.StateSpaceType.cyclic_joint_position
+                or simOMPL.StateSpaceType.joint_position,
+        jointHandle,
+        cyclic and {} or {interval[1]},
+        cyclic and {} or {interval[1]+interval[2]},
+        useForProjection,
+        weight
+    )
+end
+
 return simOMPL
