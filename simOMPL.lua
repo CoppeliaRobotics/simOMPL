@@ -173,8 +173,8 @@ end
 --@fun createStateSpaceForJoint convenience function that wraps simOMPL.createStateSpace
 --@arg string name name of the state space
 --@arg int jointHandle handle of the joint
---@arg int useForProjection use for projection
---@arg {type=float,default=nil} weight weight
+--@arg {type=int,default=1} useForProjection use for projection
+--@arg {type=float,default=0} weight weight
 --@ret int ssHandle handle of the state space
 --@cats state
 function simOMPL.createStateSpaceForJoint(name,jointHandle,useForProjection,weight)
@@ -188,6 +188,27 @@ function simOMPL.createStateSpaceForJoint(name,jointHandle,useForProjection,weig
         useForProjection,
         weight
     )
+end
+
+--@fun setStateSpaceForJoints convenience function that wraps simOMPL.setStateSpace
+--@arg string taskHandle the handle of the task
+--@arg table.int jointHandles handles of the joints
+--@arg {type=table,item_type=int,default={}} useForProjection use for projection, same size as jointHandles
+--@arg {type=table,item_type=float,default={}} weight weights, same size as jointHandles
+--@cats state
+function simOMPL.setStateSpaceForJoints(taskHandle,jointHandles,useForProjeciton,weights)
+    local ss={}
+    for i,jointHandle in ipairs(jointHandles) do
+        table.insert(ss,
+            simOMPL.createStateSpaceForJoint(
+                sim.getObjectAlias(jointHandle,4),
+                jointHandle,
+                useForProjection[i] or 0,
+                weights[i]
+            )
+        )
+    end
+    simOMPL.setStateSpace(taskHandle,ss)
 end
 
 return simOMPL
