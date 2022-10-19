@@ -201,10 +201,12 @@ function simOMPL.setStateSpaceForJoints(taskHandle,jointHandles,useForProjection
     for i,jointHandle in ipairs(jointHandles) do
         table.insert(ss,
             simOMPL.createStateSpaceForJoint(
-                sim.getObjectAlias(jointHandle,4),
-                jointHandle,
-                useForProjection[i] or 0,
-                weights[i] or 1
+                table.unpack{
+                    sim.getObjectAlias(jointHandle,4),
+                    jointHandle,
+                    useForProjection[i],
+                    weights[i]
+                }
             )
         )
     end
