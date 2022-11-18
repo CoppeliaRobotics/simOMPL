@@ -71,7 +71,7 @@ struct LuaCallbackFunction
     // name of the Lua function
     std::string function;
     // id of the script where the function is defined in
-    simInt scriptId;
+    int scriptId;
 };
 
 struct StateSpaceDef
@@ -81,16 +81,16 @@ struct StateSpaceDef
     // type of this state space:
     StateSpaceType type;
     // handle of the object (object, or joint if type = joint_position/cyclic_joint_position):
-    simInt objectHandle;
+    int objectHandle;
     // object handle in order to specify optional reference frame that is not absolute
     // for sim_ompl_statespace_pose2d, etc.
-    simInt refFrameHandle;
+    int refFrameHandle;
     // weight of this state space component (used for state distance calculation):
-    simFloat weight;
+    float weight;
     // lower bounds of search space:
-    std::vector<simFloat> boundsLow;
+    std::vector<float> boundsLow;
     // upper bounds of search space:
-    std::vector<simFloat> boundsHigh;
+    std::vector<float> boundsHigh;
     // use this state space as the default projection:
     bool defaultProjection;
     // (specific to dubins state space) turning radius:
@@ -106,9 +106,9 @@ struct TaskDef
     // state space is a composition of elementary state spaces (internal handles to StateSpaceDef objects):
     std::vector<std::string> stateSpaces;
     // handle of the collision pairs:
-    std::vector<simInt> collisionPairHandles;
+    std::vector<int> collisionPairHandles;
     // start state:
-    std::vector<simFloat> startState;
+    std::vector<float> startState;
     // goal can be specified in different ways:
     struct Goal
     {
@@ -120,9 +120,9 @@ struct TaskDef
         // goal tolerance:
         float tolerance;
         // goal state:
-        std::vector<std::vector<simFloat> > states;
+        std::vector<std::vector<float> > states;
         // goal dummy pair:
-        struct {simInt goalDummy, robotDummy;} dummyPair;
+        struct {int goalDummy, robotDummy;} dummyPair;
         // goal callback:
         LuaCallbackFunction callback;
     } goal;
@@ -348,7 +348,7 @@ protected:
     virtual void dummyPairProjection(const ob::State *state, OMPLProjection projection) const
     {
         /*
-        simFloat pos[3];
+        float pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
         projection(0) = pos[0];
         projection(1) = pos[1];
@@ -358,7 +358,7 @@ protected:
         // TODO: don't we need to apply the provided state to the robot, read the tip dummy's position, then project it?
 
         // do projection, only for axis that should not be ignored:
-        simFloat pos[3];
+        float pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
         int ind = 0;
         for(int i = 0; i < 3; i++)
@@ -498,7 +498,7 @@ public:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         int j = 0;
-        simFloat pos[3], orient[4], value;
+        float pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -562,7 +562,7 @@ public:
     // reads state s from CoppeliaSim:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        simFloat pos[3], orient[4], value;
+        float pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -1361,7 +1361,7 @@ public:
 
         task->goal.type = TaskDef::Goal::STATE;
         task->goal.states.clear();
-        task->goal.states.push_back(std::vector<simFloat>());
+        task->goal.states.push_back(std::vector<float>());
 
         for(size_t i = 0; i < in->state.size(); i++)
             task->goal.states[0].push_back(in->state[i]);
@@ -1375,7 +1375,7 @@ public:
         task->goal.type = TaskDef::Goal::STATE;
 
         size_t last = task->goal.states.size();
-        task->goal.states.push_back(std::vector<simFloat>());
+        task->goal.states.push_back(std::vector<float>());
 
         for(size_t i = 0; i < in->state.size(); i++)
             task->goal.states[last].push_back(in->state[i]);
