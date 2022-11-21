@@ -86,11 +86,11 @@ struct StateSpaceDef
     // for sim_ompl_statespace_pose2d, etc.
     int refFrameHandle;
     // weight of this state space component (used for state distance calculation):
-    float weight;
+    double weight;
     // lower bounds of search space:
-    std::vector<float> boundsLow;
+    std::vector<double> boundsLow;
     // upper bounds of search space:
-    std::vector<float> boundsHigh;
+    std::vector<double> boundsHigh;
     // use this state space as the default projection:
     bool defaultProjection;
     // (specific to dubins state space) turning radius:
@@ -108,7 +108,7 @@ struct TaskDef
     // handle of the collision pairs:
     std::vector<int> collisionPairHandles;
     // start state:
-    std::vector<float> startState;
+    std::vector<double> startState;
     // goal can be specified in different ways:
     struct Goal
     {
@@ -116,11 +116,11 @@ struct TaskDef
         // goal ref. dummy:
         int refDummy;
         // goal metric:
-        float metric[4]; // x,y,z,angle(orientation), relative to refDummy
+        double metric[4]; // x,y,z,angle(orientation), relative to refDummy
         // goal tolerance:
-        float tolerance;
+        double tolerance;
         // goal state:
-        std::vector<std::vector<float> > states;
+        std::vector<std::vector<double> > states;
         // goal dummy pair:
         struct {int goalDummy, robotDummy;} dummyPair;
         // goal callback:
@@ -136,7 +136,7 @@ struct TaskDef
     // resolution at which state validity needs to be verified in order for a
     // motion between two states to be considered valid (specified as a
     // fraction of the space's extent)
-    float stateValidityCheckingResolution;
+    double stateValidityCheckingResolution;
     // state sampling:
     struct ValidStateSampling
     {
@@ -348,7 +348,7 @@ protected:
     virtual void dummyPairProjection(const ob::State *state, OMPLProjection projection) const
     {
         /*
-        float pos[3];
+        floatDouble pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
         projection(0) = pos[0];
         projection(1) = pos[1];
@@ -358,7 +358,7 @@ protected:
         // TODO: don't we need to apply the provided state to the robot, read the tip dummy's position, then project it?
 
         // do projection, only for axis that should not be ignored:
-        float pos[3];
+        floatDouble pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
         int ind = 0;
         for(int i = 0; i < 3; i++)
@@ -388,7 +388,7 @@ protected:
         projectionEvaluationCallback_out out_args;
 
         for(size_t i = 0; i < stateVec.size(); i++)
-            in_args.state.push_back((float)stateVec[i]);
+            in_args.state.push_back(stateVec[i]);
 
         if(projectionEvaluationCallback(task->projectionEvaluation.callback.scriptId, task->projectionEvaluation.callback.function.c_str(), &in_args, &out_args))
         {
@@ -498,7 +498,7 @@ public:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         int j = 0;
-        float pos[3], orient[4], value;
+        floatDouble pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -509,49 +509,49 @@ public:
             case sim_ompl_statespacetype_pose2d:
                 simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
-                pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                orient[2] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
                 simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
                 simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 break;
             case sim_ompl_statespacetype_pose3d:
-                pos[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getX();
-                pos[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getY();
-                pos[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                orient[0] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
-                orient[1] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
-                orient[2] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
-                orient[3] = (float)s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
+                pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
+                pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
+                pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
+                orient[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
+                orient[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
+                orient[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
+                orient[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
                 simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
                 simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 break;
             case sim_ompl_statespacetype_position2d:
                 simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 break;
             case sim_ompl_statespacetype_position3d:
-                pos[0] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                pos[1] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                pos[2] = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
+                pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
+                pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
                 simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 break;
             case sim_ompl_statespacetype_joint_position:
-                value = (float)s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
+                value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 simSetJointPosition(stateSpace->objectHandle, value);
                 break;
             case sim_ompl_statespacetype_cyclic_joint_position:
-                value = (float)s->as<ob::SO2StateSpace::StateType>(i)->value;
+                value = s->as<ob::SO2StateSpace::StateType>(i)->value;
                 simSetJointPosition(stateSpace->objectHandle, value);
                 break;
             case sim_ompl_statespacetype_dubins:
                 simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
-                pos[0] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getX();
-                pos[1] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getY();
-                orient[2] = (float)s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
+                pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
+                pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
+                orient[2] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
                 simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
                 simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
                 break;
@@ -562,7 +562,7 @@ public:
     // reads state s from CoppeliaSim:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        float pos[3], orient[4], value;
+        floatDouble pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -615,7 +615,7 @@ public:
     }
 
     // Store relative pose of objects:
-    void saveRelPoseState(std::vector<float>& p)
+    void saveRelPoseState(std::vector<floatDouble>& p)
     {
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -633,7 +633,7 @@ public:
     }
 
     // Restore relative pose of objects:
-    void restoreRelPoseState(const std::vector<float>& p)
+    void restoreRelPoseState(const std::vector<floatDouble>& p)
     {
         int pt = 0;
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
@@ -690,7 +690,7 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
-        std::vector<float> pose_old;
+        std::vector<floatDouble> pose_old;
         statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
@@ -730,7 +730,7 @@ protected:
         stateValidationCallback_out out_args;
 
         for(size_t i = 0; i < stateVec.size(); i++)
-            in_args.state.push_back((float)stateVec[i]);
+            in_args.state.push_back(stateVec[i]);
 
         if(stateValidationCallback(task->stateValidation.callback.scriptId, task->stateValidation.callback.function.c_str(), &in_args, &out_args))
         {
@@ -788,7 +788,7 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
-        std::vector<float> pose_old;
+        std::vector<floatDouble> pose_old;
         statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
@@ -796,20 +796,20 @@ protected:
 
         if(task->goal.metric[3] == 0.0)
         { // ignore orientation
-            float goalPos[3];
-            float robotPos[3];
+            floatDouble goalPos[3];
+            floatDouble robotPos[3];
             simGetObjectPosition(task->goal.dummyPair.goalDummy, task->goal.refDummy, &goalPos[0]);
             simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &robotPos[0]);
             *distance = sqrt(pow((goalPos[0] - robotPos[0])*task->goal.metric[0], 2) + pow((goalPos[1] - robotPos[1])*task->goal.metric[1], 2) + pow((goalPos[2] - robotPos[2])*task->goal.metric[2], 2));
         }
         else
         { // do not ignore orientation
-            float goalM[12];
-            float robotM[12];
+            floatDouble goalM[12];
+            floatDouble robotM[12];
             simGetObjectMatrix(task->goal.dummyPair.goalDummy, task->goal.refDummy, goalM);
             simGetObjectMatrix(task->goal.dummyPair.robotDummy, task->goal.refDummy, robotM);
-            float axis[3];
-            float angle;
+            floatDouble axis[3];
+            floatDouble angle;
             simGetRotationAxis(robotM, goalM, axis, &angle);
             *distance = sqrt(pow((goalM[3] - robotM[3])*task->goal.metric[0], 2) + pow((goalM[7] - robotM[7])*task->goal.metric[1], 2) + pow((goalM[11] - robotM[11])*task->goal.metric[2], 2) + pow(angle*task->goal.metric[3], 2));
         }
@@ -834,7 +834,7 @@ protected:
         goalCallback_out out_args;
 
         for(size_t i = 0; i < stateVec.size(); i++)
-            in_args.state.push_back((float)stateVec[i]);
+            in_args.state.push_back(stateVec[i]);
 
         if(goalCallback(task->goal.callback.scriptId, task->goal.callback.function.c_str(), &in_args, &out_args))
         {
@@ -916,7 +916,7 @@ public:
             validStateSamplerCallbackNear_out out_args;
 
             for(size_t i = 0; i < nearStateVec.size(); i++)
-                in_args.state.push_back((float)nearStateVec[i]);
+                in_args.state.push_back(nearStateVec[i]);
             in_args.distance = distance;
 
             if(validStateSamplerCallbackNear(task->validStateSampling.callbackNear.scriptId, task->validStateSampling.callbackNear.function.c_str(), &in_args, &out_args))
@@ -1305,7 +1305,7 @@ public:
             task->collisionPairHandles.push_back(in->collisionPairHandles[i]);
     }
 
-    void validateStateSize(const TaskDef *task, const std::vector<float>& s, std::string descr = "State")
+    void validateStateSize(const TaskDef *task, const std::vector<double>& s, std::string descr = "State")
     {
         if(s.size() == 0)
             throw std::runtime_error(descr + " is empty.");
@@ -1361,7 +1361,7 @@ public:
 
         task->goal.type = TaskDef::Goal::STATE;
         task->goal.states.clear();
-        task->goal.states.push_back(std::vector<float>());
+        task->goal.states.push_back(std::vector<double>());
 
         for(size_t i = 0; i < in->state.size(); i++)
             task->goal.states[0].push_back(in->state[i]);
@@ -1375,7 +1375,7 @@ public:
         task->goal.type = TaskDef::Goal::STATE;
 
         size_t last = task->goal.states.size();
-        task->goal.states.push_back(std::vector<float>());
+        task->goal.states.push_back(std::vector<double>());
 
         for(size_t i = 0; i < in->state.size(); i++)
             task->goal.states[last].push_back(in->state[i]);
@@ -1617,7 +1617,7 @@ public:
             std::vector<double> v;
             task->stateSpacePtr->copyToReals(v, s);
             for(size_t j = 0; j < v.size(); j++)
-                out->states.push_back((float)v[j]);
+                out->states.push_back(v[j]);
         }
     }
 
@@ -1635,7 +1635,7 @@ public:
             std::vector<double> stateReals;
             task->stateSpacePtr->copyToReals(stateReals, state);
             for(unsigned int j = 0; j < stateReals.size(); j++)
-                out->states.push_back((float)stateReals[j]);
+                out->states.push_back(stateReals[j]);
 
             int tag = v.getTag();
             out->tags.push_back(tag);
@@ -1654,7 +1654,7 @@ public:
 
                 ompl::base::Cost cost;
                 data.getEdgeWeight(i, j, &cost);
-                out->edgeWeights.push_back((float)cost.value());
+                out->edgeWeights.push_back(cost.value());
             }
         }
 
@@ -1710,7 +1710,7 @@ public:
         task->stateSpacePtr->as<StateSpace>()->readState(state);
         std::vector<double> stateVec = state.reals();
         for(size_t i = 0; i < stateVec.size(); i++)
-            out->state.push_back((float)stateVec[i]);
+            out->state.push_back(stateVec[i]);
     }
 
     void writeState(writeState_in *in, writeState_out *out)
@@ -1794,7 +1794,7 @@ public:
             Eigen::VectorXd projection(task->projectionEvaluatorPtr->getDimension());
             task->projectionEvaluatorPtr->project(state(), projection);
             for(size_t j = 0; j < projection.size(); j++)
-                out->projection.push_back((float)projection(j));
+                out->projection.push_back(projection(j));
         }
     }
 

@@ -21,16 +21,16 @@
             <param name="objectHandle" type="int">
                 <description>the object handle (a joint object if type is simOMPL.StateSpaceType.joint_position or .cyclic_joint_position, otherwise a shape)</description>
             </param>
-            <param name="boundsLow" type="table" item-type="float">
+            <param name="boundsLow" type="table" item-type="double">
                 <description>lower bounds (if type is pose, specify only the 3 position components)</description>
             </param>
-            <param name="boundsHigh" type="table" item-type="float">
+            <param name="boundsHigh" type="table" item-type="double">
                 <description>upper bounds (if type is pose, specify only the 3 position components)</description>
             </param>
             <param name="useForProjection" type="int">
                 <description>if true, this object position or joint value will be used for computing a default projection</description>
             </param>
-            <param name="weight" type="float" default="1.0">
+            <param name="weight" type="double" default="1.0">
                 <description>the weight of this state space component, used for computing distance between states. Default value is 1.0</description>
             </param>
             <param name="refObjectHandle" type="int" default="-1">
@@ -69,7 +69,7 @@
             <param name="stateSpaceHandle" type="string">
                 <description>handle to state space component</description>
             </param>
-            <param name="turningRadius" type="float">
+            <param name="turningRadius" type="double">
                 <description>turning radius</description>
             </param>
             <param name="isSymmetric" type="bool">
@@ -167,7 +167,7 @@
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="resolution" type="float">
+            <param name="resolution" type="double">
                 <description>resolution of state validity checking, expressed as fraction of state space's extent</description>
             </param>
         </params>
@@ -249,7 +249,7 @@
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
             </param>
         </params>
@@ -266,7 +266,7 @@
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
             </param>
         </params>
@@ -283,7 +283,7 @@
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>a table of numbers, whose size must be consistent with the robot's state space specified in this task object</description>
             </param>
         </params>
@@ -309,10 +309,10 @@
             <param name="goalDummy" type="int">
                 <description>a dummy fixed in the environment, representing the goal pose/position</description>
             </param>
-            <param name="tolerance" type="float" default="0.001f">
+            <param name="tolerance" type="double" default="0.001f">
                 <description>tolerated dummy-dummy distance</description>
             </param>
-            <param name="metric" type="table" item-type="float" default="{1.0, 1.0, 1.0, 0.1}">
+            <param name="metric" type="table" item-type="double" default="{1.0, 1.0, 1.0, 0.1}">
                 <description>a metric (x,y,z,angle) used to evaluate the dummy-dummy distance</description>
             </param>
             <param name="refDummy" type="int" default="-1">
@@ -451,7 +451,7 @@
             </param>
         </params>
         <return>
-            <param name="distance" type="float">
+            <param name="distance" type="double">
                 <description>distance to the desired goal for the top solution, or -1.0 if there are no solutions available</description>
             </param>
         </return>
@@ -471,7 +471,7 @@
             </param>
         </params>
         <return>
-            <param name="states" type="table" item-type="float">
+            <param name="states" type="table" item-type="double">
                 <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
             </param>
         </return>
@@ -490,19 +490,19 @@
             </param>
         </params>
         <return>
-            <param name="states" type="table" item-type="float">
+            <param name="states" type="table" item-type="double">
                 <description>a table of states, representing the configurations in the constructed search graph. States are specified linearly.</description>
             </param>
             <param name="tags" type="table" item-type="int">
                 <description>a table of tags (one integer for every vertex)</description>
             </param>
-            <param name="tagsReal" type="table" item-type="float">
-                <description>a table of tags (one float for every vertex)</description>
+            <param name="tagsReal" type="table" item-type="double">
+                <description>a table of tags (one real value for every vertex)</description>
             </param>
             <param name="edges" type="table" item-type="int">
                 <description>the pairs of vertex indices describing vertex connectivity</description>
             </param>
-            <param name="edgeWeights" type="table" item-type="float">
+            <param name="edgeWeights" type="table" item-type="double">
                 <description>the weight (cost) associated to each edge</description>
             </param>
             <param name="startVertices" type="table" item-type="int">
@@ -547,7 +547,7 @@ end
             <param name="solved" type="bool">
                 <description>true if a solution has been found.</description>
             </param>
-            <param name="states" type="table" item-type="float">
+            <param name="states" type="table" item-type="double">
                 <description>a table of states, representing the solution, from start to goal. States are specified linearly.</description>
             </param>
         </return>
@@ -563,7 +563,7 @@ end
             </param>
         </params>
         <return>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </return>
@@ -577,7 +577,7 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </params>
@@ -596,7 +596,7 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </params>
@@ -615,7 +615,7 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </params>
@@ -634,12 +634,12 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </params>
         <return>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </return>
@@ -653,15 +653,15 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="a" type="table" item-type="float">
+            <param name="a" type="table" item-type="double">
                 <description>state vector</description>
             </param>
-            <param name="b" type="table" item-type="float">
+            <param name="b" type="table" item-type="double">
                 <description>state vector</description>
             </param>
         </params>
         <return>
-            <param name="distance" type="float">
+            <param name="distance" type="double">
                 <description>computed distance</description>
             </param>
         </return>
@@ -680,12 +680,12 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>state vector(s)</description>
             </param>
         </params>
         <return>
-            <param name="projection" type="table" item-type="float">
+            <param name="projection" type="table" item-type="double">
                 <description>state projection vector(s)</description>
             </param>
         </return>
@@ -849,7 +849,7 @@ end
     <script-function name="goalCallback">
         <description>Callback for checking if the goal is satisfied.</description>
         <params>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>the state to test for goal satisfaction</description>
             </param>
         </params>
@@ -857,7 +857,7 @@ end
             <param name="satisfied" type="bool">
                 <description>true if satisfied, false otherwise</description>
             </param>
-            <param name="distance" type="float">
+            <param name="distance" type="double">
                 <description>distance to goal, if it is known. A constant value can be returned otherwise, but the performance of the algorithm will be worse.</description>
             </param>
         </return>
@@ -865,12 +865,12 @@ end
     <script-function name="projectionEvaluationCallback">
         <description>Callback for computing a (euclidean) projection of states.</description>
         <params>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>the state to compute the projection for</description>
             </param>
         </params>
         <return>
-            <param name="projection" type="table" item-type="float">
+            <param name="projection" type="table" item-type="double">
                 <description>projected state, usualy of size 2 or 3, representing a point in plane or space.</description>
             </param>
         </return>
@@ -878,7 +878,7 @@ end
     <script-function name="stateValidationCallback">
         <description>Callback for checking the validity of states.</description>
         <params>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>the state to compute the projection for</description>
             </param>
         </params>
@@ -893,7 +893,7 @@ end
         <params>
         </params>
         <return>
-            <param name="sampledState" type="table" item-type="float">
+            <param name="sampledState" type="table" item-type="double">
                 <description>a valid state</description>
             </param>
         </return>
@@ -901,15 +901,15 @@ end
     <script-function name="validStateSamplerCallbackNear">
         <description>Callback for sampling valid states in the proximity of a given state, within a certain distance.</description>
         <params>
-            <param name="state" type="table" item-type="float">
+            <param name="state" type="table" item-type="double">
                 <description>the center state</description>
             </param>
-            <param name="distance" type="float">
+            <param name="distance" type="double">
                 <description>distance bound</description>
             </param>
         </params>
         <return>
-            <param name="sampledState" type="table" item-type="float">
+            <param name="sampledState" type="table" item-type="double">
                 <description>a valid state</description>
             </param>
         </return>
