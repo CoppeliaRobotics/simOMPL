@@ -403,7 +403,7 @@ protected:
         }
     }
 
-    sim::Handles<StateSpaceDef> stateSpaceHandles;
+    sim::Handles<StateSpaceDef> &stateSpaceHandles;
     TaskDef *task;
     const ob::StateSpacePtr& statespace;
     int dim;
