@@ -52,7 +52,7 @@
 #endif
 
 #include "simPlusPlus/Plugin.h"
-#include "simPlusPlus/Handle.h"
+#include "simPlusPlus/Handles.h"
 #include "config.h"
 #include "plugin.h"
 #include "stubs.h"
@@ -174,13 +174,10 @@ struct TaskDef
     ob::PlannerPtr planner;
 };
 
-template<> std::string sim::Handle<StateSpaceDef>::tag() { return "OMPL.StateSpace"; }
-template<> std::string sim::Handle<TaskDef>::tag() { return "OMPL.Task"; }
-
 class ProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
-    ProjectionEvaluator(sim::Handles<StateSpaceDef> &ssh, const ob::StateSpacePtr& space, TaskDef *task)
+    ProjectionEvaluator(sim::Handles<StateSpaceDef*> &ssh, const ob::StateSpacePtr& space, TaskDef *task)
         : ob::ProjectionEvaluator(space), stateSpaceHandles(ssh), statespace(space)
     {
         this->task = task;
@@ -403,7 +400,7 @@ protected:
         }
     }
 
-    sim::Handles<StateSpaceDef> &stateSpaceHandles;
+    sim::Handles<StateSpaceDef*> &stateSpaceHandles;
     TaskDef *task;
     const ob::StateSpacePtr& statespace;
     int dim;
@@ -412,7 +409,7 @@ protected:
 class StateSpace : public ob::CompoundStateSpace
 {
 public:
-    StateSpace(sim::Handles<StateSpaceDef> &ssh, TaskDef *task)
+    StateSpace(sim::Handles<StateSpaceDef*> &ssh, TaskDef *task)
         : ob::CompoundStateSpace(), stateSpaceHandles(ssh), task(task)
     {
         setName("SimCompoundStateSpace");
@@ -652,7 +649,7 @@ public:
     }
 
 protected:
-    sim::Handles<StateSpaceDef> &stateSpaceHandles;
+    sim::Handles<StateSpaceDef*> &stateSpaceHandles;
     TaskDef *task;
 };
 
@@ -1867,8 +1864,8 @@ public:
 
 private:
     OutputHandler *oh;
-    sim::Handles<TaskDef> taskHandles;
-    sim::Handles<StateSpaceDef> stateSpaceHandles;
+    sim::Handles<TaskDef*> taskHandles{"OMPL.Task"};
+    sim::Handles<StateSpaceDef*> stateSpaceHandles{"OMPL.StateSpace"};
 };
 
 SIM_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)
