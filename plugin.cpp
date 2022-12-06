@@ -345,7 +345,7 @@ protected:
     virtual void dummyPairProjection(const ob::State *state, OMPLProjection projection) const
     {
         /*
-        floatDouble pos[3];
+        double pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
         projection(0) = pos[0];
         projection(1) = pos[1];
@@ -355,7 +355,7 @@ protected:
         // TODO: don't we need to apply the provided state to the robot, read the tip dummy's position, then project it?
 
         // do projection, only for axis that should not be ignored:
-        floatDouble pos[3];
+        double pos[3];
         simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
         int ind = 0;
         for(int i = 0; i < 3; i++)
@@ -495,7 +495,7 @@ public:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         int j = 0;
-        floatDouble pos[3], orient[4], value;
+        double pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -559,7 +559,7 @@ public:
     // reads state s from CoppeliaSim:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        floatDouble pos[3], orient[4], value;
+        double pos[3], orient[4], value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -612,7 +612,7 @@ public:
     }
 
     // Store relative pose of objects:
-    void saveRelPoseState(std::vector<floatDouble>& p)
+    void saveRelPoseState(std::vector<double>& p)
     {
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -630,7 +630,7 @@ public:
     }
 
     // Restore relative pose of objects:
-    void restoreRelPoseState(const std::vector<floatDouble>& p)
+    void restoreRelPoseState(const std::vector<double>& p)
     {
         int pt = 0;
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
@@ -687,7 +687,7 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
-        std::vector<floatDouble> pose_old;
+        std::vector<double> pose_old;
         statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
@@ -785,7 +785,7 @@ protected:
         // save old state:
         ob::ScopedState<ob::CompoundStateSpace> s_old(statespace);
         statespace->as<StateSpace>()->readState(s_old);
-        std::vector<floatDouble> pose_old;
+        std::vector<double> pose_old;
         statespace->as<StateSpace>()->saveRelPoseState(pose_old);
 
         // write query state:
@@ -793,20 +793,20 @@ protected:
 
         if(task->goal.metric[3] == 0.0)
         { // ignore orientation
-            floatDouble goalPos[3];
-            floatDouble robotPos[3];
+            double goalPos[3];
+            double robotPos[3];
             simGetObjectPosition(task->goal.dummyPair.goalDummy, task->goal.refDummy, &goalPos[0]);
             simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &robotPos[0]);
             *distance = sqrt(pow((goalPos[0] - robotPos[0])*task->goal.metric[0], 2) + pow((goalPos[1] - robotPos[1])*task->goal.metric[1], 2) + pow((goalPos[2] - robotPos[2])*task->goal.metric[2], 2));
         }
         else
         { // do not ignore orientation
-            floatDouble goalM[12];
-            floatDouble robotM[12];
+            double goalM[12];
+            double robotM[12];
             simGetObjectMatrix(task->goal.dummyPair.goalDummy, task->goal.refDummy, goalM);
             simGetObjectMatrix(task->goal.dummyPair.robotDummy, task->goal.refDummy, robotM);
-            floatDouble axis[3];
-            floatDouble angle;
+            double axis[3];
+            double angle;
             simGetRotationAxis(robotM, goalM, axis, &angle);
             *distance = sqrt(pow((goalM[3] - robotM[3])*task->goal.metric[0], 2) + pow((goalM[7] - robotM[7])*task->goal.metric[1], 2) + pow((goalM[11] - robotM[11])*task->goal.metric[2], 2) + pow(angle*task->goal.metric[3], 2));
         }
