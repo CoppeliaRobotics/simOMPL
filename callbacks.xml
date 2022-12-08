@@ -309,7 +309,7 @@
             <param name="goalDummy" type="int">
                 <description>a dummy fixed in the environment, representing the goal pose/position</description>
             </param>
-            <param name="tolerance" type="double" default="0.001f">
+            <param name="tolerance" type="double" default="0.001">
                 <description>tolerated dummy-dummy distance</description>
             </param>
             <param name="metric" type="table" item-type="double" default="{1.0, 1.0, 1.0, 0.1}">
