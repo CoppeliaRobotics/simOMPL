@@ -1020,7 +1020,7 @@ public:
         if(in->weight <= 0)
             throw std::runtime_error("State component weight must be positive.");
 
-        if(in->refObjectHandle != -1 && simIsHandleValid(in->refObjectHandle, sim_appobj_object_type) <= 0)
+        if(in->refObjectHandle != -1 && simIsHandle(in->refObjectHandle, sim_appobj_object_type) <= 0)
             throw std::runtime_error("Reference object handle is not valid.");
 
         StateSpaceDef *statespace = new StateSpaceDef();
@@ -1210,8 +1210,7 @@ public:
             break;
         }
         s << prefix << "algorithm: " << algorithm_string(task->algorithm) << std::endl;
-
-        simAddStatusbarMessage(s.str().c_str());
+        sim::addLog(sim_verbosity_infos, s.str().c_str());
         std::cout << s.str();
     }
 
