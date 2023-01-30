@@ -345,8 +345,7 @@ protected:
     virtual void dummyPairProjection(const ob::State *state, OMPLProjection projection) const
     {
         /*
-        double pos[3];
-        simGetObjectPosition(task->goal.dummyPair.robotDummy, -1, &pos[0]);
+        std::array<double, 3> pos = sim::getObjectPosition(task->goal.dummyPair.robotDummy, -1);
         projection(0) = pos[0];
         projection(1) = pos[1];
         projection(2) = pos[2];
@@ -355,8 +354,7 @@ protected:
         // TODO: don't we need to apply the provided state to the robot, read the tip dummy's position, then project it?
 
         // do projection, only for axis that should not be ignored:
-        double pos[3];
-        simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &pos[0]);
+        std::array<double, 3> pos = sim::getObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy);
         int ind = 0;
         for(int i = 0; i < 3; i++)
         {
@@ -495,7 +493,9 @@ public:
     void writeState(const ob::ScopedState<ob::CompoundStateSpace>& s)
     {
         int j = 0;
-        double pos[3], orient[4], value;
+        std::array<double, 3> pos, orient;
+        std::array<double, 4> orienq;
+        double value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -504,53 +504,53 @@ public:
             switch(stateSpace->type)
             {
             case sim_ompl_statespacetype_pose2d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
+                orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
                 pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                 orient[2] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                sim::setObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, orient);
+                sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
             case sim_ompl_statespacetype_pose3d:
                 pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
                 pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
                 pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
-                orient[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
-                orient[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
-                orient[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
-                orient[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
-                simSetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                orienq[0] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().x;
+                orienq[1] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().y;
+                orienq[2] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().z;
+                orienq[3] = s->as<ob::SE3StateSpace::StateType>(i)->rotation().w;
+                sim::setObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, orienq);
+                sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
             case sim_ompl_statespacetype_position2d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
-                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
             case sim_ompl_statespacetype_position3d:
                 pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
-                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
             case sim_ompl_statespacetype_joint_position:
                 value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
-                simSetJointPosition(stateSpace->objectHandle, value);
+                sim::setJointPosition(stateSpace->objectHandle, value);
                 break;
             case sim_ompl_statespacetype_cyclic_joint_position:
                 value = s->as<ob::SO2StateSpace::StateType>(i)->value;
-                simSetJointPosition(stateSpace->objectHandle, value);
+                sim::setJointPosition(stateSpace->objectHandle, value);
                 break;
             case sim_ompl_statespacetype_dubins:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
+                orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
                 pos[1] = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                 orient[2] = s->as<ob::SE2StateSpace::StateType>(i)->getYaw();
-                simSetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
-                simSetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                sim::setObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, orient);
+                sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
             }
         }
@@ -559,7 +559,9 @@ public:
     // reads state s from CoppeliaSim:
     void readState(ob::ScopedState<ob::CompoundStateSpace>& s)
     {
-        double pos[3], orient[4], value;
+        std::array<double, 3> pos, orient;
+        std::array<double, 4> orienq;
+        double value;
 
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
@@ -568,42 +570,42 @@ public:
             switch(stateSpace->type)
             {
             case sim_ompl_statespacetype_pose2d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
+                orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
                 s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                 break;
             case sim_ompl_statespacetype_pose3d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                simGetObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]);
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
+                orienq = sim::getObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orient[0];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orient[1];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orient[2];
-                s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orient[3];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().x = orienq[0];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().y = orienq[1];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orienq[2];
+                s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orienq[3];
                 break;
             case sim_ompl_statespacetype_position2d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                 break;
             case sim_ompl_statespacetype_position3d:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
                 break;
             case sim_ompl_statespacetype_joint_position:
-                simGetJointPosition(stateSpace->objectHandle, &value);
+                value = sim::getJointPosition(stateSpace->objectHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
                 break;
             case sim_ompl_statespacetype_cyclic_joint_position:
-                simGetJointPosition(stateSpace->objectHandle, &value);
+                value = sim::getJointPosition(stateSpace->objectHandle);
                 s->as<ob::SO2StateSpace::StateType>(i)->value = value;
                 break;
             case sim_ompl_statespacetype_dubins:
-                simGetObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, &pos[0]);
-                simGetObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, &orient[0]); // Euler angles
+                pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
+                orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
                 s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                 break;
@@ -622,9 +624,17 @@ public:
                     stateSpace->type == sim_ompl_statespacetype_position2d ||
                     stateSpace->type == sim_ompl_statespacetype_position3d)
             {
-                p.resize(p.size() + 7);
-                simGetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[p.size() - 7]);
-                simGetObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, &p[p.size() - 4]);
+                int n = p.size();
+                p.resize(n + 7);
+                std::array<double, 3> pos = sim::getObjectPosition(stateSpace->objectHandle, sim_handle_parent);
+                std::array<double, 4> orienq = sim::getObjectQuaternion(stateSpace->objectHandle, sim_handle_parent);
+                p[n + 0] = pos[0];
+                p[n + 1] = pos[1];
+                p[n + 2] = pos[2];
+                p[n + 3] = orienq[0];
+                p[n + 4] = orienq[1];
+                p[n + 5] = orienq[2];
+                p[n + 6] = orienq[3];
             }
         }
     }
@@ -641,8 +651,10 @@ public:
                     stateSpace->type == sim_ompl_statespacetype_position2d ||
                     stateSpace->type == sim_ompl_statespacetype_position3d)
             {
-                simSetObjectPosition(stateSpace->objectHandle, sim_handle_parent, &p[pt+0]);
-                simSetObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, &p[pt+3]);
+                std::array<double, 3> pos{p[pt + 0], p[pt + 1], p[pt + 2]};
+                std::array<double, 4> orienq{p[pt + 3], p[pt + 4], p[pt + 5], p[pt + 6]};
+                sim::setObjectPosition(stateSpace->objectHandle, sim_handle_parent, pos);
+                sim::setObjectQuaternion(stateSpace->objectHandle, sim_handle_parent, orienq);
                 pt += 7;
             }
         }
@@ -699,8 +711,8 @@ protected:
         {
             if(task->collisionPairHandles[2 * i + 0] >= 0)
             {
-                int r = simCheckCollision(task->collisionPairHandles[2 * i + 0], task->collisionPairHandles[2 * i + 1]);
-                if(r > 0)
+                bool r = sim::checkCollision(task->collisionPairHandles[2 * i + 0], task->collisionPairHandles[2 * i + 1]);
+                if(r)
                 {
                     inCollision = true;
                     break;
@@ -793,22 +805,25 @@ protected:
 
         if(task->goal.metric[3] == 0.0)
         { // ignore orientation
-            double goalPos[3];
-            double robotPos[3];
-            simGetObjectPosition(task->goal.dummyPair.goalDummy, task->goal.refDummy, &goalPos[0]);
-            simGetObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy, &robotPos[0]);
-            *distance = sqrt(pow((goalPos[0] - robotPos[0])*task->goal.metric[0], 2) + pow((goalPos[1] - robotPos[1])*task->goal.metric[1], 2) + pow((goalPos[2] - robotPos[2])*task->goal.metric[2], 2));
+            auto goalPos = sim::getObjectPosition(task->goal.dummyPair.goalDummy, task->goal.refDummy);
+            auto robotPos = sim::getObjectPosition(task->goal.dummyPair.robotDummy, task->goal.refDummy);
+            *distance = sqrt(
+                pow((goalPos[0] - robotPos[0]) * task->goal.metric[0], 2) +
+                pow((goalPos[1] - robotPos[1]) * task->goal.metric[1], 2) +
+                pow((goalPos[2] - robotPos[2]) * task->goal.metric[2], 2)
+            );
         }
         else
         { // do not ignore orientation
-            double goalM[12];
-            double robotM[12];
-            simGetObjectMatrix(task->goal.dummyPair.goalDummy, task->goal.refDummy, goalM);
-            simGetObjectMatrix(task->goal.dummyPair.robotDummy, task->goal.refDummy, robotM);
-            double axis[3];
-            double angle;
-            simGetRotationAxis(robotM, goalM, axis, &angle);
-            *distance = sqrt(pow((goalM[3] - robotM[3])*task->goal.metric[0], 2) + pow((goalM[7] - robotM[7])*task->goal.metric[1], 2) + pow((goalM[11] - robotM[11])*task->goal.metric[2], 2) + pow(angle*task->goal.metric[3], 2));
+            auto goalM = sim::getObjectMatrix(task->goal.dummyPair.goalDummy, task->goal.refDummy);
+            auto robotM = sim::getObjectMatrix(task->goal.dummyPair.robotDummy, task->goal.refDummy);
+            auto [axis, angle] = sim::getRotationAxis(robotM, goalM);
+            *distance = sqrt(
+                pow((goalM[3] - robotM[3]) * task->goal.metric[0], 2) +
+                pow((goalM[7] - robotM[7]) * task->goal.metric[1], 2) +
+                pow((goalM[11] - robotM[11]) * task->goal.metric[2], 2) +
+                pow(angle * task->goal.metric[3], 2)
+            );
         }
 
         bool satisfied = *distance <= tolerance;
@@ -1020,7 +1035,7 @@ public:
         if(in->weight <= 0)
             throw std::runtime_error("State component weight must be positive.");
 
-        if(in->refObjectHandle != -1 && simIsHandle(in->refObjectHandle, sim_appobj_object_type) <= 0)
+        if(in->refObjectHandle != -1 && !sim::isHandle(in->refObjectHandle, sim_appobj_object_type))
             throw std::runtime_error("Reference object handle is not valid.");
 
         StateSpaceDef *statespace = new StateSpaceDef();
