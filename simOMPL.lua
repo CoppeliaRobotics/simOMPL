@@ -1,4 +1,4 @@
-local simOMPL={}
+local simOMPL=loadPlugin'simOMPL'
 
 --@fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
 --@arg string taskHandle the handle of the task
@@ -212,5 +212,7 @@ function simOMPL.setStateSpaceForJoints(taskHandle,jointHandles,useForProjection
     end
     simOMPL.setStateSpace(taskHandle,ss)
 end
+
+(require'simOMPL-typecheck')(simOMPL)
 
 return simOMPL

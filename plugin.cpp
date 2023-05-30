@@ -1001,7 +1001,7 @@ public:
 class Plugin : public sim::Plugin
 {
 public:
-    void onStart()
+    void onInit()
     {
         oh = new OutputHandler;
         ompl::msg::useOutputHandler(oh);
@@ -1013,7 +1013,7 @@ public:
         setBuildDate(BUILD_DATE);
     }
 
-    void onEnd()
+    void onCleanup()
     {
         ompl::msg::restorePreviousOutputHandler();
         delete oh;

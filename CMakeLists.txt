@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(simExtOMPL)
+project(simOMPL)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MACOSX_RPATH 1)
@@ -46,11 +46,11 @@ coppeliasim_generate_stubs(${CMAKE_CURRENT_BINARY_DIR}/generated XML_FILE ${CMAK
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-coppeliasim_add_plugin(simExtOMPL SOURCES plugin.cpp)
-add_dependencies(simExtOMPL ompl-${OMPL_VERSION})
-target_link_libraries(simExtOMPL Boost::boost Boost::system Boost::serialization)
-target_link_libraries(simExtOMPL Eigen3::Eigen)
-target_link_libraries(simExtOMPL ompl)
+coppeliasim_add_plugin(simOMPL SOURCES plugin.cpp)
+add_dependencies(simOMPL ompl-${OMPL_VERSION})
+target_link_libraries(simOMPL Boost::boost Boost::system Boost::serialization)
+target_link_libraries(simOMPL Eigen3::Eigen)
+target_link_libraries(simOMPL ompl)
 if(NOT WIN32)
     install(DIRECTORY ${OMPL_BUILD_DIR}/lib/ DESTINATION ${COPPELIASIM_LIBRARIES_DIR})
 endif()
