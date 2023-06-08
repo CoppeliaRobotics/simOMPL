@@ -83,7 +83,7 @@ struct StateSpaceDef
     // handle of the object (object, or joint if type = joint_position/cyclic_joint_position):
     int objectHandle;
     // object handle in order to specify optional reference frame that is not absolute
-    // for sim_ompl_statespace_pose2d, etc.
+    // for simompl_statespace_pose2d, etc.
     int refFrameHandle;
     // weight of this state space component (used for state distance calculation):
     double weight;
@@ -263,16 +263,16 @@ protected:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_pose2d:
+            case simompl_statespacetype_position2d:
                 return 2;
-            case sim_ompl_statespacetype_pose3d:
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_pose3d:
+            case simompl_statespacetype_position3d:
                 return 3;
-            case sim_ompl_statespacetype_joint_position:
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 return 1;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 return 2;
             }
         }
@@ -292,31 +292,31 @@ protected:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
                 projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 projection(0) = s->as<ob::SE3StateSpace::StateType>(i)->getX();
                 projection(1) = s->as<ob::SE3StateSpace::StateType>(i)->getY();
                 projection(2) = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
                 break;
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 projection(1) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 projection(2) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 projection(0) = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 projection(0) = s->as<ob::SO2StateSpace::StateType>(i)->value;
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 projection(0) = s->as<ob::SE2StateSpace::StateType>(i)->getX();
                 projection(1) = s->as<ob::SE2StateSpace::StateType>(i)->getY();
                 break;
@@ -421,29 +421,29 @@ public:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 subSpace = ob::StateSpacePtr(new ob::SE2StateSpace());
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 subSpace = ob::StateSpacePtr(new ob::SE3StateSpace());
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
                 break;
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(2));
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(3));
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 subSpace = ob::StateSpacePtr(new ob::RealVectorStateSpace(1));
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 subSpace = ob::StateSpacePtr(new ob::SO2StateSpace());
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 subSpace = ob::StateSpacePtr(new ob::DubinsStateSpace(stateSpace->dubinsTurningRadius, stateSpace->dubinsIsSymmetric));
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(0)->setName(stateSpace->name + ".position");
                 subSpace->as<ob::CompoundStateSpace>()->getSubspace(1)->setName(stateSpace->name + ".orientation");
@@ -463,26 +463,26 @@ public:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 as<ob::SE2StateSpace>(i)->setBounds(bounds);
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 as<ob::SE3StateSpace>(i)->setBounds(bounds);
                 break;
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 as<ob::RealVectorStateSpace>(i)->setBounds(bounds);
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 if(!stateSpace->boundsLow.empty() || !stateSpace->boundsHigh.empty())
                     sim::addLog(sim_verbosity_warnings, "cyclic_joint_position state space has no bounds");
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 as<ob::SE2StateSpace>(i)->setBounds(bounds);
                 break;
             }
@@ -503,7 +503,7 @@ public:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
@@ -512,7 +512,7 @@ public:
                 sim::setObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle, orient);
                 sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 pos[0] = s->as<ob::SE3StateSpace::StateType>(i)->getX();
                 pos[1] = s->as<ob::SE3StateSpace::StateType>(i)->getY();
                 pos[2] = s->as<ob::SE3StateSpace::StateType>(i)->getZ();
@@ -523,27 +523,27 @@ public:
                 sim::setObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle, orienq);
                 sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 pos[0] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 pos[1] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[1];
                 pos[2] = s->as<ob::RealVectorStateSpace::StateType>(i)->values[2];
                 sim::setObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle, pos);
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 value = s->as<ob::RealVectorStateSpace::StateType>(i)->values[0];
                 sim::setJointPosition(stateSpace->objectHandle, value);
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 value = s->as<ob::SO2StateSpace::StateType>(i)->value;
                 sim::setJointPosition(stateSpace->objectHandle, value);
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 pos[0] = s->as<ob::SE2StateSpace::StateType>(i)->getX();
@@ -569,13 +569,13 @@ public:
 
             switch(stateSpace->type)
             {
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
                 s->as<ob::SE2StateSpace::StateType>(i)->setYaw(orient[2]);
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 orienq = sim::getObjectQuaternion(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::SE3StateSpace::StateType>(i)->setXYZ(pos[0], pos[1], pos[2]);
@@ -584,26 +584,26 @@ public:
                 s->as<ob::SE3StateSpace::StateType>(i)->rotation().z = orienq[2];
                 s->as<ob::SE3StateSpace::StateType>(i)->rotation().w = orienq[3];
                 break;
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = pos[0];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[1] = pos[1];
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[2] = pos[2];
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 value = sim::getJointPosition(stateSpace->objectHandle);
                 s->as<ob::RealVectorStateSpace::StateType>(i)->values[0] = value;
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 value = sim::getJointPosition(stateSpace->objectHandle);
                 s->as<ob::SO2StateSpace::StateType>(i)->value = value;
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 pos = sim::getObjectPosition(stateSpace->objectHandle, stateSpace->refFrameHandle);
                 orient = sim::getObjectOrientation(stateSpace->objectHandle, stateSpace->refFrameHandle); // Euler angles
                 s->as<ob::SE2StateSpace::StateType>(i)->setXY(pos[0], pos[1]);
@@ -619,10 +619,10 @@ public:
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
-            if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
-                    stateSpace->type == sim_ompl_statespacetype_pose3d ||
-                    stateSpace->type == sim_ompl_statespacetype_position2d ||
-                    stateSpace->type == sim_ompl_statespacetype_position3d)
+            if(stateSpace->type == simompl_statespacetype_pose2d ||
+                    stateSpace->type == simompl_statespacetype_pose3d ||
+                    stateSpace->type == simompl_statespacetype_position2d ||
+                    stateSpace->type == simompl_statespacetype_position3d)
             {
                 int n = p.size();
                 p.resize(n + 7);
@@ -646,10 +646,10 @@ public:
         for(size_t i = 0; i < task->stateSpaces.size(); i++)
         {
             StateSpaceDef *stateSpace = stateSpaceHandles.get(task->stateSpaces[i]);
-            if(stateSpace->type == sim_ompl_statespacetype_pose2d ||
-                    stateSpace->type == sim_ompl_statespacetype_pose3d ||
-                    stateSpace->type == sim_ompl_statespacetype_position2d ||
-                    stateSpace->type == sim_ompl_statespacetype_position3d)
+            if(stateSpace->type == simompl_statespacetype_pose2d ||
+                    stateSpace->type == simompl_statespacetype_pose3d ||
+                    stateSpace->type == simompl_statespacetype_position2d ||
+                    stateSpace->type == simompl_statespacetype_position3d)
             {
                 std::array<double, 3> pos{p[pt + 0], p[pt + 1], p[pt + 2]};
                 std::array<double, 4> orienq{p[pt + 3], p[pt + 4], p[pt + 5], p[pt + 6]};
@@ -1076,7 +1076,7 @@ public:
         task->stateValidityCheckingResolution = 0.01f; // 1% of state space's extent
         task->validStateSampling.type = TaskDef::ValidStateSampling::DEFAULT;
         task->projectionEvaluation.type = TaskDef::ProjectionEvaluation::DEFAULT;
-        task->algorithm = sim_ompl_algorithm_KPIECE1;
+        task->algorithm = simompl_algorithm_KPIECE1;
         task->verboseLevel = 0;
         out->taskHandle = taskHandles.add(task, in->_.scriptID);
     }
@@ -1126,7 +1126,7 @@ public:
             s << "}" << std::endl;
             s << prefix << "        default projection: " << (stateSpace->defaultProjection ? "true" : "false") << std::endl;
             s << prefix << "        weight: " << stateSpace->weight << std::endl;
-            if(stateSpace->type == sim_ompl_statespacetype_dubins)
+            if(stateSpace->type == simompl_statespacetype_dubins)
             {
                 s << prefix << "        (dubins) turning radius: " << stateSpace->dubinsTurningRadius << std::endl;
                 s << prefix << "        (dubins) symmetric: " << (stateSpace->dubinsIsSymmetric ? "true" : "false") << std::endl;
@@ -1267,25 +1267,25 @@ public:
             task->stateSpaces.push_back(stateSpaceHandle);
             switch(stateSpaceHandles.get(stateSpaceHandle)->type)
             {
-            case sim_ompl_statespacetype_position2d:
+            case simompl_statespacetype_position2d:
                 task->dim += 2;
                 break;
-            case sim_ompl_statespacetype_pose2d:
+            case simompl_statespacetype_pose2d:
                 task->dim += 3;
                 break;
-            case sim_ompl_statespacetype_position3d:
+            case simompl_statespacetype_position3d:
                 task->dim += 3;
                 break;
-            case sim_ompl_statespacetype_pose3d:
+            case simompl_statespacetype_pose3d:
                 task->dim += 7;
                 break;
-            case sim_ompl_statespacetype_joint_position:
+            case simompl_statespacetype_joint_position:
                 task->dim += 1;
                 break;
-            case sim_ompl_statespacetype_cyclic_joint_position:
+            case simompl_statespacetype_cyclic_joint_position:
                 task->dim += 1;
                 break;
-            case sim_ompl_statespacetype_dubins:
+            case simompl_statespacetype_dubins:
                 task->dim += 3;
                 break;
             }
@@ -1334,8 +1334,8 @@ public:
     {
         switch(algorithm)
         {
-        case sim_ompl_algorithm_PRM:
-        case sim_ompl_algorithm_PRMstar:
+        case simompl_algorithm_PRM:
+        case simompl_algorithm_PRMstar:
             return true;
         default:
             return false;
@@ -1413,7 +1413,7 @@ public:
     ob::PlannerPtr plannerFactory(Algorithm algorithm, ob::SpaceInformationPtr si)
     {
         ob::PlannerPtr planner;
-#define PLANNER(x) case sim_ompl_algorithm_##x: planner = ob::PlannerPtr(new og::x(si)); break
+#define PLANNER(x) case simompl_algorithm_##x: planner = ob::PlannerPtr(new og::x(si)); break
         switch(algorithm)
         {
             PLANNER(BKPIECE1);
@@ -1882,5 +1882,5 @@ private:
     sim::Handles<StateSpaceDef*> stateSpaceHandles{"OMPL.StateSpace"};
 };
 
-SIM_PLUGIN(PLUGIN_NAME, PLUGIN_VERSION, Plugin)
+SIM_PLUGIN(Plugin)
 #include "stubsPlusPlus.cpp"
