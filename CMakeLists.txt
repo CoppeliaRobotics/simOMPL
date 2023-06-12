@@ -34,7 +34,7 @@ ExternalProject_Add(ompl-${OMPL_VERSION}
 
 include_directories(${OMPL_SRC_DIR}/src ${OMPL_BUILD_DIR}/src)
 if(WIN32)
-    link_directories(${OMPL_BUILD_DIR}/src/ompl/Release)
+    link_directories(${OMPL_BUILD_DIR}/src/ompl/${CMAKE_BUILD_TYPE})
 else()
     link_directories(${OMPL_BUILD_DIR}/lib)
 endif()
