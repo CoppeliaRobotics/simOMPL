@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16.3)
 project(simOMPL)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -48,9 +48,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 
 coppeliasim_add_plugin(simOMPL SOURCES plugin.cpp)
 add_dependencies(simOMPL ompl-${OMPL_VERSION})
-target_link_libraries(simOMPL Boost::boost Boost::system Boost::serialization)
-target_link_libraries(simOMPL Eigen3::Eigen)
-target_link_libraries(simOMPL ompl)
+target_link_libraries(simOMPL PRIVATE Boost::boost Boost::system Boost::serialization)
+target_link_libraries(simOMPL PRIVATE Eigen3::Eigen)
+target_link_libraries(simOMPL PRIVATE ompl)
 if(NOT WIN32)
     install(DIRECTORY ${OMPL_BUILD_DIR}/lib/ DESTINATION ${COPPELIASIM_LIBRARIES_DIR})
 endif()
