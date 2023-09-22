@@ -103,7 +103,7 @@ function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
     parentObjectHandle=-1
     color=color or {1,0,0}
     extraAttributes=extraAttributes or 0
-    sim.setAutoYield(false)
+    sim.setStepping(true)
     local dwoPath=sim.addDrawingObject(sim.drawing_lines+extraAttributes,lineSize,0,parentObjectHandle,99999,color)
     local pathProjection=simOMPL.projectStates(taskHandle,path)
     for i=4,#pathProjection,3 do
@@ -111,7 +111,7 @@ function simOMPL.drawPath(taskHandle,path,lineSize,color,extraAttributes)
         for j=-3,2 do table.insert(d, pathProjection[i+j]) end
         sim.addDrawingObjectItem(dwoPath,d)
     end
-    sim.setAutoYield(true)
+    sim.setStepping(false)
     return {dwoPath}
 end
 
@@ -136,7 +136,7 @@ function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,
     local dupTol=0
     local parentHandle=-1
     local maxItemCnt=999999
-    sim.setAutoYield(false)
+    sim.setStepping(true)
     local dwoPoints=sim.addDrawingObject(sim.drawing_spherepoints,pointSize,dupTol,parentHandle,maxItemCnt,color)
     local dwoLines=sim.addDrawingObject(sim.drawing_lines,lineSize,dupTol,parentHandle,maxItemCnt,color)
     local dwoStart=sim.addDrawingObject(sim.drawing_spherepoints,pointSize*1.5,dupTol,parentHandle,maxItemCnt,startColor)
@@ -158,7 +158,7 @@ function simOMPL.drawPlannerData(taskHandle,pointSize,lineSize,color,startColor,
         local p={states[3*goalVertices[i]+1],states[3*goalVertices[i]+2],states[3*goalVertices[i]+3]}
         sim.addDrawingObjectItem(dwoGoal,p)
     end
-    sim.setAutoYield(true)
+    sim.setStepping(false)
     return {dwoPoints,dwoLines,dwoStart,dwoGoal}
 end
 
