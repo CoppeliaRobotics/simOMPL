@@ -702,8 +702,8 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="callback" type="string">
-                <description>name of the Lua callback</description>
+            <param name="callback" type="func">
+                <description>callback</description>
             </param>
             <param name="projectionSize" type="int">
                 <description>size of the projection (usually 2 or 3)</description>
@@ -725,8 +725,8 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="callback" type="string">
-                <description>name of the Lua callback</description>
+            <param name="callback" type="func">
+                <description>callback</description>
             </param>
         </params>
         <return>
@@ -746,8 +746,8 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="callback" type="string">
-                <description>name of the Lua callback</description>
+            <param name="callback" type="func">
+                <description>callback</description>
             </param>
         </params>
         <return>
@@ -766,11 +766,11 @@ end
             <param name="taskHandle" type="string">
                 <description>a handle to a task object created with <command-ref name="createTask" /></description>
             </param>
-            <param name="callback" type="string">
-                <description>the name of the Lua callback for sampling a state</description>
+            <param name="callback" type="func">
+                <description>callback for sampling a state</description>
             </param>
-            <param name="callbackNear" type="string">
-                <description>the name of the Lua callback for sampling near a given state within the given distance</description>
+            <param name="callbackNear" type="func">
+                <description>callback for sampling near a given state within the given distance</description>
             </param>
         </params>
         <return>
