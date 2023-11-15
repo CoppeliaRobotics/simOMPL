@@ -230,30 +230,4 @@ end
 
 (require 'simOMPL-typecheck')(simOMPL)
 
--- accept pure function where callback string is expected:
-
-simOMPL.setGoalCallback = wrap(simOMPL.setGoalCallback, function(origFunc)
-    return function(taskHandle, callback)
-        return origFunc(taskHandle, reify(callback))
-    end
-end)
-
-simOMPL.setProjectionEvaluationCallback = wrap(simOMPL.setProjectionEvaluationCallback, function(origFunc)
-    return function(taskHandle, callback, projectionSize)
-        return origFunc(taskHandle, reify(callback), projectionSize)
-    end
-end)
-
-simOMPL.setStateValidationCallback = wrap(simOMPL.setStateValidationCallback, function(origFunc)
-    return function(taskHandle, callback)
-        return origFunc(taskHandle, reify(callback))
-    end
-end)
-
-simOMPL.setValidStateSamplerCallback = wrap(simOMPL.setValidStateSamplerCallback, function(origFunc)
-    return function(taskHandle, callback, callbackNear)
-        return origFunc(taskHandle, reify(callback), reify(callbackNear))
-    end
-end)
-
 return simOMPL
