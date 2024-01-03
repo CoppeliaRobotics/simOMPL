@@ -5,11 +5,9 @@ copying, etc.) contained in the same directory if it is present, or
 under the same terms of the files in the parent directory otherwise.
 
 -----------------------------------------------------------------------
-simExtOMPL, based on v_repExtOMPL from Coppelia Robotics AG
-on September 2019
+simOMPL
 
-Copyright (C) 2015-2023 Coppelia Robotics AG
-Copyright (C) 2019 Robot Nordic ApS
+Copyright (C) 2015-2024 Coppelia Robotics AG
 
 All rights reserved.
 
@@ -37,5 +35,3 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------
-
-The OMPL plugin is courtesy of Federico Ferri.
