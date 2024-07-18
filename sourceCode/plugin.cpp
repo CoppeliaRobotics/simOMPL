@@ -1035,7 +1035,7 @@ public:
         if(in->weight <= 0)
             throw std::runtime_error("State component weight must be positive.");
 
-        if(in->refObjectHandle != -1 && !sim::isHandle(in->refObjectHandle, sim_appobj_object_type))
+        if(in->refObjectHandle != -1 && !sim::isHandle(in->refObjectHandle, sim_objecttype_sceneobject))
             throw std::runtime_error("Reference object handle is not valid.");
 
         StateSpaceDef *statespace = new StateSpaceDef();
