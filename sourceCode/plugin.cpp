@@ -1019,7 +1019,7 @@ public:
         delete oh;
     }
 
-    void onScriptStateAboutToBeDestroyed(int scriptHandle, int scriptUid)
+    void onScriptStateAboutToBeDestroyed(int scriptHandle, long long scriptUid)
     {
         for(auto statespace : stateSpaceHandles.find(scriptHandle))
             delete stateSpaceHandles.remove(statespace);
