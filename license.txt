@@ -7,7 +7,7 @@ under the same terms of the files in the parent directory otherwise.
 -----------------------------------------------------------------------
 simOMPL
 
-Copyright (C) 2015-2024 Coppelia Robotics AG
+Copyright (C) 2015-2025 Coppelia Robotics AG
 
 All rights reserved.
 
