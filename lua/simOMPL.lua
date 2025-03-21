@@ -2,7 +2,7 @@ local simOMPL = loadPlugin 'simOMPL';
 
 -- @fun setGoalStates set multiple goal states at once, equivalent to calling simOMPL.setGoalState, simOMPL.addGoalState, simOMPL.addGoalState...
 -- @arg string taskHandle the handle of the task
--- @arg {type=table,size=1..*} states a table of tables, one element for each goal state
+-- @arg {type='table',size='1..*'} states a table of tables, one element for each goal state
 -- @cats task, goal
 function simOMPL.setGoalStates(taskHandle, states)
     simOMPL.setGoalState(taskHandle, states[1])
@@ -87,7 +87,7 @@ end
 -- @arg string taskHandle the handle of the task
 -- @arg table.float path the path, as returned by simOMPL.getPath
 -- @arg float lineSize size of the line (in pixels)
--- @arg {type=table,item_type=float,size=3} color color of the lines
+-- @arg {type='table',item_type='float',size=3} color color of the lines
 -- @arg int extraAttributes extra attributes to pass to sim.addDrawingObject
 -- @ret table.int dwos a table of handles of new drawing objects
 -- @cats path, drawing
@@ -116,9 +116,9 @@ end
 -- @arg string taskHandle handle of the task
 -- @arg float pointSize size of nodes (in meters)
 -- @arg float lineSize size of lines (in pixels)
--- @arg {type=table,item_type=float,size=3} color color of nodes and lines
--- @arg {type=table,item_type=float,size=3} startColor color of start nodes
--- @arg {type=table,item_type=float,size=3} goalColor color of goal nodes
+-- @arg {type='table',item_type='float',size=3} color color of nodes and lines
+-- @arg {type='table',item_type='float',size=3} startColor color of start nodes
+-- @arg {type='table',item_type='float',size=3} goalColor color of goal nodes
 -- @ret table.int dwos a table of handles of new drawing objects
 -- @cats drawing
 function simOMPL.drawPlannerData(taskHandle, pointSize, lineSize, color, startColor, goalColor)
@@ -193,8 +193,8 @@ end
 -- @fun createStateSpaceForJoint convenience function that wraps simOMPL.createStateSpace
 -- @arg string name name of the state space
 -- @arg int jointHandle handle of the joint
--- @arg {type=int,default=0} useForProjection use for projection
--- @arg {type=float,default=1} weight weight
+-- @arg {type='int',default=0} useForProjection use for projection
+-- @arg {type='float',default=1} weight weight
 -- @ret int ssHandle handle of the state space
 -- @cats state
 function simOMPL.createStateSpaceForJoint(name, jointHandle, useForProjection, weight)
@@ -210,8 +210,8 @@ end
 -- @fun setStateSpaceForJoints convenience function that wraps simOMPL.setStateSpace
 -- @arg string taskHandle the handle of the task
 -- @arg table.int jointHandles handles of the joints
--- @arg {type=table,item_type=int,default={}} useForProjection use for projection, same size as jointHandles
--- @arg {type=table,item_type=float,default={}} weight weights, same size as jointHandles
+-- @arg {type='table',item_type='int',default='{}'} useForProjection use for projection, same size as jointHandles
+-- @arg {type='table',item_type='float',default='{}'} weight weights, same size as jointHandles
 -- @cats state
 function simOMPL.setStateSpaceForJoints(taskHandle, jointHandles, useForProjection, weights)
     local ss = {}
