@@ -1247,25 +1247,20 @@ public:
     {
         TaskDef *task = getTask(in->taskHandle);
 
+        std::vector<StateSpaceDef*> stateSpaces;
         for(size_t i = 0; i < in->stateSpaceHandles.size(); i++)
         {
-            try
-            {
-                stateSpaceHandles.get(in->stateSpaceHandles[i]);
-            }
-            catch(...)
-            {
-                throw std::runtime_error("Invalid state space handle.");
-            }
+            StateSpaceDef *ss = stateSpaceHandles.get(in->stateSpaceHandles[i], nullptr);
+            if(!ss) throw std::runtime_error("Invalid state space handle.");
+            stateSpaces.push_back(ss);
         }
 
         task->stateSpaces.clear();
         task->dim = 0;
-        for(size_t i = 0; i < in->stateSpaceHandles.size(); i++)
+        for(size_t i = 0; i < stateSpaces.size(); i++)
         {
-            std::string stateSpaceHandle = in->stateSpaceHandles[i];
-            task->stateSpaces.push_back(stateSpaceHandle);
-            switch(stateSpaceHandles.get(stateSpaceHandle)->type)
+            task->stateSpaces.push_back(in->stateSpaceHandles[i]);
+            switch(stateSpaces[i]->type)
             {
             case simompl_statespacetype_position2d:
                 task->dim += 2;
