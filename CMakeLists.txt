@@ -20,7 +20,7 @@ find_package(CoppeliaSim 4.5.1.7 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 include(ExternalProject)
-set(OMPL_VERSION 1.5.0)
+set(OMPL_VERSION 1.7.0)
 set(OMPL_ABI_VERSION 16)
 set(OMPL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ompl-${OMPL_VERSION}-prefix)
 set(OMPL_SRC_DIR ${OMPL_PREFIX}/src/ompl-${OMPL_VERSION})
