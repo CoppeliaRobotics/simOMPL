@@ -27,6 +27,9 @@ set(OMPL_SRC_DIR ${OMPL_PREFIX}/src/ompl-${OMPL_VERSION})
 set(OMPL_BUILD_DIR ${OMPL_PREFIX}/src/ompl-${OMPL_VERSION}-build)
 ExternalProject_Add(ompl-${OMPL_VERSION}
     URL https://github.com/ompl/ompl/archive/${OMPL_VERSION}.tar.gz
+    PATCH_COMMAND
+        ${CMAKE_COMMAND} -E echo "Applying patch to remove Boost::system..." &&
+        patch -p1 < ${CMAKE_SOURCE_DIR}/ompl-1.7.0-remove-boost-system.patch
     CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DOMPL_BUILD_DEMOS=OFF -DOMPL_BUILD_PYBINDINGS=OFF -DOMPL_BUILD_PYTESTS=OFF -DOMPL_BUILD_TESTS=OFF -DOMPL_REGISTRATION=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     BUILD_COMMAND ${CMAKE_COMMAND} --build ${OMPL_BUILD_DIR} --config ${CMAKE_BUILD_TYPE}
     INSTALL_COMMAND ""
