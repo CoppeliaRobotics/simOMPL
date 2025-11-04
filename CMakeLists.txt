@@ -4,7 +4,7 @@ project(simOMPL)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MACOSX_RPATH 1)
 
-find_package(Boost REQUIRED COMPONENTS system serialization)
+find_package(Boost REQUIRED COMPONENTS serialization)
 
 if(NOT COPPELIASIM_INCLUDE_DIR)
     if(DEFINED ENV{COPPELIASIM_ROOT_DIR})
@@ -53,7 +53,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sourceCode/config.h.in ${CMAKE_CURREN
 
 coppeliasim_add_plugin(simOMPL SOURCES sourceCode/plugin.cpp)
 add_dependencies(simOMPL ompl-${OMPL_VERSION})
-target_link_libraries(simOMPL PRIVATE Boost::boost Boost::system Boost::serialization)
+target_link_libraries(simOMPL PRIVATE Boost::boost Boost::serialization)
 target_link_libraries(simOMPL PRIVATE Eigen3::Eigen)
 target_link_libraries(simOMPL PRIVATE ompl)
 if(NOT WIN32)
