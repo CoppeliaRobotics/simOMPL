@@ -1008,9 +1008,6 @@ public:
 
         if(!registerScriptStuff())
             throw std::runtime_error("failed to register script stuff");
-
-        setExtVersion("OMPL (open motion planning library) Plugin");
-        setBuildDate(BUILD_DATE);
     }
 
     void onCleanup()
