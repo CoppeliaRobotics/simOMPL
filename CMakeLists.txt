@@ -25,6 +25,7 @@ set(OMPL_ABI_VERSION 18)
 set(OMPL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ompl-${OMPL_VERSION}-prefix)
 set(OMPL_SRC_DIR ${OMPL_PREFIX}/src/ompl-${OMPL_VERSION})
 set(OMPL_BUILD_DIR ${OMPL_PREFIX}/src/ompl-${OMPL_VERSION}-build)
+set(OMPL_INSTALL_DIR ${OMPL_PREFIX}/install)
 ExternalProject_Add(ompl-${OMPL_VERSION}
     URL https://github.com/ompl/ompl/archive/${OMPL_VERSION}.tar.gz
     PATCH_COMMAND
@@ -32,19 +33,12 @@ ExternalProject_Add(ompl-${OMPL_VERSION}
         patch -p1 < ${CMAKE_SOURCE_DIR}/ompl-1.7.0-remove-boost-system.patch
     CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DOMPL_BUILD_DEMOS=OFF -DOMPL_BUILD_PYBINDINGS=OFF -DOMPL_BUILD_PYTESTS=OFF -DOMPL_BUILD_TESTS=OFF -DOMPL_REGISTRATION=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     BUILD_COMMAND ${CMAKE_COMMAND} --build ${OMPL_BUILD_DIR} --config ${CMAKE_BUILD_TYPE}
-    INSTALL_COMMAND ""
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install ${OMPL_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --prefix ${OMPL_INSTALL_DIR}
 )
+set(OMPL_INCLUDE_DIR "${OMPL_INSTALL_DIR}/include/ompl-1.7")
+set(OMPL_LIB_DIR "${OMPL_INSTALL_DIR}/lib")
 
-include_directories(${OMPL_SRC_DIR}/src ${OMPL_BUILD_DIR}/src)
-if(WIN32)
-    set(OMPL_LIB_DIR "${OMPL_BUILD_DIR}/src/ompl/${CMAKE_BUILD_TYPE}")
-else()
-    if(EXISTS "${OMPL_BUILD_DIR}/lib" AND IS_DIRECTORY "${OMPL_BUILD_DIR}/lib")
-        set(OMPL_LIB_DIR "${OMPL_BUILD_DIR}/lib")
-    else()
-        set(OMPL_LIB_DIR "${OMPL_BUILD_DIR}/src/ompl")
-    endif()
-endif()
+include_directories(${OMPL_INCLUDE_DIR})
 link_directories(${OMPL_LIB_DIR})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
